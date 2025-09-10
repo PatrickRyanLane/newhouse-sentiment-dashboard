@@ -1,986 +1,992 @@
-Doug McMillon
-Andrew Jassy
-Tim Cook
-Stephen Hemsley
-Warren Buffett
-David Joyner
-Darren Woods
-Sundar Pichai
-Brian Tyler
-Robert Mauch
-Ron Vachris
-Jamie Dimon
-Satya Nadella
-Jason Hollar
-Mike Wirth
-David Cordani
-Jim Farley
-Brian Moynihan
-Mary Barra
-Gail Boudreaux
-Jane Fraser
-Sarah London
-Ted Decker
-Maryann Mannen
-Ron Sargent
-Mark Lashier
-Priscilla Almodovar
-Tim Wentworth
-Lane Riggs
-Mark Zuckerberg
-Hans Vestberg
-John Stankey
-Brian Roberts
-Charles Scharf
-David Solomon
-Michael Hutchins
-Michael Fiddelke
-Jim Rechtin
-Jon Farney
-Elon Musk
-Ted Pick
-Joaquin Duato
-Juan Luciano
-Ramon Laguarta
-Carol Tomé
-Rajesh Subramaniam
-Bob Iger
-Michael Dell
-Marvin Ellison
-Jon Moeller
-Thomas Long
-Kelly Ortberg
-Susan Morris
-Kevin Hourican
-Christopher Calio
-Larry Culp
-James Taiclet
-Stephen Squeri
-Joe Creed
-Michel Khalaf
-Samuel Hazen
-Tricia Griffith
-Arvind Krishna
-John May
-Jensen Huang
-Philip Smith
-Robert M Davis
-Ryan Lance
-Albert Bourla
-Ed Bastian
-Patrick Zammit
-Kevin Murphy
-Thomas J Wilson
-Chuck Robbins
-Kirt Walker
-Christopher Winfrey
-Bob Michael
-Craig DeSanto
-Lip-Bu Tan
-Ernie Herrman
-Andrew Sullivan
-Enrique Lores
-Scott Kirby
-George Holm
-Donnie King
-Robert Isom
-Timothy M Sweeney
-Elliott Hill
-Safra Catz
-AJ Jim Teague
-Richard Fairbank
-Willie Chiang
-Michael Kasbar
-Peter Zaffino
-James Quincey
-Thasunda Brown Duckett
-Jay Debertin
-Chris Boerner
-Corie Barry
-Marc Casper
-Roger Crandall
-Juan Andrade
-Phebe Novakovic
-Alan Schnitzer
-David Zaslav
-Gunjan Kedia
-Robert Ford
-Kathy Warden
-Tim Gerend
-Todd Vasos
-Matthew Lucey
-Dara Khosrowshahi
-Vimal Kapur
-Dirk Van de Put
-Brian Niccol
-Cristiano Amon
-Hock Tan
-David Flitman
-Paul Romanowski
-Jacek Olczak
-Preston Feight
-Marc Benioff
-Leon Topalian
-Michael Dastoor
-Jonathan Jaffe
-David Ricks
-Joe Zubretsky
-Jennifer Rumsey
-Robin Vince
-Ted Sarandos
-William H Rogers Jr
-Sean Kerins
-William M Brown
-Ryan McInerney
-Marc Rowan
-Tim Go
-Robert Sulentic
-William Demchak
-Bryan DeBoer
-William Nash
-Brian Robbins
-Michael Creedon
-Sandy Douglas
-Alex Chriss
-Roger Penske
-Antonio Neri
-Harry Sideris
-Vicki Hollub
-Lawrence Coben
-Robert Bradway
-John Ketchum
-Rainer Blair
-Daniel ODay
-Michael Manley
-Carlos Abrams-Rivera
-Philip Gallagher
-Gary Dickerson
-Bob Jordan
-Rick Wurster
-Lorenzo Simonelli
-Chris Kempczinski
-Christopher Womack
-Michael Miebach
-Joseph Dominguez
-Christopher Swift
-Patricia Poppe
-Bom Kim
-Ezra Yacob
-Jim Vena
-Matt Schroeder
-Tony Spring
-Anthony Capuano
-Raymond E Scott
-William Stengel II
-Heidi Petz
-Jeff Miller
-Kathleen Quirk
-Michael Rapino
-John Doyle
-Lisa Su
-Frank Holding
-John Engel
-David Gitlin
-Lourenco Goncalves
-Calvin G Butler Jr
-Joseph Bae
-Christine Leahy
-Glenn Fogel
-Brian Doubles
-Earl Austin
-Christian Ulbrich
-Saumya Sutaria
-William Gifford
-Kevin Lobo
-Michael Hsu
-Jack Fusco
-James Conroy
-Anthony Smurfit
-Jeffrey Harmening
-Mark Stewart
-Bob Eddy
-Peter Arduini
-Noel Wallace
-Marc Bitzer
-Chris Kubasik
-Shantanu Narayen
-Thomas Polen
-Richard P Dealy
-Ravi Kumar S
-Andrew Clyde
-Mike Lyons
-Jennifer Parmentier
-William Fehrman
-Andrew Silvernail
-Jonas Prising
-John Zillmer
-Mark Millett
-Dan Amos
-Tony Cheng
-Karsanbhai
-Ronald P OHanley
-Timothy Knavish
-David Burritt
-Maria Black
-Daryl Kenningham
-Robert Blue
-Larry Fink
-Pierce Norton II
-David Bozeman
-Haviv Ilan
-Michael Bender
-Philip Daniele III
-Timothy Archer
-Charles Magro
-Rick Lanoha
-Peter Jackson
-Martin Schroeter
-Hamid Akhavan
-Bill Westrate
-Avigal Soreq
-Beth Ford
-Walker Martin
-Eric Slifka
-DG Macpherson
-Bob Pragada
-Pedro Pizarro
-William Hornbuckle
-Andrew McMahon
-Christopher OHerlihy
-James Cracchiolo
-Ryan Marshall
-Matthew Meloy
-Michael Rhodes
-Joseph Fadool
-Stéphane de La Faverie
-Benjamin Tisch
-Brad Beckham
-Thomas Gayner
-Donald Allan
-Sanjay Mehrotra
-James Breuer
-Thomas Bell
-Scott Smith
-Kimberly Dang
-Christophe Beck
-Brent Shafer
-Clay Gaspar
-Steven Cahillane
-Raul Nicholas Vargas Ochoa
-Darren Rebelez
-Ari Bousbib
-Jon Vander Ark
-Timothy Cofer
-Karla Lewis
-David Hult
-Darryl Button
-James Burke
-John Barrett
-William Krueger
-Erik Nordstrom
-John Wren
-Stephanie Ferris
-Timothy Cawley
-Joseph Hinrichs
-Troy Rudd
-Kathleen Johnson
-Harry Lawton III
-Raul Fernandez
-Eric Hansotia
-David Bruton Smith
-Sasan Goodarzi
-Matthew Flannery
-Marc Miller
-Michael Mahoney
-Judith Marks
-Robert Frenzel
-Penny Pennington
-Daniel Fisher
-Justin Jude
-James Blackledge
-Bruce Bodine
-Scott Donnelly
-Adam Schechter
-Deanna Strable-Soethout
-Leonard Schleifer
-Paul Shoukry
-Lauren Hobart
-Jamie Whisnant
-Ariane Gorin
-Shelley Simpson
-René Jones
-Gerardo Norcia
-Andrés Gluski
-Timothy Spence
-Eduardo Menezes
-Wendell Weeks
-Anthony Guzzi
-Adam Norwitt
-Jean-Marc Gilson
-Lori Koch
-Derek Chang
-Martina Cheung
-Tim Hingtgen
-Brian Tierney
-Rick McKenney
-Stanley Bergman
-Tiang Yew Tan
-Vincent Roche
-Sean Connolly
-Bruce Van Saun
-Mark George
-Andrew Marsh
-Robert Berkley
-Javier Rodriguez
-Michael OGrady
-James Snee
-Timothy J Donahue
-Joseph Ferraro
-Niraj Shah
-José Mas
-Joseph Nolan
-Thomas Palmer
-Robert Sanchez
-Michael Nolan
-Gavin Hattersley
-Thomas Reeg
-Ellen Cooper
-Bracken Darrell
-Erik Fyrwald
-Christopher Kastner
-Shane OKelly
-Ralph LaRossa
-Kecia Steelman
-Michele Buck
-Sumit Singh
-Steven Vondran
-Jeffrey Lorberbaum
-Keith Demmings
-Robert Martin
-Kathleen Mazzarella
-Joey Wat
-Scott Richardson
-David Rawlinson II
-Alan Armstrong
-Philippe Krakowsky
-Brendan McCracken
-Andrew Teno
-Stephen Steinour
-Timothy NeCastro
-Ernest Garcia III
-R Bruce McDonald
-William Oplinger
-Mark Pearson
-Richard Wallace
-Ricardo Cardenas
-Mikael Bratt
-Benito Minicucci
-Christopher Gorman
-Robert Goldstein
-Edward Pesicka
-Christopher Nassetta
-Jamie Iannone
-Patrick Gallagher
-Rich Steinmeier
-Stephen Spray
-Douglas Yearley
-Gregory Brown
-Brian Chesky
-Jeffrey Sprecher
-Robert Thomson
-Scott Boatwright
-Reshma Kewalramani
-Christopher Viehbacher
-Malcolm Wilson
-Tony Sarsam
-Michael O’Sullivan
-Teresa Rasmussen
-Eugene Bredow
-Brian Chambers
-Rafael Santana
-John Pfeifer
-Cameron Bready
-Calvin McDonald
-J Kent Masters
-Joanna Geraghty
-Robert Steer
-William Newlands
-Michael Doss
-Gil West
-Malcolm C Roberts
-Mick Beekhuizen
-Daniel Wall
-Gregory Roberts
-Horacio Rozanski
-James Davis
-Dennis Mathew
-Stefan Larsson
-Mark Costa
-Joyce Mullen
-John Turner
-Julian G Francis
-Blake Moret
-Mike Speetzen
-William McDermott
-Jure Sola
-Bob Flexon
-Scott Lauber
-Jon Rousseau
-Todd Schneider
-Peter Matt
-Robert D Lawler
-Domenic Dell’Osso Jr
-Jason P Wells
-H Michael Krimbill
-Tony Xu
-Clay Williams
-Kristin Peck
-Mark Smucker
-Steve Sanghi
-Richard Tobin
-Kaes Van’t Hof
-Deon Stander
-Vincent Sorgi
-Hassane El-Khoury
-Arie Kotler
-William Monteleone
-John Christmann IV
-Adaire Fox-Martin
-Joseph M Otting
-Mary Dillon
-James Zallie
-Christopher Peterson
-Scott Salmirs
-Christopher Hilger
-Hamid Moghadam
-Stephen Schwarzman
-Robert Greenberg
-Keith Allman
-Rusty Rush
-Jennifer Johnson
-Gerry P Smith
-Carl Lindner lll
-Mark Kowlzan
-Thomas Hill
-Milan Galik
-Laura Alber
-Mario Harik
-Devin Stockfish
-Thomas J McInerney
-Garrick Rochow
-Toni Townes-Whitley
-Rich Handler
-Daniel Heaf
-Andrew Wilson
-Sheryl Palmer
-Ivan Tornos
-Linda Rendle
-Matthew Pine
-Heather Lavallee
-Daniel Florness
-Albert Nahmad
-Carl Eschenbach
-Craig Smiddy
-Frank C Sullivan
-Matthew Missad
-Martin J Lyons
-Adam W Miller
-Rodney Sacks
-Gary Guthart
-Charles Liang
-Christopher Caldwell
-Gordon J Hardie
-David Gibbs
-Steve Henry
-Chuck Treadway
-Rob Vitale
-Steven J Moskowitz
-Emmanuel Ligner
-Stuart Bradie
-Carrie Wheeler
-Russell Becker
-Toby Rice
-Jesse Arenivas
-Nikesh Arora
-Steven Bandrowczak
-Vicente Reynal
-William T Dillard II
-C Howard Nye
-Giordano Albertazzi
-Stephane Bancel
-Nate R Jorgensen
-Jack Sinclair
-Padraig McDonnell
-Kenneth T Lane
-Randall C Stuewe
-R Howard Coker
-John Mengucci
-Mark Witkowski
-Lee M Tillman
-Mark Hoplamazian
-David S Chernow
-Brendan M Foley
-Joanne Crevoiserat
-James Quincey
-John Plant
-Shankh Mitra
-W Anthony Will
-David A Zapico
-Kevin Stein
-Craig Billings
-William J Way
-Giel Rutten
-Paul Sarvadi
-Donald Zurbay
-Rob Sharps
-Patrice Louvet
-Jeffrey Mezger
-David M Foulkes
-M Keith Waddell
-Jay Snowden
-George Kurian
-Kevin Ali
-Joel D Anderson
-Louis V Pinkham
-Jay Geldmacher
-Marcus Lemonis
-Peter R Huntsman
-Hillary Super
-Michelle Gass
-Neil Hunn
-Steven P Lawrence
-Phillippe Lord
-David C Dauch
-Olumide Soroye
-Adena Friedman
-Tim Gokey
-Patrick M Shanahan
-Robert Kyncl
-Denise Dignam
-Jim DeVries
-Bernard Zovighian
-Mark E Seaton
-John C Roche
-Adam J Greenlee
-Jayne Hrdlicka
-Robert Fauber
-Thomas E Jorden
-Eugene A Hall
-Kevin Plank
-James W Lanning
-Matthew T Farrell
-Kevin M Freeman
-Joe Shoen
-Mark Bertolini
-Jayshree Ullal
-Sassine Ghazi
-Jochen Zeitz
-Nick Jeffery
-Thomas Edward McCormick
-D Christian Koch
-David E Simon
-Stephen Bratspies
-Ryan M. Schneider
-George Bobb III
-Terrence A Duffy
-Rami Rahim
-Sue Nabi
-Peter D Arvan
-David Campbell
-Matthew J Murphy
-Lloyd Yates
-William C Stone
-Mark Rourke
-Andrew Anagnost
-Dustin Semach
-William L Meaney
-Andy P Power
-Satish Dhanasekaran
-Frank M Svoboda
-Carey A Smith
-Ynon Kreiz
-Karen S Haller
-Terrance Williams
-Eric W Gerstenberg
-Gunner Smith
-Gerben W Bakker
-Dave Davis
-Michael J Smith
-Strauss Zelnick
-John C Turner Jr
-David M OMalley
-Frank A Lonegro
-James F Risoleo
-Ken Xie
-Doug Shulman
-Ryan Cohen
-Mark W Begor
-Jay L Schottenstein
-Curtis C Farmer
-Ole Rosgaard
-Brian E Lane
-Robert M Buck
-Ralph Andretta
-Jim Anderson
-Walter C. D. Carlson
-Ronald Kruszewski
-Richard Hayne
-Simon Meester
-Edward J Lehner
-Nicholas T Pinchuk
-Ryals McMullian
-D Bryan Jordan
-John B Gibson
-Chris Cocks
-Pete McPartland
-Michael Arougheti
-Alok Maskara
-James C Grech
-Joseph P Lacher Jr
-Perry A Sook
-Wade Davis
-Scott L Thompson
-Mike Simonds
-B Andrew Rose
-Bruce L Caswell
-Robert L Reffkin
-Mark Eubanks
-Peter Quigley
-David L Yowan
-Mary E Kipp
-Adam Aron
-Mark J Tarr
-Liam K Griffin
-Richard G Kyle
-Ron Gusek
-John E Geller Jr
-Karl G. Glassman
-Bruce K Thorn
-Jonathan H Weis
-Jeffrey B Guldner
-Arkadiy Dobkin
-Paul M Rady
-Michael Spanos
-Nicole A Kivisto
-Gerald L Morgan
-Gabriel Tirador
-Nicholas I Fink
-Paul E Burdiss
-William J Christensen
-Evan Spiegel
-Bill Burns
-Steven Sell
-Richard M Olson
-Eric S Yuan
-Dan L Batrack
-Joseph D Russell Jr
-Jacob Thaysen
-Debra A Cafaro
-Pierre R Brondeau
-Judy R McReynolds
-Russell J Weiner
-Theodore S Hanson
-RJ Scaringe
-Jeffrey N Simmons
-Tim O Shaughnessy
-Thomas V Taylor
-Neil A Schrimsher
-Robert E Price
-John David Risher
-Gary B Smith
-Joey Levin
-Jim Jacobs
-Devin B McGranahan
-R Scott Rowe
-Kenneth A Vecchione
-John C Rademacher
-Doug Black
-Oliver G Brewer III
-Glenn Sanford
-Fran Horowitz
-Kevin Akers
-Alessandro Maselli
-J Powell Brown
-Aman Bhutani
-John C. Griffith
-John J Marchioni
-Lawson E Whiting
-Dave Peacock
-Mick Farrell
-Kamal Hathi
-Todd Kelsey
-Phillip D Yeager
-Steven B Hedlund
-Timothy C Oliver
-Bruce Fleming
-Daniel S. Peyovich
-Avner M Applbaum
-Kimberly A Fields
-Khozema Z Shipchandler
-Gary C Bhojwani
-William Andrew Hendricks Jr
-Kevin D Hochman
-James C Foster
-Rajiv K Prasad
-Eric T Steigerwalt
-Thomas L Ryan
-Charles M Nifong Jr
-Anirudh Devgan
-Andi Owen
-Sumit Roy
-Timothy John Fitzgerald
-Robert H Schottenstein
-Stephen P MacMillan
-Lisa M Barton
 Aaron P Jagdfeld
-Erik Gershwind
-Varun Krishna
-Fahmi Karam
-NADominic Ng
-Mark Wang
-Robert J Sheedy Jr
-Simon D Campion
-Jeremy Wensinger
-Andrew Rees
-David M Maura
-Sachin S Lawande
-Neil M Ashe
-Lorie L Tekorius
-John R Ciulla
-Sean D Keohane
-Drew M Wilkerson
-Daniel E Brown
-Javier D Ferrer Fernandez
-Olivier Rabiller
-Ronald N Tutor
-Jeff Liaw
-Aman Narang
-Joseph M Hogan
-Kevin J Wheeler
-Christopher A Cartwright
-James Kelly
-Tom Leighton
-Robert G Painter
-Tony Helton
-Caroline S Grace
-Patrick Kaltenbach
-Michael L Baur
-Jason Lippert
-Fredric J Tomczyk
-Octavio Marquez
-Sivasankaran Somasundaram
-Ronald F Clarke
-Robert W Pittman
-Patrick Zalupski
-Keith E Smith
-Mehran Assadi
-Barry R Port
-Denise A Paulonis
-Clifford A Skelton
-Jean-Michel Ribieras
-Douglas F Bauer
-Shawn OConnell
-Bill Meury
-Dale Francescon
-Michael Nierenberg
-Michael J Brown
-Scott Seu
-Jason D Robins
-Jonathan J Mazelsky
-Richard S Swartz
-Stefano Caroti
-Kevin R Sayer
-John T C Lee
-Edward B Pitoniak
-Albert White III
-Barry L Biffle
-Robert A Bruggeworth
-Winnie Park
-Steven Oakland
-James S Hagedorn
-Michael Cannon-Brookes
-Bertrand Loy
-William E Waltz
-Celeste B Mastin
-Kyle T Larkin
-Michael J Happe
-Steven H Gunby
-Stephan B Tanda
-Timothy P Boyle
-Anthony J Wood
-M Christopher Doyle
-Andy Eidson
-Andy L Nemeth
-Roger W Jenkins
-Kevin S Blair
-Julie Felss Masino
-David M Overton
-Nick DeIuliis
-Christopher Pappas
-Tod Carpenter
-Gregory L Christopher
-Rob Saltiel
-Jillian C Evanko
-Dave Guilmette
-Joel Smejkal
-Dennis Degner
-Ira D Robbins
-Bernard Kim
-Vincent Pilette
-Timothy S Crane
-Pat Roche
-Mark R Widmar
-Niko Lahanas
-Chris Osowski
-Derek J Leathers
+Adaire Fox-Martin
+Adam Aron
 Adam Foroughi
-Luca Savi
-Lawrence H Silber
-Hilton H Howell Jr
-Eric D Ashleman
-Owen D Thomas
-Kurt Wolf
-Sara E Armbruster
-Charles D. Young
-Suzanne Foster
-Grant E Sims
-Laura Prieskorn
-Rick L Wessel
-Sherman Miller
-Paul A Lang
-Ashish K Khandpur
-Shyam K Reddy
-Christopher S Ripley
-Stacy Kymes
-James H Walter
-Jason Murray
-Brian Armstrong
-Oscar K Brown
-Nicholas R Lower
-Morris Goldfarb
-Mark D Morelli
-Matthew J Cox
-David W Grzebinski
-Keith A Harvey
-Eric Nyman
-Doug Howe
-Jerry E Gahlhoff Jr
-D Scott Barbour
-Sean Gamble
-George Kurtz
-Bill Ready
-Fidji Simo
-Kimberly K Ryan
-David S Graziosi
-Gary G Friedman
-Lucinda M Baier
-Brian J Blaser
-E Jean Savage
-Liam J Kelly
-Laurans A Mendelson
-Frank H Laukien
-Harvey M Schwartz
-Mark S LaVigne
-Joel Quadracci
-Amar Maletira
-Udit Batra
-Eric M Green
-Doug Palladini
-G Mike Mikan
-Russell "Chip" Childs
-Christopher H Hunter
-Prahlad Singh
-Maria M Pope
-Charles Chip Blankenship
-Mike Steib
-Kurt J Ekert
-Matt Wilson
-Rob Katz
-Schnitzer Steel Industries
-David A Spector
-Frederick J Holzgrefe III
-Mark J Parrell
-John W Lindsay
-Gary D Burnison
-Timothy J McGrath
-Lynn M Bamford
-Jonathan W Witter
-Jeff Benck
-Charles H Giancarlo
-Brian R Gray
-Jay Schmidt
-Dale Asplund
-Jeffrey S Edwards
-Glenn J Williams
-Francois Locoh-Donou
-Joseph Wm Foran
-Sridhar Ramaswamy
-Mark D Dankberg
-Francisco J Leon
-Peter Stern
-David Baszucki
-Jeffrey W Edwards
-Clark Lauritzen
-Carlos Alberini
-Shyam P Kambeyanda
-Edmund Shallcross III
-Benjamin W Schall
+Adam J Greenlee
+Adam Norwitt
+Adam Schechter
+Adam W Miller
+Adena Friedman
+AJ Jim Teague
+Alan Armstrong
+Alan Schnitzer
+Albert Bourla
+Albert Nahmad
+Albert White III
+Alessandro Maselli
+Alex Chriss
 Allan C Thygesen
-Bryan J Knutson
-Heath Sampson
-Ara K Hovnanian
-Joshua G Silverman
-Kevin Roycraft
-J Eric Evans
-Clint E Stein
-Lee M Shavel
-Dave Banyard Jr
-Peter R Ingram
-Kristin A Dolan
-Brendan T Cavanagh
-George F Chappelle Jr
-Thomas E Gottwald
-Thomas J Baltimore Jr
-Peter M Moglia
-Ronald J Kramer
-John L Plueger
-Jennifer F Scanlon
-Greg Smith
-Sean Trauschke
-Norman D Schwartz
-Scott Doyle
-Michael E Reed
-Cindy J Miller
-Phillip D Green
-Joseph D Margolis
-Mark A Skonieczny
-Ladd Wilks
-Sundaram Nagarajan
+Alok Maskara
+Aman Bhutani
+Aman Narang
+Amar Maletira
+Andi Owen
+Andrew Anagnost
+Andrew Clyde
+Andrew Marsh
+Andrew McMahon
+Andrew Rees
+Andrew Silvernail
+Andrew Sullivan
+Andrew Teno
+Andrew Wilson
+Andrés Gluski
+Andy Eidson
+Andy Jassy
+Andy L Nemeth
+Andy P Power
+Anirudh Devgan
 Anne P Noonan
-Lori Flees
-Scott H Baxter
-Tim Larson
-Chuck Divita
-W Bradley Southern
-George C Freeman III
-James A Brock
-Robert Antokol
-Joe Craft
-Paul Keel
-Jared Isaacman
-Mark Mac McFarland
-Tony R Thene
-Melissa D Smith
-James Jim C Ryan III
-Peter J Federico
-Brent L Yeagy
-Henry A Fernandez
-Mark Penn
-Julie Schertell
+Anthony Capuano
+Anthony Guzzi
+Anthony J Wood
+Anthony Smurfit
+Antonio Neri
+Ara K Hovnanian
+Ari Bousbib
+Ariane Gorin
+Arie Kotler
+Arkadiy Dobkin
+Arvind Krishna
 Ashish Chand
-Greg Anderson
+Ashish K Khandpur
+Avigal Soreq
+Avner M Applbaum
+B Andrew Rose
+Barry L Biffle
+Barry R Port
+Benito Minicucci
+Benjamin Tisch
+Benjamin W Schall
+Bernard Kim
+Bernard Zovighian
+Bertrand Loy
+Beth Ford
+Bill Burns
+Bill Meury
+Bill Ready
+Bill Westrate
+Blake Moret
+Bob Eddy
+Bob Flexon
+Bob Iger
+Bob Jordan
+Bob Michael
+Bob Pragada
+Bom Kim
+Bracken Darrell
+Brad Beckham
+Brad Jacobs
+Brendan M Foley
+Brendan McCracken
+Brendan T Cavanagh
+Brent L Yeagy
+Brent Shafer
+Brian Armstrong
+Brian Chambers
+Brian Chesky
+Brian D Pieninck
+Brian Doubles
+Brian E Lane
+Brian J Blaser
+Brian Moynihan
+Brian Niccol
+Brian R Gray
+Brian Robbins
+Brian Roberts
+Brian Tierney
+Brian Tyler
+Bruce Bodine
+Bruce Fleming
+Bruce K Thorn
+Bruce L Caswell
+Bruce Van Saun
+Bryan DeBoer
+Bryan Hanson
+Bryan J Knutson
+C Howard Nye
+Calvin G Butler Jr
+Calvin McDonald
+Cameron Bready
+Carey A Smith
+Carl Eschenbach
+Carl Lindner lll
+Carlos Abrams-Rivera
+Carlos Alberini
+Carol Tomé
+Caroline S Grace
+Carrie Wheeler
+Celeste B Mastin
+Charles Chip Blankenship
+Charles D. Young
+Charles H Giancarlo
+Charles Liang
+Charles M Nifong Jr
+Charles Magro
+Charles Scharf
+Chris Boerner
+Chris Cocks
+Chris Kempczinski
+Chris Kubasik
+Chris Osowski
+Christian Ulbrich
+Christine Leahy
+Christophe Beck
+Christopher A Cartwright
+Christopher Caldwell
+Christopher Calio
+Christopher Gorman
+Christopher H Hunter
+Christopher Hilger
+Christopher Kastner
+Christopher Nassetta
+Christopher O'Herlihy
+Christopher Pappas
+Christopher Peterson
+Christopher S Ripley
+Christopher Swift
+Christopher Viehbacher
+Christopher Winfrey
+Christopher Womack
+Chuck Divita
+Chuck Robbins
+Chuck Treadway
+Cindy J Miller
+Clark Lauritzen
+Clay Gaspar
+Clay Williams
+Clifford A Skelton
+Clint E Stein
+Corie Barry
+Craig Billings
+Craig DeSanto
+Craig Smiddy
+Cristiano Amon
+Curtis C Farmer
+D Bryan Jordan
+D Christian Koch
+D Scott Barbour
+Dale Asplund
+Dale Francescon
+Dan Amos
+Dan L Batrack
+Daniel E Brown
+Daniel Fisher
+Daniel Florness
+Daniel Heaf
+Daniel O'Day
+Daniel S. Peyovich
+Daniel Wall
+Dara Khosrowshahi
+Darren Rebelez
+Darren Woods
+Darryl Button
+Daryl Kenningham
+Dave Banyard Jr
+Dave Davis
+Dave Guilmette
+Dave Peacock
+David A Spector
+David A Zapico
+David Baszucki
+David Bozeman
+David Bruton Smith
+David Burritt
+David C Dauch
+David Campbell
+David Cordani
+David E Simon
+David Flitman
+David Gibbs
+David Gitlin
+David Hult
+David Joyner
+David L Yowan
+David M Foulkes
+David M Maura
+David M O'Malley
+David M Overton
+David Rawlinson II
+David Ricks
+David S Chernow
+David S Graziosi
+David Solomon
+David W Grzebinski
+David Zaslav
+Deanna Strable-Soethout
+Debra A Cafaro
+Denise A Paulonis
+Denise Dignam
+Dennis Degner
+Dennis Mathew
+Deon Stander
+Derek Chang
+Derek J Leathers
+Devin B McGranahan
+Devin Stockfish
+DG Macpherson
+Dirk Van de Put
+Domenic Dell’Osso Jr
+Donald Allan
+Donald Zurbay
+Donnie King
+Doug Black
+Doug Howe
+Doug McMillon
+Doug Palladini
+Doug Shulman
+Douglas F Bauer
+Douglas Yearley
 Drew Houston
+Drew M Wilkerson
+Dustin Semach
+E Jean Savage
+Earl Austin
+Ed Bastian
+Edmund Shallcross III
+Eduardo Menezes
+Edward B Pitoniak
+Edward J Lehner
+Edward Pesicka
+Ellen Cooper
+Elliott Hill
+Elon Musk
+Emmanuel Ligner
+Enrique Lores
+Eric D Ashleman
+Eric Hansotia
+Eric M Green
+Eric Nyman
+Eric S Yuan
+Eric Slifka
+Eric T Steigerwalt
+Eric W Gerstenberg
+Erik Fyrwald
+Erik Gershwind
+Erik Nordstrom
+Ernest Garcia III
+Ernie Herrman
+Eugene A Hall
+Eugene Bredow
+Evan Spiegel
+Ezra Yacob
+Fahmi Karam
+Fidji Simo
+Fran Horowitz
+Francisco J Leon
+Francois Locoh-Donou
+Frank A Lonegro
+Frank C Sullivan
+Frank H Laukien
+Frank Holding
+Frank M Svoboda
+Frederick J Holzgrefe III
+Fredric J Tomczyk
+G Mike Mikan
+Gabriel Tirador
+Gail Boudreaux
+Garrick Rochow
+Gary B Smith
+Gary C Bhojwani
+Gary D Burnison
+Gary Dickerson
+Gary G Friedman
+Gary Guthart
+Gavin Hattersley
+George Bobb III
+George C Freeman III
+George F Chappelle Jr
+George Holm
+George Kurian
+George Kurtz
+Gerald L Morgan
+Gerardo Norcia
+Gerben W Bakker
+Gerry P Smith
+Giel Rutten
+Gil West
+Giordano Albertazzi
+Glenn Fogel
+Glenn J Williams
+Glenn Sanford
+Gordon J Hardie
+Grant E Sims
+Greg Anderson
+Greg Smith
+Gregory Brown
+Gregory L Christopher
+Gregory Roberts
+Gunjan Kedia
+Gunner Smith
+H Michael Krimbill
+Hamid Akhavan
+Hamid Moghadam
+Hans Vestberg
+Harry Lawton III
+Harry Sideris
+Harvey M Schwartz
+Hassane El-Khoury
+Haviv Ilan
+Heath Sampson
+Heather Lavallee
+Heidi Petz
+Henry A Fernandez
+Hillary Super
+Hilton H Howell Jr
+Hock Tan
+Horacio Rozanski
+Ira D Robbins
+Ivan Tornos
+J Eric Evans
+J Kent Masters
+J Powell Brown
+Jacek Olczak
+Jack Fusco
+Jack Sinclair
+Jacob Thaysen
+James A Brock
+James Blackledge
+James Breuer
+James Burke
+James C Foster
+James C Grech
+James Conroy
+James Cracchiolo
+James Davis
+James F Risoleo
+James H Walter
+James Jim C Ryan III
+James Kelly
+James Quincey
+James S Hagedorn
+James Snee
+James Taiclet
+James W Lanning
+James Zallie
+Jamie Dimon
+Jamie Iannone
+Jamie Whisnant
+Jane Fraser
+Jared Isaacman
+Jason D Robins
+Jason Hollar
+Jason Lippert
+Jason Murray
+Jason P Wells
+Javier D Ferrer Fernandez
+Javier Rodriguez
+Jay Debertin
+Jay Geldmacher
+Jay L Schottenstein
+Jay Schmidt
+Jay Snowden
+Jayne Hrdlicka
+Jayshree Ullal
+Jean-Michel Ribieras
+Jeff Benck
+Jeff Liaw
+Jeff Miller
+Jeffrey B Guldner
+Jeffrey Harmening
+Jeffrey Lorberbaum
+Jeffrey Mezger
+Jeffrey N Simmons
+Jeffrey S Edwards
+Jeffrey Sprecher
+Jeffrey W Edwards
+Jennifer F Scanlon
+Jennifer Johnson
+Jennifer Parmentier
+Jennifer Rumsey
+Jennifer Witz
+Jensen Huang
+Jeremy Wensinger
+Jerry E Gahlhoff Jr
+Jesse Arenivas
+Jillian C Evanko
+Jim Anderson
+Jim DeVries
+Jim Farley
+Jim Jacobs
+Jim Rechtin
+Jim Vena
+Joanna Geraghty
+Joanne Crevoiserat
+Joaquin Duato
+Jochen Zeitz
+Joe Craft
+Joe Creed
+Joe Shoen
+Joe Zubretsky
+Joel D Anderson
+Joel Quadracci
+Joel Smejkal
+Joey Levin
+Joey Wat
+John B Gibson
+John Barrett
+John C Rademacher
+John C Roche
+John C Turner Jr
+John C. Griffith
+John Christmann IV
+John David Risher
+John Doyle
+John E Geller Jr
+John Engel
+John J Marchioni
+John Ketchum
+John L Plueger
+John May
+John Mengucci
+John Pfeifer
+John Plant
+John R Ciulla
+John Stankey
+John T C Lee
+John Turner
+John Venhuizen
+John W Lindsay
+John Wren
+John Zillmer
+Jon Farney
+Jon Moeller
+Jon Rousseau
+Jon Vander Ark
+Jonas Prising
+Jonathan H Weis
+Jonathan J Mazelsky
+Jonathan Jaffe
+Jonathan W Witter
+Joseph Bae
+Joseph D Margolis
+Joseph D Russell Jr
+Joseph Dominguez
+Joseph Fadool
+Joseph Ferraro
+Joseph Hinrichs
+Joseph M Hogan
+Joseph M Otting
+Joseph Nolan
+Joseph P Lacher Jr
+Joseph Wm Foran
+Joshua G Silverman
+José Mas
+Joyce Mullen
+Juan Andrade
+Juan Luciano
+Judith Marks
+Judy R McReynolds
+Julie Felss Masino
+Julie Schertell
+Jure Sola
+Justin Jude
+Kaes Van’t Hof
+Kamal Hathi
+Karen S Haller
+Karl G. Glassman
+Karla Lewis
+Karsanbhai
+Kathleen Johnson
+Kathleen Mazzarella
+Kathleen Quirk
+Kathy Warden
+Kecia Steelman
+Keith A Harvey
+Keith Allman
+Keith Demmings
+Keith E Smith
+Kelly Ortberg
+Ken Xie
+Kenneth A Vecchione
+Kenneth T Lane
+Kevin Akers
+Kevin Ali
+Kevin D Hochman
+Kevin Hogan
+Kevin Hourican
+Kevin J Wheeler
+Kevin Kwilinski
+Kevin Lobo
+Kevin M Freeman
+Kevin Murphy
+Kevin Plank
+Kevin R Sayer
+Kevin Roycraft
+Kevin S Blair
+Kevin Stein
 Kevin T Conroy
-Rex D Geveden
-Scott R Wells
+Khozema Z Shipchandler
+Kimberly A Fields
+Kimberly Dang
+Kimberly K Ryan
+Kirk Perry
+Kirt Walker
+Kristin A Dolan
+Kristin Peck
+Kurt J Ekert
+Kurt Wolf
+Kyle T Larkin
+Ladd Wilks
+Lane Riggs
+Larry Fink
+Laura Alber
+Laura Prieskorn
+Laurans A Mendelson
+Lauren Hobart
+Lawrence Coben
+Lawrence H Silber
+Lawson E Whiting
+Lee M Shavel
+Lee M Tillman
+Leon Topalian
+Leonard Schleifer
+Liam J Kelly
+Liam K Griffin
+Linda Rendle
+Lip-Bu Tan
+Lisa M Barton
+Lisa Su
+Lloyd Yates
+Lorenzo Simonelli
+Lori Flees
+Lori Koch
+Lorie L Tekorius
+Louis V Pinkham
+Lourenco Goncalves
+Luca Savi
+Lucinda M Baier
+Lynn M Bamford
+M Christopher Doyle
+M Keith Waddell
+Malcolm C Roberts
+Malcolm Wilson
+Marc Benioff
+Marc Bitzer
+Marc Casper
+Marc Miller
+Marc Rowan
+Marcus Lemonis
+Maria Black
+Maria M Pope
+Mario Harik
+Mark A Skonieczny
+Mark Bertolini
+Mark Costa
+Mark D Dankberg
+Mark D Morelli
+Mark E Seaton
+Mark Eubanks
+Mark George
+Mark Hoplamazian
+Mark J Parrell
+Mark J Tarr
+Mark Kowlzan
+Mark Lashier
+Mark Mac McFarland
+Mark Millett
+Mark Pearson
+Mark Penn
+Mark R Widmar
+Mark Rourke
+Mark S LaVigne
+Mark Shapiro
+Mark Smucker
+Mark Stewart
+Mark W Begor
+Mark Wang
+Mark Witkowski
+Mark Zuckerberg
+Martin J Lyons
+Martin Schroeter
+Martina Cheung
+Marvin Ellison
+Mary Barra
+Mary Dillon
+Mary E Kipp
+Maryann Mannen
+Matt Schroeder
+Matt Wilson
+Matthew Flannery
+Matthew J Cox
+Matthew J Murphy
+Matthew Lucey
+Matthew Meloy
+Matthew Missad
+Matthew Pine
+Matthew T Farrell
+Mehran Assadi
+Melissa D Smith
+Michael Arougheti
+Michael Bender
+Michael Cannon-Brookes
+Michael Creedon
+Michael Dastoor
+Michael Dell
+Michael Doss
+Michael E Reed
+Michael Fiddelke
+Michael Hsu
+Michael Hutchins
+Michael J Brown
+Michael J Happe
+Michael J Smith
+Michael Kasbar
+Michael L Baur
+Michael Mahoney
+Michael Manley
+Michael Miebach
+Michael Nierenberg
+Michael Nolan
+Michael O'Grady
+Michael O’Sullivan
+Michael Rapino
+Michael Rhodes
+Michael Shepherd
+Michael Spanos
+Michel Khalaf
+Michele Buck
+Michelle Gass
+Mick Beekhuizen
+Mick Farrell
+Mikael Bratt
+Mike Lyons
+Mike Simonds
+Mike Speetzen
+Mike Steib
+Mike Wirth
+Milan Galik
+Morris Goldfarb
+NADominic Ng
+Nate R Jorgensen
+Neil A Schrimsher
+Neil Hunn
+Neil M Ashe
+Nicholas I Fink
+Nicholas R Lower
+Nicholas T Pinchuk
+Nick DeIuliis
+Nick Jeffery
+Nicole A Kivisto
+Nikesh Arora
+Niko Lahanas
+Niraj Shah
+Noel Wallace
+Norman D Schwartz
+Octavio Marquez
+Ole Rosgaard
+Oliver G Brewer III
+Olivier Rabiller
+Olumide Soroye
+Oscar K Brown
+Owen D Thomas
+Padraig McDonnell
+Pat Roche
+Patrice Louvet
+Patricia Poppe
+Patrick Gallagher
+Patrick Kaltenbach
+Patrick M Shanahan
+Patrick Zalupski
+Patrick Zammit
+Paul A Lang
 Paul Bay
+Paul E Burdiss
+Paul Keel
+Paul M Rady
+Paul Romanowski
+Paul Sarvadi
+Paul Shoukry
+Pedro Pizarro
+Penny Pennington
+Perry A Sook
+Pete McPartland
+Peter Arduini
+Peter D Arvan
+Peter J Federico
+Peter Jackson
+Peter M Moglia
+Peter Matt
+Peter Quigley
+Peter R Huntsman
+Peter R Ingram
+Peter Stern
+Peter Zaffino
+Phebe Novakovic
+Philip Daniele III
+Philip Gallagher
+Philip Smith
+Philippe Krakowsky
+Phillip D Green
+Phillip D Yeager
+Phillippe Lord
+Pierce Norton II
+Pierre R Brondeau
+Prahlad Singh
+Preston Feight
+Priscilla Almodovar
+R Bruce McDonald
+R Howard Coker
+R Scott Rowe
+Rafael Santana
+Rainer Blair
+Rajesh Subramaniam
+Rajiv K Prasad
+Ralph Andretta
+Ralph LaRossa
+Rami Rahim
+Ramon Laguarta
+Randall C Stuewe
+Raul Fernandez
+Raul Nicholas Vargas Ochoa
+Ravi Kumar S
+Raymond E Scott
+René Jones
+Reshma Kewalramani
+Rex D Geveden
+Ricardo Cardenas
+Rich Handler
+Rich Steinmeier
+Richard Fairbank
+Richard G Kyle
+Richard Hayne
+Richard M Olson
+Richard P Dealy
+Richard S Swartz
+Richard Tobin
+Richard Wallace
+Rick L Wessel
+Rick Lanoha
+Rick McKenney
+Rick Wurster
+RJ Scaringe
+Rob Katz
+Rob Saltiel
+Rob Sharps
+Rob Vitale
+Robert A Bruggeworth
+Robert Antokol
+Robert Berkley
+Robert Blue
+Robert Bradway
+Robert D Lawler
+Robert E Price
+Robert Fauber
+Robert Ford
+Robert Frenzel
+Robert G Painter
+Robert Goldstein
+Robert Greenberg
+Robert H Schottenstein
+Robert Isom
+Robert J Sheedy Jr
+Robert Kyncl
+Robert L Reffkin
+Robert M Buck
+Robert M Davis
+Robert Martin
+Robert Mauch
+Robert Sanchez
+Robert Steer
+Robert Sulentic
+Robert Thomson
+Robert W Pittman
+Robin Vince
+Rodney Sacks
+Roger Crandall
+Roger Penske
+Roger W Jenkins
+Ron Gusek
+Ron Sargent
+Ron Vachris
+Ronald F Clarke
+Ronald J Kramer
+Ronald Kruszewski
+Ronald N Tutor
+Ronald P O'Hanley
+Russell Becker
+Russell Chip Childs
+Russell J Weiner
+Rusty Rush
+Ryals McMullian
+Ryan Cohen
+Ryan Lance
+Ryan M. Schneider
+Ryan Marshall
+Ryan McInerney
+Sachin S Lawande
+Safra Catz
+Samuel Hazen
+Sandy Douglas
+Sanjay Mehrotra
+Sara E Armbruster
+Sarah London
+Sasan Goodarzi
+Sassine Ghazi
+Satish Dhanasekaran
+Satya Nadella
+Saumya Sutaria
+Schnitzer Steel Industries
+Scott Boatwright
+Scott Donnelly
+Scott Doyle
+Scott H Baxter
+Scott Kirby
+Scott L Thompson
+Scott Lauber
+Scott R Wells
+Scott Richardson
+Scott Salmirs
+Scott Seu
+Scott Smith
+Scott Strazik
+Sean Connolly
+Sean D Keohane
+Sean Gamble
+Sean Kerins
+Sean Trauschke
+Shane O'Kelly
+Shankh Mitra
+Shantanu Narayen
+Shawn O'Connell
+Shelley Simpson
+Sherman Miller
+Sheryl Palmer
+Shyam K Reddy
+Shyam P Kambeyanda
+Simon D Campion
+Simon Meester
+Sivasankaran Somasundaram
+Sridhar Ramaswamy
+Stacy Kymes
+Stanley Bergman
+Stefan Larsson
+Stefano Caroti
+Stephan B Tanda
+Stephane Bancel
+Stephanie Ferris
+Stephen Bratspies
+Stephen Hemsley
+Stephen P MacMillan
+Stephen Schwarzman
+Stephen Spray
+Stephen Squeri
+Stephen Steinour
+Steve Henry
+Steve Sanghi
+Steven B Hedlund
+Steven Bandrowczak
+Steven Cahillane
+Steven H Gunby
+Steven J Moskowitz
+Steven Oakland
+Steven P Lawrence
+Steven Sell
+Steven Vondran
+Strauss Zelnick
+Stuart Bradie
+Stéphane de La Faverie
+Sue Nabi
+Sumit Roy
+Sumit Singh
+Sundar Pichai
+Sundaram Nagarajan
+Susan Morris
+Suzanne Foster
+Ted Decker
+Ted Pick
+Ted Sarandos
+Teresa Rasmussen
+Terrance Williams
+Terrence A Duffy
+Thasunda Brown Duckett
+Theodore S Hanson
+Thomas Bell
+Thomas E Gottwald
+Thomas E Jorden
+Thomas Edward McCormick
+Thomas Gayner
+Thomas Hill
+Thomas J Baltimore Jr
+Thomas J McInerney
+Thomas J Wilson
+Thomas L Ryan
+Thomas Long
+Thomas Palmer
+Thomas Polen
+Thomas Reeg
+Thomas V Taylor
+Tiang Yew Tan
+Tim Cook
+Tim Gerend
+Tim Go
+Tim Gokey
+Tim Hingtgen
+Tim Larson
+Tim O Shaughnessy
+Tim Wentworth
+Timothy Archer
+Timothy C Oliver
+Timothy Cawley
+Timothy Cofer
+Timothy J Donahue
+Timothy J McGrath
+Timothy John Fitzgerald
+Timothy Knavish
+Timothy M Sweeney
+Timothy NeCastro
+Timothy P Boyle
+Timothy S Crane
+Timothy Spence
+Toby Rice
+Tod Carpenter
+Todd Kelsey
+Todd Schneider
+Todd Vasos
+Tom Leighton
+Toni Townes-Whitley
+Tony Cheng
+Tony Helton
+Tony R Thene
+Tony Sarsam
+Tony Spring
+Tony Xu
+Tricia Griffith
+Troy Rudd
+Udit Batra
+Varun Krishna
+Vicente Reynal
+Vicki Hollub
+Vimal Kapur
+Vincent Pilette
+Vincent Roche
+Vincent Sorgi
+W Anthony Will
+W Bradley Southern
+Wade Davis
+Walker Martin
+Walter C. D. Carlson
+Warren Buffett
+Wendell Weeks
+William Andrew Hendricks Jr
+William C Stone
+William Demchak
+William E Waltz
+William Fehrman
+William Gifford
+William H Rogers Jr
+William Hornbuckle
+William J Christensen
+William Krueger
+William L Meaney
+William M Brown
+William McDermott
+William Monteleone
+William Nash
+William Newlands
+William Oplinger
+William Stengel II
+William T Dillard II
+Willie Chiang
+Winnie Park
+Ynon Kreiz
