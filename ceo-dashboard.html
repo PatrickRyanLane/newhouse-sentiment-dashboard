@@ -1,18 +1,24 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>CEO News Sentiment Dashboard</title>
+
+  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Papa Parse -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
   <style>
-    .th-sort { cursor:pointer; user-select:none }
-    .th-sort .arrow { opacity:.35; margin-left:.15rem }
-    .th-sort.active .arrow { opacity:1 }
-    .left { text-align:left; }
-    #trendWrap { height:22rem; }
+    .th-sort { cursor: pointer; user-select: none; }
+    .th-sort .arrows { margin-left:.35rem; display:inline-flex; gap:.15rem; opacity:.4 }
+    .th-sort.active .arrows { opacity:1 }
+    .th-sort .arrow { line-height:1; font-size:.8rem; opacity:.25 }
+    .th-sort .arrow.on { opacity:1 }
+    .name-cell { text-align:left !important; }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-900">
@@ -20,12 +26,8 @@
     <header class="mb-6">
       <h1 class="text-3xl font-bold">CEO News Sentiment Dashboard</h1>
       <p class="text-sm text-slate-600">
-        Sources:
-        <code>data_ceos/daily_counts.csv</code>,
-        <code>data_ceos/articles/YYYY-MM-DD.csv</code>,
-        <code>data/ceo_serps.csv</code>,
-        <code>data/ceo_boards.csv</code>,
-        <code>data/roster.csv</code>.
+        Shows the top Fortune 1000 CEOs by negative article count (per day), plus SERP sentiment & control.
+        Data: <code>data_ceos/daily_counts.csv</code>, <code>data/serps/ceo_serps.csv</code>, <code>data/roster.csv</code>, <code>data/ceo_boards.csv</code>.
       </p>
     </header>
 
@@ -37,7 +39,7 @@
       </div>
       <div>
         <label class="block text-sm font-medium mb-1">Filter CEOs</label>
-        <input id="filterInput" type="text" placeholder="Type to filter…" class="w-full border rounded-lg p-2" />
+        <input id="filterInput" type="text" placeholder="Type to filter…" class="w-full border rounded-lg p-2"/>
       </div>
       <div class="flex items-end">
         <button id="refreshBtn" class="px-3 py-2 rounded-lg bg-slate-900 text-white">Refresh</button>
@@ -51,11 +53,12 @@
         <div class="flex items-center gap-2 text-xs text-slate-600">
           <span id="trendInfo"></span>
           <span id="trendRange"></span>
-          <button id="trendPrev" class="px-2 py-1 border rounded" title="Older window">←</button>
-          <button id="trendNext" class="px-2 py-1 border rounded" title="Newer window">→</button>
+          <button id="trendPrev" class="px-2 py-1 border rounded" title="Older 30 days">←</button>
+          <button id="trendNext" class="px-2 py-1 border rounded" title="Newer 30 days">→</button>
         </div>
       </div>
-      <div id="trendWrap"><canvas id="trendChart"></canvas></div>
+      <p id="trendHint" class="text-sm text-slate-500 mb-2 hidden">Tip: select exactly 1 CEO to show their trend. With none selected, the Index average is shown.</p>
+      <div class="h-64"><canvas id="trendChart"></canvas></div>
     </section>
 
     <!-- Table -->
@@ -67,10 +70,35 @@
             <th class="p-3 text-left">CEO</th>
             <th class="p-3 text-left">Company</th>
             <th class="p-3 text-left">Theme</th>
-            <th class="p-3 text-left th-sort" data-sort="negNews">Negative News (%) <span class="arrow">▲▼</span></th>
-            <th class="p-3 text-left th-sort" data-sort="negSerp">Negative SERP (%) <span class="arrow">▲▼</span></th>
-            <th class="p-3 text-left th-sort" data-sort="ctrlSerp">SERP Control (%) <span class="arrow">▲▼</span></th>
-            <th class="p-3 text-left th-sort" data-sort="risk">Risk <span class="arrow">▲▼</span></th>
+
+            <th id="thNegNews" class="p-3 text-left th-sort">Negative News (%)
+              <span class="arrows">
+                <span class="arrow" data-dir="asc">▲</span>
+                <span class="arrow on" data-dir="desc">▼</span>
+              </span>
+            </th>
+
+            <th id="thNegSerp" class="p-3 text-left th-sort">Negative SERP (%)
+              <span class="arrows">
+                <span class="arrow" data-dir="asc">▲</span>
+                <span class="arrow" data-dir="desc">▼</span>
+              </span>
+            </th>
+
+            <th id="thControl" class="p-3 text-left th-sort">SERP Control (%)
+              <span class="arrows">
+                <span class="arrow" data-dir="asc">▲</span>
+                <span class="arrow" data-dir="desc">▼</span>
+              </span>
+            </th>
+
+            <th id="thRisk" class="p-3 text-left th-sort">Risk
+              <span class="arrows">
+                <span class="arrow" data-dir="asc">▲</span>
+                <span class="arrow" data-dir="desc">▼</span>
+              </span>
+            </th>
+
             <th class="p-3 text-left">Headlines</th>
             <th class="p-3 text-left">SERP</th>
             <th class="p-3 text-left">Boards</th>
@@ -79,12 +107,13 @@
         <tbody id="tableBody"></tbody>
       </table>
 
-      <div class="flex justify-end gap-2 mt-3">
-        <button id="prevPage" class="px-3 py-1.5 border rounded">Prev</button>
-        <button id="nextPage" class="px-3 py-1.5 border rounded">Next</button>
+      <div class="flex items-center justify-between mt-3">
+        <p id="status" class="text-xs text-slate-500"></p>
+        <div class="flex items-center gap-2">
+          <button id="prevPage" class="px-3 py-1.5 border rounded">Prev</button>
+          <button id="nextPage" class="px-3 py-1.5 border rounded">Next</button>
+        </div>
       </div>
-
-      <p id="status" class="text-xs text-slate-500 mt-2"></p>
     </section>
   </div>
 
@@ -95,575 +124,513 @@
       <div class="w-full max-w-3xl bg-white rounded-2xl shadow-xl overflow-hidden">
         <div class="flex items-center justify-between p-4 border-b">
           <div>
-            <h3 id="modalTitle" class="text-xl font-bold"></h3>
+            <h3 id="modalTitle" class="text-xl font-bold">Details</h3>
             <p id="modalSubtitle" class="text-sm text-slate-600"></p>
           </div>
           <button id="modalClose" class="px-3 py-1.5 rounded-lg border">Close</button>
         </div>
-        <div id="modalBody" class="max-h-[70vh] overflow-y-auto p-4"></div>
+        <div id="modalBody" class="max-h-[70vh] overflow-y-auto p-4">
+          <p class="text-sm text-slate-500">Loading…</p>
+        </div>
       </div>
     </div>
   </div>
 
 <script>
 (function(){
-  // ===== PATHS =====
-  const CSV_COUNTS   = 'data_ceos/daily_counts.csv';
-  const CSV_ARTICLES = (date)=>`data_ceos/articles/${date}.csv`;
-  const CSV_SERPS    = 'data/ceo_serps.csv';
-  const CSV_BOARDS   = 'data/ceo_boards.csv';
-  const CSV_ROSTER   = 'data/roster.csv'; // for CEO → Sector mapping
+  // ---------- Paths ----------
+  const COUNTS_CSV = 'data_ceos/daily_counts.csv';
+  const SERPS_CSV  = 'data/serps/ceo_serps.csv';
+  const ROSTER_CSV = 'data/roster.csv';
+  const CEO_COMP_CSV = 'ceo_companies.csv'; // fallback
+  const BOARDS_CSV = 'data/ceo_boards.csv';
+  const ARTICLES = (date) => `data_ceos/articles/${date}.csv`;
 
-  const GH_USER = 'jonas-sickler';
-  const GH_REPO = 'news-sentiment-dashboard';
-  const GH_PAGES_BASE = `https://${GH_USER}.github.io/${GH_REPO}/`;
-
-  // ===== DOM =====
-  const dateSelect = document.getElementById('dateSelect');
+  // ---------- DOM ----------
+  const dateSelect  = document.getElementById('dateSelect');
   const filterInput = document.getElementById('filterInput');
-  const refreshBtn = document.getElementById('refreshBtn');
-  const selectAll = document.getElementById('selectAll');
-  const tableBody = document.getElementById('tableBody');
-  const statusEl = document.getElementById('status');
+  const refreshBtn  = document.getElementById('refreshBtn');
+  const selectAll   = document.getElementById('selectAll');
+  const tableBody   = document.getElementById('tableBody');
+  const statusEl    = document.getElementById('status');
+  const prevPageBtn = document.getElementById('prevPage');
+  const nextPageBtn = document.getElementById('nextPage');
 
   const trendCanvas = document.getElementById('trendChart');
-  const trendInfo = document.getElementById('trendInfo');
-  const trendRange = document.getElementById('trendRange');
-  const trendPrev = document.getElementById('trendPrev');
-  const trendNext = document.getElementById('trendNext');
-  const TREND_WINDOW = 30;
-
-  const modalBackdrop = document.getElementById('modalBackdrop');
-  const modalTitle = document.getElementById('modalTitle');
-  const modalSubtitle = document.getElementById('modalSubtitle');
-  const modalBody = document.getElementById('modalBody');
-  const modalClose = document.getElementById('modalClose');
-
-  // ===== STATE =====
-  let allRows = [];           // daily counts
-  let serps = [];             // ceo_serps
-  let boards = [];            // ceo_boards
-  let ceoToSector = new Map();// CEO -> Sector
-  let companyToSector = new Map();// Company -> Sector
-
-  let currentDate = null;
-  let currentRows = [];
-  let selected = new Set();
-  let page = 0;
-  const PAGE_SIZE = 25;
-  let sortKey = 'negNews';
-  let sortDir = 'desc';
-
+  const trendInfo   = document.getElementById('trendInfo');
+  const trendRange  = document.getElementById('trendRange');
+  const trendPrev   = document.getElementById('trendPrev');
+  const trendNext   = document.getElementById('trendNext');
+  const trendHint   = document.getElementById('trendHint');
   let trendChart = null;
-  let trendCEO = null;
-  let trendPage = 0;
-  const articlesCache = {};
+  let trendPage = 0, TREND_WINDOW=30, trendCEO=null;
 
-  // ===== Helpers =====
-  const pct = (p,t)=> t ? Math.round((p/t)*100) : 0;
-  const asInt = (v)=> Number(v||0);
-  const fmtPct = (n)=> `${n}%`;
-  const uniq = (a)=> Array.from(new Set(a));
-  const norm = (s)=> String(s||'').normalize('NFKC').replace(/["']/g,'').replace(/\s+/g,' ').trim().toLowerCase();
-
-  function escapeHtml(s){ return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;'); }
-
-  function computeRisk(negSerpPct, ctrlPct){
-    if(negSerpPct > 0) return 'High';
-    if(negSerpPct === 0 && ctrlPct < 35) return 'Medium';
-    return 'Low';
-  }
-
-  function themeFromTitles(titles){
-    const stop = new Set(['the','a','an','of','for','to','in','on','at','by','with','from','as','and','or','but','is','are','was','were','be','been','being','this','that','ceo','company','inc','corp','co','ltd','plc','group','llc','lp','sa','news','today','says','said','report','reports','update','updates']);
-    const f=new Map();
-    const add=t=>{ if(!t) return; const k=t.toLowerCase(); if(stop.has(k)) return; f.set(k,(f.get(k)||0)+1); };
-    titles.forEach(t=>{
-      const base=String(t).split(' - ')[0];
-      const w=base.split(/\W+/).filter(Boolean);
-      for(let i=0;i<w.length;i++){
-        const w1=w[i]?.toLowerCase(); if(!w1||stop.has(w1)) continue;
-        add(w1);
-        const w2=w[i+1]?.toLowerCase(); if(w2&&!stop.has(w2)){
-          add(`${w1} ${w2}`);
-          const w3=w[i+2]?.toLowerCase(); if(w3&&!stop.has(w3)){
-            add(`${w1} ${w2} ${w3}`);
-          }
-        }
-      }
-    });
-    const arr=[...f.entries()].sort((a,b)=> b[1]-a[1] || a[0].length-a[0].length);
-    if(!arr.length) return 'None';
-    const [top,c]=arr[0];
-    if(top.includes(' ') && c>=2) return top;
-    const multi=arr.find(([k,n])=>k.includes(' ')&&n>=2);
-    if(multi) return multi[0];
-    return top;
-  }
-
-  // ===== Data fetch =====
-  async function fetchText(rel){
-    const urls=[new URL(rel,location.href).href, `${GH_PAGES_BASE}${rel}`];
-    for(const u of uniq(urls)){
-      try{
-        const r=await fetch(u,{cache:'no-store',mode:'cors'});
-        if(r.ok){ const t=await r.text(); if(t) return t; }
-      }catch(_){}
-    }
-    return '';
-  }
-
-  async function loadCounts(){
-    const t=await fetchText(CSV_COUNTS);
-    const parsed=Papa.parse(t,{header:true,dynamicTyping:true});
-    return (parsed.data||[]).map(r=>{
-      const o={}; for(const k in r){ if(!k) continue; o[String(k).replace(/^\ufeff/,'').trim().toLowerCase()]=r[k]; }
-      return o;
-    }).filter(r=> r.date && r.brand).map(r=>({
-      date:String(r.date),
-      ceo:String(r.brand),
-      company:String(r.company||r.alias||''),
-      total:asInt(r.total),
-      positive:asInt(r.positive),
-      neutral:asInt(r.neutral),
-      negative:asInt(r.negative),
-      theme:r.theme?String(r.theme):'None'
-    }));
-  }
-
-  async function loadSerps(){
-    const t=await fetchText(CSV_SERPS);
-    const parsed=Papa.parse(t,{header:true,dynamicTyping:true});
-    return (parsed.data||[]).map(r=>{
-      const o={}; for(const k in r){ if(!k) continue; o[String(k).replace(/^\ufeff/,'').trim().toLowerCase()]=r[k]; }
-      return o;
-    }).filter(r=> r.ceo || r.company).map(r=>({
-      ceo:String(r.ceo||''),
-      company:String(r.company||''),
-      title:String(r.title||''),
-      url:String(r.link||r.url||''),
-      snippet:String(r.snippet||''),
-      control:(String(r.control||'').toLowerCase()==='true' || String(r.control||'').toLowerCase()==='controlled'),
-      sentiment:String(r.sentiment||'').toLowerCase()
-    }));
-  }
-
-  async function loadBoards(){
-    const t=await fetchText(CSV_BOARDS);
-    const parsed=Papa.parse(t,{header:true,dynamicTyping:true});
-    return (parsed.data||[]).map(r=>{
-      const o={}; for(const k in r){ if(!k) continue; o[String(k).replace(/^\ufeff/,'').trim().toLowerCase()]=r[k]; }
-      return o;
-    }).filter(r=> r.ceo && (r.url || r.domain)).map(r=>({
-      ceo:String(r.ceo||''),
-      domain:String(r.domain||''),
-      url:String(r.url||'')
-    }));
-  }
-
-  async function loadRoster(){
-    const t=await fetchText(CSV_ROSTER);
-    const parsed=Papa.parse(t,{header:true,dynamicTyping:true});
-    const rows=(parsed.data||[]).map(r=>{
-      const o={}; for(const k in r){ if(!k) continue; o[String(k).replace(/^\ufeff/,'').trim().toLowerCase()]=r[k]; }
-      return o;
-    }).filter(r=> r.ceo || r.company);
-    ceoToSector.clear(); companyToSector.clear();
-    rows.forEach(r=>{
-      const ceo=String(r.ceo||''); const comp=String(r.company||''); const sec=String(r.sector||'');
-      if(ceo) ceoToSector.set(norm(ceo), sec);
-      if(comp) companyToSector.set(norm(comp), sec);
-    });
-  }
-
-  async function loadArticlesFor(date){
-    if(articlesCache[date]) return articlesCache[date];
-    const t=await fetchText(CSV_ARTICLES(date));
-    const parsed=Papa.parse(t,{header:true,dynamicTyping:false});
-    const rows=(parsed.data||[]).map(r=>{
-      const o={}; for(const k in r){ if(!k) continue; o[String(k).replace(/^\ufeff/,'').trim().toLowerCase()]=r[k]; }
-      const brand=String(o.brand||o.ceo||o.brand_name||o.canonical||o.company||'').trim();
-      const alias=String(o.alias_matched||o.alias||'').trim();
-      const url=String(o.url||o.link||'').trim();
-      let domain=String(o.domain||'').trim();
-      if(!domain&&url){ try{ domain=new URL(url).hostname; }catch{} }
-      return {
-        brand, alias,
-        title:String(o.title||o.headline||'').trim(),
-        url, domain,
-        sentiment:String(o.sentiment||o.label||'neutral').toLowerCase(),
-        published:String(o.published||o.date||o.datetime||'')
-      };
-    }).filter(r=> r.brand || r.alias);
-    articlesCache[date]=rows;
-    return rows;
-  }
-
-  // ===== Derivations =====
-  function buildDateOptions(){
-    const dates=[...new Set(allRows.map(r=>r.date))].sort();
-    dateSelect.innerHTML = dates.map(d=>`<option value="${d}">${d}</option>`).join('');
-    currentDate = dates[dates.length-1] || null;
-    if(currentDate) dateSelect.value=currentDate;
-  }
-
-  function serpAggFor(ceoName){
-    const key=norm(ceoName);
-    const rows=serps.filter(s=> norm(s.ceo)===key);
-    if(!rows.length) return {negPct:0, ctrlPct:0, rows:[]};
-    const total=rows.length;
-    const neg=rows.filter(r=> r.sentiment==='negative').length;
-    const ctrl=rows.filter(r=> r.control===true).length;
-    return {negPct:pct(neg,total), ctrlPct:pct(ctrl,total), rows};
-  }
-
-  function applySort(arr){
-    const get={
-      negNews:(r)=>r.negNewsPct,
-      negSerp:(r)=>r.negSerpPct,
-      ctrlSerp:(r)=>r.ctrlPct,
-      risk:(r)=>({'High':3,'Medium':2,'Low':1}[r.risk]||0)
-    }[sortKey] || ((r)=>r.negNewsPct);
-    arr.sort((a,b)=>{
-      const d=get(b)-get(a);
-      if(d!==0) return sortDir==='desc'? d : -d;
-      return a.ceo.localeCompare(b.ceo);
-    });
-  }
-
-  function paginate(arr){
-    const start=page*PAGE_SIZE;
-    return arr.slice(start,start+PAGE_SIZE);
-  }
-
-  // ===== Render table =====
-  function render(){
-    const needle=norm(filterInput.value);
-    const rows=allRows
-      .filter(r=> r.date===currentDate)
-      .filter(r=> !needle || norm(r.ceo).includes(needle) || norm(r.company).includes(needle))
-      .map(r=>{
-        const total=Math.max(1, r.total || (r.positive+r.neutral+r.negative));
-        const negNewsPct=pct(r.negative,total);
-        const sa=serpAggFor(r.ceo);
-        const risk=computeRisk(sa.negPct, sa.ctrlPct);
-        return {...r, negNewsPct, negSerpPct:sa.negPct, ctrlPct:sa.ctrlPct, risk};
-      });
-
-    applySort(rows);
-    const pageRows=paginate(rows);
-    currentRows=pageRows;
-
-    tableBody.innerHTML = pageRows.map(r=>{
-      const checked=selected.has(r.ceo)?'checked':'';
-      return `<tr class="border-t hover:bg-slate-50">
-        <td class="p-3"><input type="checkbox" data-ceo="${r.ceo.replace(/"/g,'&quot;')}" ${checked}></td>
-        <td class="p-3 left font-medium">${r.ceo}</td>
-        <td class="p-3 left">${r.company||''}</td>
-        <td class="p-3">${r.theme && r.theme!=='None' ? r.theme : 'None'}</td>
-        <td class="p-3">${fmtPct(r.negNewsPct)}</td>
-        <td class="p-3">${fmtPct(r.negSerpPct)}</td>
-        <td class="p-3">${fmtPct(r.ctrlPct)}</td>
-        <td class="p-3">${r.risk}</td>
-        <td class="p-3"><button class="px-2 py-1 border rounded" data-headlines="${r.ceo.replace(/"/g,'&quot;')}">View</button></td>
-        <td class="p-3"><button class="px-2 py-1 border rounded" data-serp="${r.ceo.replace(/"/g,'&quot;')}">View</button></td>
-        <td class="p-3"><button class="px-2 py-1 border rounded" data-boards="${r.ceo.replace(/"/g,'&quot;')}">View</button></td>
-      </tr>`;
-    }).join('');
-
-    statusEl.textContent = `${rows.length} CEOs for ${currentDate}. Page ${page+1} of ${Math.max(1, Math.ceil(rows.length/PAGE_SIZE))}.`;
-    attachTableHandlers();
-    updateTrend(); // important
-  }
-
-  function attachTableHandlers(){
-    tableBody.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
-      cb.addEventListener('change', ()=>{
-        const ceo=cb.getAttribute('data-ceo');
-        if(cb.checked) selected.add(ceo); else selected.delete(ceo);
-        updateTrend();
-      });
-    });
-    tableBody.querySelectorAll('[data-headlines]').forEach(b=> b.addEventListener('click',()=> showHeadlines(b.getAttribute('data-headlines'))));
-    tableBody.querySelectorAll('[data-serp]').forEach(b=> b.addEventListener('click',()=> showSerps(b.getAttribute('data-serp'))));
-    tableBody.querySelectorAll('[data-boards]').forEach(b=> b.addEventListener('click',()=> showBoards(b.getAttribute('data-boards'))));
-  }
-
-  // ===== Trend series (CEO / Sector / Index) =====
-  function allDatesSorted(){ return [...new Set(allRows.map(r=>r.date))].sort(); }
-
-  function seriesForCeo(ceo){
-    const dates=allDatesSorted();
-    const map=new Map(); allRows.forEach(r=>{ if(r.ceo===ceo) map.set(r.date,r); });
-    const pos=[],neu=[],neg=[];
-    for(const d of dates){
-      const r=map.get(d)||{positive:0,neutral:0,negative:0,total:0};
-      const t=Math.max(1, r.total || (r.positive+r.neutral+r.negative));
-      pos.push(pct(r.positive,t));
-      neu.push(pct(r.neutral,t));
-      neg.push(pct(r.negative,t));
-    }
-    return {dates,pos,neu,neg};
-  }
-
-  function sectorForCeo(ceo, company){
-    const s1 = ceoToSector.get(norm(ceo));
-    if(s1) return s1;
-    const s2 = companyToSector.get(norm(company||''));
-    return s2 || null;
-  }
-
-  function seriesForSector(sector){
-    const dates=allDatesSorted();
-    const pos=[],neu=[],neg=[];
-    for(const d of dates){
-      let P=0,N=0,NE=0,T=0;
-      // aggregate over all rows on that date whose sector matches
-      const dayRows = allRows.filter(r=> r.date===d);
-      dayRows.forEach(r=>{
-        const sec = sectorForCeo(r.ceo, r.company);
-        if(sec && sec===sector){
-          const t = r.total || (r.positive+r.neutral+r.negative);
-          P += r.positive; NE += r.neutral; N += r.negative; T += t;
-        }
-      });
-      const tt = Math.max(1,T);
-      pos.push(pct(P,tt));
-      neu.push(pct(NE,tt));
-      neg.push(pct(N,tt));
-    }
-    return {dates,pos,neu,neg};
-  }
-
-  function seriesForIndex(){
-    const dates=allDatesSorted();
-    const pos=[],neu=[],neg=[];
-    for(const d of dates){
-      const dayRows=allRows.filter(r=> r.date===d);
-      let P=0,N=0,NE=0,T=0;
-      dayRows.forEach(r=>{
-        const t=r.total || (r.positive+r.neutral+r.negative);
-        P += r.positive; NE += r.neutral; N += r.negative; T += t;
-      });
-      const tt=Math.max(1,T);
-      pos.push(pct(P,tt)); neu.push(pct(NE,tt)); neg.push(pct(N,tt));
-    }
-    return {dates,pos,neu,neg};
-  }
-
-  function updateTrend(){
-    let mode='ceo'; // 'ceo' | 'sector' | 'index'
-    let series=null;
-    let label='';
-
-    if(selected.size===1){
-      const ceo=[...selected][0];
-      series=seriesForCeo(ceo);
-      label=`CEO: ${ceo}`;
-      trendCEO = ceo;
-    } else if(selected.size===0){
-      // Use sector average of the first visible row's sector; fallback to index
-      if(currentRows.length){
-        const r=currentRows[0];
-        const sec=sectorForCeo(r.ceo, r.company);
-        if(sec){
-          mode='sector';
-          series=seriesForSector(sec);
-          label=`Sector: ${sec} (average)`;
-        }else{
-          mode='index';
-          series=seriesForIndex();
-          label='Index average';
-        }
-      }else{
-        mode='index';
-        series=seriesForIndex();
-        label='Index average';
-      }
-      trendCEO = null;
-    } else {
-      // multiple selected – show index to avoid confusion
-      mode='index';
-      series=seriesForIndex();
-      label='Index average';
-      trendCEO = null;
-    }
-
-    const total=series.dates.length;
-    const W=TREND_WINDOW;
-    const maxPage=Math.max(0, Math.ceil(total/W)-1);
-    if(trendPage>maxPage) trendPage=maxPage;
-    const end=Math.max(0,total - W*trendPage);
-    const start=Math.max(0,end - W);
-
-    const labels=series.dates.slice(start,end);
-    const pos=series.pos.slice(start,end);
-    const neu=series.neu.slice(start,end);
-    const neg=series.neg.slice(start,end);
-
-    trendInfo.textContent = label;
-    trendRange.textContent = labels.length ? ` | DATE: ${labels[0]} → ${labels[labels.length-1]}` : '';
-
-    const data={ labels, datasets:[
-      {label:'Positive', data:pos, backgroundColor:'#98c15b', stack:'sent'},
-      {label:'Neutral',  data:neu, backgroundColor:'#dae5e6', stack:'sent'},
-      {label:'Negative', data:neg, backgroundColor:'#ffb199', stack:'sent'}
-    ]};
-    const options={ responsive:true, maintainAspectRatio:false,
-      scales:{x:{stacked:true}, y:{stacked:true, beginAtZero:true, ticks:{callback:v=>v+'%'}}},
-      plugins:{legend:{position:'top'}}
-    };
-    if(trendChart) trendChart.destroy();
-    trendChart=new Chart(trendCanvas.getContext('2d'), {type:'bar', data, options});
-  }
-
-  trendPrev.addEventListener('click', ()=>{ trendPage+=1; updateTrend(); });
-  trendNext.addEventListener('click', ()=>{ trendPage=Math.max(0, trendPage-1); updateTrend(); });
-
-  // ===== Modals =====
+  // Modal
+  const modalBackdrop = document.getElementById('modalBackdrop');
+  const modalTitle    = document.getElementById('modalTitle');
+  const modalSubtitle = document.getElementById('modalSubtitle');
+  const modalBody     = document.getElementById('modalBody');
+  const modalClose    = document.getElementById('modalClose');
   function openModal(){ modalBackdrop.classList.remove('hidden'); }
   function closeModal(){ modalBackdrop.classList.add('hidden'); }
   modalClose.addEventListener('click', closeModal);
-  modalBackdrop.addEventListener('click', e=>{ if(e.target===modalBackdrop) closeModal(); });
+  modalBackdrop.addEventListener('click', (e)=>{ if(e.target===modalBackdrop) closeModal(); });
+  window.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeModal(); });
 
+  // ---------- State ----------
+  let allRows = [];            // daily_counts rows (every date)
+  let dates = [];              // sorted unique dates
+  let currentDate = null;
+  let rosterMap = new Map();   // CEO -> Company
+  let serpsByCeo = new Map();  // CEO -> [{title, url, snippet, control(bool), sentiment}]
+  let boardsByCeo = new Map(); // CEO -> [{domain,url}]
+  let metricsByCeo = new Map();// CEO -> {negSerpPct, controlPct}
+  let selected = new Set();    // selected CEO names
+  let page = 0, pageSize=25;
+  let sortKey = 'neg_news';    // neg_news | neg_serp | control | risk
+  let sortDir = 'desc';        // asc | desc
+  let filteredRows = [];       // rows for current date after filter text
+
+  // ---------- Utils ----------
+  function normKeys(row){
+    const o={}; for(const k in row){ o[String(k).trim().toLowerCase()] = row[k]; } return o;
+  }
+  const toPct = (num, den) => (!den?0: (num/den*100));
+  const pctStr = (v)=> `${Math.round(v)}%`;
+  const asBool = (v)=>{
+    const s=String(v??'').trim().toLowerCase();
+    if(['true','t','1','yes','y','controlled'].includes(s)) return true;
+    if(['false','f','0','no','n','uncontrolled'].includes(s)) return false;
+    return null;
+  };
+  function riskLabel(negSerpPct, controlPct){
+    if(negSerpPct>0) return 'High';
+    if(negSerpPct===0 && controlPct<35) return 'Medium';
+    return 'Low';
+  }
+  function textEq(a,b){ return String(a||'').trim().toLowerCase() === String(b||'').trim().toLowerCase(); }
+
+  // ---------- Loaders ----------
+  async function fetchCsv(path){
+    const url = path + (path.includes('?')?'&':'?') + '_=' + Date.now();
+    const r = await fetch(url, {cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const t = await r.text();
+    const p = Papa.parse(t, {header:true});
+    return (Array.isArray(p.data) ? p.data : []).map(normKeys);
+  }
+
+  async function loadRoster(){
+    try{
+      const rows = await fetchCsv(ROSTER_CSV); // expects headers: ceo, company
+      for(const r of rows){
+        const ceo = r['ceo'] || r['name'] || '';
+        const company = r['company'] || r['brand'] || '';
+        if(ceo) rosterMap.set(String(ceo), String(company));
+      }
+    }catch{
+      // fallback
+      try{
+        const rows = await fetchCsv(CEO_COMP_CSV); // headers: ceo, company
+        for(const r of rows){
+          const ceo = r['ceo'] || '';
+          const company = r['company'] || '';
+          if(ceo) rosterMap.set(String(ceo), String(company));
+        }
+      }catch{}
+    }
+  }
+
+  async function loadBoards(){
+    try{
+      const rows = await fetchCsv(BOARDS_CSV); // CEO, Company, URL, Domain
+      for(const r of rows){
+        const ceo = r['ceo']||'';
+        const domain = r['domain']||'';
+        const url = r['url']||'';
+        if(!ceo || !url) continue;
+        if(!boardsByCeo.has(ceo)) boardsByCeo.set(ceo, []);
+        boardsByCeo.get(ceo).push({domain,url});
+      }
+    }catch{}
+  }
+
+  async function loadSerps(){
+    metricsByCeo.clear(); serpsByCeo.clear();
+    try{
+      const rows = await fetchCsv(SERPS_CSV); // CEO, Company, Position, Title, Link, Snippet, Control, Sentiment
+      for(const r of rows){
+        const ceo = r['ceo'] || '';
+        if(!ceo) continue;
+        const control = asBool(r['control']);
+        const sentiment = (r['sentiment']||'').trim().toLowerCase(); // positive|neutral|negative
+        const item = {
+          title: r['title']||'',
+          url: r['link']||'',
+          snippet: r['snippet']||'',
+          control, sentiment
+        };
+        if(!serpsByCeo.has(ceo)) serpsByCeo.set(ceo, []);
+        serpsByCeo.get(ceo).push(item);
+      }
+      // Compute metrics
+      for(const [ceo, arr] of serpsByCeo){
+        const total = arr.length;
+        const neg = arr.filter(x=>x.sentiment==='negative').length;
+        const ctrl = arr.filter(x=>x.control===true).length;
+        metricsByCeo.set(ceo, {
+          negSerpPct: total? (neg/total*100) : 0,
+          controlPct: total? (ctrl/total*100) : 0
+        });
+      }
+    }catch(e){
+      console.error('SERPs load error', e);
+    }
+  }
+
+  async function loadCounts(){
+    const rows = await fetchCsv(COUNTS_CSV);
+    // Expected headers: date, brand(CEO), company?, total, positive, neutral, negative, theme
+    const good = rows.filter(r=> r.date && (r.brand || r.ceo));
+    allRows = good.map(r=>({
+      date: String(r.date),
+      ceo:  String(r.brand || r.ceo || ''),
+      company: String(r.company || rosterMap.get(String(r.brand || r.ceo || '')) || ''),
+      total: +(r.total||0),
+      positive: +(r.positive||0),
+      neutral:  +(r.neutral||0),
+      negative: +(r.negative||0),
+      theme: (r.theme ? String(r.theme) : 'None')
+    }));
+    dates = Array.from(new Set(allRows.map(r=>r.date))).sort();
+    currentDate = dates[dates.length-1] || null;
+    if(currentDate) dateSelect.value = currentDate;
+  }
+
+  // ---------- Trend series ----------
+  function seriesForCEO(ceo){
+    const byDate = new Map();
+    for(const r of allRows){ if(textEq(r.ceo,ceo)) byDate.set(r.date, r); }
+    const ds = dates.map(d=>{
+      const r = byDate.get(d) || {total:0,positive:0,neutral:0,negative:0};
+      const t = r.total||0;
+      return {
+        d,
+        pos: t? (r.positive/t*100):0,
+        neu: t? (r.neutral /t*100):0,
+        neg: t? (r.negative/t*100):0
+      };
+    });
+    return ds;
+  }
+  function seriesForIndex(){
+    // Weighted by totals across ALL CEOs each day
+    const byDate = new Map();
+    for(const d of dates){ byDate.set(d, {pos:0,neu:0,neg:0,tot:0}); }
+    for(const r of allRows){
+      const v = byDate.get(r.date);
+      if(!v) continue;
+      v.pos += r.positive; v.neu += r.neutral; v.neg += r.negative; v.tot += r.total;
+    }
+    const ds = dates.map(d=>{
+      const v = byDate.get(d) || {pos:0,neu:0,neg:0,tot:0};
+      const t = v.tot||0;
+      return {
+        d,
+        pos: t? (v.pos/t*100):0,
+        neu: t? (v.neu/t*100):0,
+        neg: t? (v.neg/t*100):0
+      };
+    });
+    return ds;
+  }
+
+  function drawTrend(){
+    let label='', dataSeries=null, mode='';
+    if(selected.size===1){
+      const ceo = [...selected][0];
+      dataSeries = seriesForCEO(ceo);
+      label = `CEO: ${ceo}`;
+      mode='ceo';
+      trendCEO = ceo;
+      trendHint.classList.add('hidden');
+    }else{
+      // None or multiple -> Index average
+      dataSeries = seriesForIndex();
+      label = 'Index average';
+      mode='index';
+      trendCEO = null;
+      trendHint.classList.remove('hidden');
+    }
+
+    const total = dataSeries.length;
+    const W = TREND_WINDOW;
+    const maxPage = Math.max(0, Math.ceil(total/W)-1);
+    if(trendPage>maxPage) trendPage=maxPage;
+    const end = Math.max(0, total - W*trendPage);
+    const start = Math.max(0, end - W);
+    const slice = dataSeries.slice(start,end);
+
+    trendInfo.textContent = (mode==='index') ? `Index average` : label;
+    trendRange.textContent = slice.length? ` | DATE: ${slice[0].d} → ${slice[slice.length-1].d}` : '';
+
+    const labels = slice.map(x=>x.d);
+    const pos = slice.map(x=>+x.pos.toFixed(1));
+    const neu = slice.map(x=>+x.neu.toFixed(1));
+    const neg = slice.map(x=>+x.neg.toFixed(1));
+
+    const data = {
+      labels,
+      datasets: [
+        { label:'Positive', data: pos, backgroundColor:'#98c15b', stack:'s' },
+        { label:'Neutral',  data: neu, backgroundColor:'#dae5e6', stack:'s' },
+        { label:'Negative', data: neg, backgroundColor:'#ffb199', stack:'s' }
+      ]
+    };
+    const options = {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{position:'top'} ,
+        tooltip:{ callbacks:{ label:(ctx)=> `${ctx.dataset.label}: ${ctx.parsed.y}%` } } },
+      scales:{ x:{stacked:true, ticks:{display: labels.length<=7}},
+               y:{stacked:true, beginAtZero:true, ticks:{callback:(v)=> v+'%'}} }
+    };
+    if(trendChart) trendChart.destroy();
+    trendChart = new Chart(trendCanvas.getContext('2d'), {type:'bar', data, options});
+  }
+
+  // ---------- Table render ----------
+  function applyFilterAndSort(){
+    const q = (filterInput.value||'').trim().toLowerCase();
+    const rows = allRows.filter(r=> r.date===currentDate && r.ceo);
+    const dedup = new Map(); // one row per CEO (per date)
+    for(const r of rows){
+      if(q && !String(r.ceo).toLowerCase().includes(q)) continue;
+      // attach SERP metrics if available
+      const met = metricsByCeo.get(r.ceo) || {negSerpPct:0, controlPct:0};
+      const risk = riskLabel(Math.round(met.negSerpPct), Math.round(met.controlPct));
+      dedup.set(r.ceo, {...r, negSerpPct:met.negSerpPct, controlPct:met.controlPct, risk});
+    }
+    let arr = Array.from(dedup.values());
+
+    // sort
+    const cmp = {
+      neg_news: (a,b)=> ( (b.negative/(b.total||1)) - (a.negative/(a.total||1)) ),
+      neg_serp: (a,b)=> (b.negSerpPct - a.negSerpPct),
+      control:  (a,b)=> (b.controlPct - a.controlPct),
+      risk:     (a,b)=> (rankRisk(b.risk) - rankRisk(a.risk))
+    }[sortKey] || ((a,b)=>0);
+
+    arr.sort(cmp);
+    if(sortDir==='asc') arr.reverse();
+
+    filteredRows = arr;
+  }
+  function rankRisk(r){ return r==='High'?3 : r==='Medium'?2 : 1; }
+
+  function renderTable(){
+    applyFilterAndSort();
+
+    const start = page*pageSize;
+    const end = start + pageSize;
+    const slice = filteredRows.slice(start,end);
+
+    tableBody.innerHTML = slice.map((r,idx)=>{
+      const negPct = toPct(r.negative, r.total);
+      const negSerp = r.negSerpPct || 0;
+      const ctrl = r.controlPct || 0;
+      const risk = r.risk || 'Low';
+      return `<tr class="border-t hover:bg-slate-50">
+        <td class="p-3"><input type="checkbox" data-ceo="${r.ceo.replace(/\"/g,'&quot;')}" ${selected.has(r.ceo)?'checked':''}></td>
+        <td class="p-3 name-cell">${r.ceo}</td>
+        <td class="p-3">${r.company|| rosterMap.get(r.ceo) || ''}</td>
+        <td class="p-3 text-slate-700">${r.theme || 'None'}</td>
+
+        <td class="p-3" title="${r.negative}/${r.total}">${pctStr(negPct)}</td>
+        <td class="p-3" title="${Math.round(negSerp)}% negative SERPs">${pctStr(negSerp)}</td>
+        <td class="p-3" title="${Math.round(ctrl)}% controlled">${pctStr(ctrl)}</td>
+        <td class="p-3">${risk}</td>
+
+        <td class="p-3"><button class="px-2 py-1 border rounded" data-headlines="${r.ceo.replace(/\"/g,'&quot;')}">View</button></td>
+        <td class="p-3"><button class="px-2 py-1 border rounded" data-serp="${r.ceo.replace(/\"/g,'&quot;')}">View</button></td>
+        <td class="p-3"><button class="px-2 py-1 border rounded" data-boards="${r.ceo.replace(/\"/g,'&quot;')}">View</button></td>
+      </tr>`;
+    }).join('\n');
+
+    statusEl.textContent = `${filteredRows.length} CEOs for ${currentDate}. Page ${page+1} of ${Math.max(1, Math.ceil(filteredRows.length/pageSize))}.`;
+    attachRowHandlers();
+    updateSortHeaders();
+    drawTrend();
+  }
+
+  function updateSortHeaders(){
+    // Clear actives
+    document.querySelectorAll('.th-sort').forEach(th=>{
+      th.classList.remove('active');
+      th.querySelectorAll('.arrow').forEach(a=>a.classList.remove('on'));
+    });
+    const map = {neg_news:'#thNegNews', neg_serp:'#thNegSerp', control:'#thControl', risk:'#thRisk'};
+    const th = document.querySelector(map[sortKey]);
+    if(!th) return;
+    th.classList.add('active');
+    const sel = sortDir==='asc' ? '.arrow[data-dir="asc"]' : '.arrow[data-dir="desc"]';
+    const ar = th.querySelector(sel);
+    if(ar) ar.classList.add('on');
+  }
+
+  function attachRowHandlers(){
+    // selection
+    tableBody.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
+      cb.addEventListener('change', ()=>{
+        const ceo = cb.getAttribute('data-ceo');
+        if(cb.checked) selected.add(ceo); else selected.delete(ceo);
+        drawTrend();
+      });
+    });
+    // headlines
+    tableBody.querySelectorAll('button[data-headlines]').forEach(btn=>{
+      btn.addEventListener('click', ()=> showHeadlines(btn.getAttribute('data-headlines')));
+    });
+    // SERP
+    tableBody.querySelectorAll('button[data-serp]').forEach(btn=>{
+      btn.addEventListener('click', ()=> showSerps(btn.getAttribute('data-serp')));
+    });
+    // Boards
+    tableBody.querySelectorAll('button[data-boards]').forEach(btn=>{
+      btn.addEventListener('click', ()=> showBoards(btn.getAttribute('data-boards')));
+    });
+  }
+
+  // ---------- Modals ----------
   async function showHeadlines(ceo){
     modalTitle.textContent = `${ceo} — Headlines`;
     modalSubtitle.textContent = `Date: ${currentDate}`;
     modalBody.innerHTML = '<p class="text-sm text-slate-500">Loading…</p>';
     openModal();
 
-    const all = await loadArticlesFor(currentDate);
-    const key = norm(ceo);
-    const rows = all.filter(r => norm(r.brand)===key || norm(r.alias)===key);
+    let rows=[];
+    try{
+      const a = await fetchCsv(ARTICLES(currentDate));
+      // the per-day articles rows have brand column set to CEO (exact match)
+      rows = a.filter(r=> textEq(r['brand']||r['ceo']||'', ceo));
+      // prefer negative first, then by whatever order
+      rows.sort((x,y)=>{
+        const ord=(s)=> s==='negative'?2 : s==='neutral'?1 : 0;
+        return ord((y.sentiment||'').toLowerCase()) - ord((x.sentiment||'').toLowerCase());
+      });
+    }catch{}
 
     if(!rows.length){
-      const abs = `${GH_PAGES_BASE}${CSV_ARTICLES(currentDate)}`;
-      modalBody.innerHTML = `<p class="text-sm text-slate-600">No articles found for this CEO on this date.</p>
-        <p class="text-xs text-slate-500 mt-2">Debug CSV:
-        <a class="underline" target="_blank" rel="noopener" href="${abs}">${abs}</a></p>`;
+      modalBody.innerHTML = '<p class="text-sm text-slate-600">No articles found for this CEO on this date.</p>';
       return;
     }
-
-    rows.sort((a,b)=>{
-      const w = s => s==='negative'?2 : (s==='neutral'?1:0);
-      const d = w(b.sentiment)-w(a.sentiment);
-      if(d) return d;
-      return (Date.parse(b.published)||0) - (Date.parse(a.published)||0);
-    });
-
     modalBody.innerHTML = `
       <div class="space-y-3">
-        ${rows.map(r=>`
+        ${rows.map(r=>{
+          const url = r.url || r.link || '';
+          let domain = r.domain || '';
+          if(!domain && url){ try{ domain = new URL(url).hostname; }catch{} }
+          const s = (r.sentiment||'').toLowerCase();
+          const badge = s==='negative' ? 'bg-rose-100 text-rose-700' : s==='positive' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-700';
+          return `
           <div class="p-3 border rounded-xl hover:bg-slate-50">
             <div class="flex items-center justify-between gap-3">
-              <div class="text-xs text-slate-500">${r.domain||''}</div>
-              <span class="inline-block px-2 py-0.5 rounded-full text-xs ${r.sentiment==='negative'?'bg-rose-100 text-rose-700':(r.sentiment==='positive'?'bg-emerald-100 text-emerald-700':'bg-slate-100 text-slate-700')}">${r.sentiment}</span>
+              <div class="text-xs text-slate-500">${domain||''}</div>
+              <span class="inline-block px-2 py-0.5 rounded-full text-xs ${badge}">${s||'neutral'}</span>
             </div>
-            <a href="${r.url}" target="_blank" rel="noopener" class="block mt-1 font-medium underline">${escapeHtml(r.title)}</a>
-            ${r.published? `<div class="text-xs text-slate-500 mt-1">${r.published}</div>`:''}
-          </div>`).join('')}
+            <a href="${url}" target="_blank" rel="noopener" class="block mt-1 font-medium underline">${escapeHtml(r.title||'View article')}</a>
+          </div>`;
+        }).join('\n')}
       </div>`;
   }
 
-  function rowsForSerp(ceo){
-    const key=norm(ceo);
-    return serps.filter(r=> norm(r.ceo)===key);
-  }
-
-  async function showSerps(ceo){
-    const rows=rowsForSerp(ceo);
-    modalTitle.textContent = `${ceo} — SERP`;
-    modalSubtitle.textContent = '';
-    if(!rows.length){ openModal(); modalBody.innerHTML='<p class="text-sm text-slate-600">No SERP rows found.</p>'; return; }
-    const total=rows.length;
-    const neg=rows.filter(r=> r.sentiment==='negative').length;
-    const ctrl=rows.filter(r=> r.control===true).length;
-    const negPct=pct(neg,total), ctrlPct=pct(ctrl,total);
-    openModal();
-    modalBody.innerHTML = `
-      <div class="mb-2 text-sm text-slate-600">
-        Negative SERP: <strong>${fmtPct(negPct)}</strong> —
-        Control: <strong>${fmtPct(ctrlPct)}</strong> —
-        Total results: <strong>${total}</strong>
-      </div>
-      <div class="space-y-3">
-        ${rows.map(r=>`
-          <div class="p-3 border rounded-xl hover:bg-slate-50">
-            <div class="flex items-center justify-between gap-3">
-              <div class="text-xs text-slate-500">${new URL(r.url).hostname}</div>
-              <div class="flex items-center gap-2 text-xs">
-                <span class="inline-block px-2 py-0.5 rounded-full ${r.control?'bg-emerald-100 text-emerald-700':'bg-rose-100 text-rose-700'}">${r.control?'controlled':'uncontrolled'}</span>
-                <span class="inline-block px-2 py-0.5 rounded-full ${r.sentiment==='negative'?'bg-rose-100 text-rose-700':(r.sentiment==='positive'?'bg-emerald-100 text-emerald-700':'bg-slate-100 text-slate-700')}">${r.sentiment}</span>
-              </div>
-            </div>
-            <a href="${r.url}" target="_blank" rel="noopener" class="block mt-1 font-medium underline">${escapeHtml(r.title)}</a>
-            ${r.snippet? `<div class="text-xs text-slate-600 mt-1">${escapeHtml(r.snippet)}</div>`:''}
-          </div>`).join('')}
-      </div>`;
-  }
-
-  async function showBoards(ceo){
-    const key=norm(ceo);
-    const rows=boards.filter(b=> norm(b.ceo)===key);
-    modalTitle.textContent = `${ceo} — Active Boards`;
-    modalSubtitle.textContent = '';
-    openModal();
-    if(!rows.length){ modalBody.innerHTML='<p class="text-sm text-slate-600">No board memberships found.</p>'; return; }
-    modalBody.innerHTML = `
-      <div class="space-y-4">
-        ${rows.map(r=>`
-          <div class="p-3 border rounded-xl">
-            <div class="text-base font-semibold">${escapeHtml(r.domain || new URL(r.url).hostname)}</div>
-            <a class="block mt-1 underline" target="_blank" rel="noopener" href="${r.url}">${r.url}</a>
-          </div>
-        `).join('')}
-      </div>`;
-  }
-
-  // ===== Sorting / Paging =====
-  document.querySelectorAll('.th-sort').forEach(th=>{
-    th.addEventListener('click', ()=>{
-      const k=th.getAttribute('data-sort');
-      if(sortKey===k) sortDir=(sortDir==='desc'?'asc':'desc');
-      else { sortKey=k; sortDir='desc'; }
-      document.querySelectorAll('.th-sort').forEach(x=>x.classList.remove('active'));
-      th.classList.add('active');
-      page=0; render();
-    });
-  });
-  document.getElementById('prevPage').addEventListener('click', ()=>{ if(page>0){ page--; render(); } });
-  document.getElementById('nextPage').addEventListener('click', ()=>{
-    const rows=allRows.filter(r=> r.date===currentDate);
-    const pages=Math.max(1, Math.ceil(rows.length/PAGE_SIZE));
-    if(page<pages-1){ page++; render(); }
-  });
-
-  // ===== Controls =====
-  dateSelect.addEventListener('change', ()=>{ currentDate=dateSelect.value; page=0; selected.clear(); render(); });
-  filterInput.addEventListener('input', ()=>{ page=0; render(); });
-  refreshBtn.addEventListener('click', loadAllAndRender);
-  selectAll.addEventListener('change', ()=>{
-    if(selectAll.checked) currentRows.forEach(r=> selected.add(r.ceo));
-    else selected.clear();
-    render();
-  });
-
-  // ===== Boot =====
-  async function loadAllAndRender(){
-    statusEl.textContent='Loading…';
-    try{
-      [allRows, serps, boards] = await Promise.all([loadCounts(), loadSerps(), loadBoards()]);
-      await loadRoster(); // sector mapping
-      buildDateOptions();
-      page=0; selected.clear();
-      render();
-      statusEl.textContent='Ready.';
-    }catch(e){
-      console.error(e);
-      statusEl.textContent='Failed to load data.';
+  function showSerps(ceo){
+    const list = serpsByCeo.get(ceo)||[];
+    modalTitle.textContent = `${ceo} — SERP results`;
+    modalSubtitle.textContent = `${list.length} results`;
+    if(!list.length){
+      modalBody.innerHTML = '<p class="text-sm text-slate-600">No SERP rows found for this CEO.</p>';
+      openModal(); return;
     }
+    const itemHtml = list.map(r=>{
+      const s=(r.sentiment||'neutral'); const c=r.control===true?'controlled':(r.control===false?'uncontrolled':'?');
+      const sBadge = s==='negative'?'bg-rose-100 text-rose-700': s==='positive'?'bg-emerald-100 text-emerald-700':'bg-slate-100 text-slate-700';
+      const cBadge = r.control===true?'bg-sky-100 text-sky-700': r.control===false?'bg-amber-100 text-amber-700':'bg-slate-100 text-slate-700';
+      return `<div class="p-3 border rounded-xl hover:bg-slate-50">
+        <div class="flex items-center gap-2 text-xs mb-1">
+          <span class="inline-block px-2 py-0.5 rounded-full ${sBadge}">${s}</span>
+          <span class="inline-block px-2 py-0.5 rounded-full ${cBadge}">${c}</span>
+        </div>
+        <a href="${r.url}" target="_blank" rel="noopener" class="font-medium underline">${escapeHtml(r.title||r.url||'Open')}</a>
+        ${r.snippet? `<div class="text-xs text-slate-600 mt-1">${escapeHtml(r.snippet)}</div>`:''}
+      </div>`;
+    }).join('\n');
+    modalBody.innerHTML = `<div class="space-y-3">${itemHtml}</div>`;
+    openModal();
   }
-  loadAllAndRender();
+
+  function showBoards(ceo){
+    const list = boardsByCeo.get(ceo)||[];
+    modalTitle.textContent = `${ceo} — Active Boards`;
+    modalSubtitle.textContent = list.length ? '' : '';
+    if(!list.length){
+      modalBody.innerHTML = `<p class="text-sm text-slate-600">No board memberships found for ${escapeHtml(ceo)}.</p>`;
+      openModal(); return;
+    }
+    const h = list.map(r=>`
+      <div class="p-3 border rounded-xl">
+        <div class="text-base font-semibold mb-1">${escapeHtml(r.domain||'')}</div>
+        <a class="block text-sm underline" href="${r.url}" target="_blank" rel="noopener">${escapeHtml(r.url||'Open')}</a>
+      </div>`).join('\n');
+    modalBody.innerHTML = `<div class="space-y-3">${h}</div>`;
+    openModal();
+  }
+
+  // ---------- Events ----------
+  dateSelect.addEventListener('change', ()=>{ currentDate = dateSelect.value; page=0; renderTable(); });
+  filterInput.addEventListener('input', ()=>{ page=0; renderTable(); });
+  refreshBtn.addEventListener('click', async()=>{
+    await Promise.all([loadSerps(), loadBoards(), loadCounts()]);
+    page=0; renderTable();
+  });
+  selectAll.addEventListener('change', ()=>{
+    if(selectAll.checked){ filteredRows.forEach((r,i)=>{ if(i>=page*pageSize && i<(page+1)*pageSize) selected.add(r.ceo); }); }
+    else selected.clear();
+    renderTable();
+  });
+  prevPageBtn.addEventListener('click', ()=>{ if(page>0){ page--; renderTable(); }});
+  nextPageBtn.addEventListener('click', ()=>{ if((page+1)*pageSize < filteredRows.length){ page++; renderTable(); }});
+
+  trendPrev.addEventListener('click', ()=>{ trendPage+=1; drawTrend(); });
+  trendNext.addEventListener('click', ()=>{ trendPage=Math.max(0, trendPage-1); drawTrend(); });
+
+  // Sorting handlers
+  document.getElementById('thNegNews').addEventListener('click', ()=>{ toggleSort('neg_news'); });
+  document.getElementById('thNegSerp').addEventListener('click', ()=>{ toggleSort('neg_serp'); });
+  document.getElementById('thControl').addEventListener('click', ()=>{ toggleSort('control'); });
+  document.getElementById('thRisk').addEventListener('click', ()=>{ toggleSort('risk'); });
+
+  function toggleSort(key){
+    if(sortKey===key){ sortDir = (sortDir==='asc'?'desc':'asc'); }
+    else { sortKey=key; sortDir='desc'; }
+    page=0; renderTable();
+  }
+
+  // ---------- Init ----------
+  function escapeHtml(s){ return String(s||'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'","&#39;'); }
+
+  async function init(){
+    // populate date options later after counts load
+    await loadRoster();
+    await Promise.all([loadSerps(), loadBoards()]);
+    await loadCounts();
+
+    // date choices
+    dateSelect.innerHTML = dates.map(d=>`<option value="${d}">${d}</option>`).join('\n');
+    if(currentDate) dateSelect.value = currentDate;
+
+    renderTable();
+  }
+  init();
 })();
 </script>
 </body>
