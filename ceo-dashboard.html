@@ -461,13 +461,26 @@
       series=seriesForCeo(ceo);
       label=`CEO: ${ceo}`;
       trendCEO = ceo;
-    } else if (selected.size===0){
-  // Show Index average when nothing is selected
-  mode = 'index';
-  series = seriesForIndex();
-  label = 'Index average';
-  trendCEO = null;
-}
+    } else if(selected.size===0){
+      // Use sector average of the first visible row's sector; fallback to index
+      if(currentRows.length){
+        const r=currentRows[0];
+        const sec=sectorForCeo(r.ceo, r.company);
+        if(sec){
+          mode='sector';
+          series=seriesForSector(sec);
+          label=`Sector: ${sec} (average)`;
+        }else{
+          mode='index';
+          series=seriesForIndex();
+          label='Index average';
+        }
+      }else{
+        mode='index';
+        series=seriesForIndex();
+        label='Index average';
+      }
+      trendCEO = null;
     } else {
       // multiple selected – show index to avoid confusion
       mode='index';
