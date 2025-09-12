@@ -38,7 +38,7 @@ John Stankey,AT&T,att.com,T,Telecommunications
 Michael Hutchins,Freddie Mac,freddiemac.com,FMCC,Financials
 Jim Rechtin,Humana,humana.com,HUM,Health Care
 Ted Pick,Morgan Stanley,morganstanley.com,MS,Financials
-Michael Fiddelke,Target,target.com,TGT,Retailing
+Michael Fiddelke,Target Corporation,target.com,TGT,Retailing
 Philip Smith,StoneX Group,stonex.com,SNEX,Financials
 Elon Musk,Tesla,tesla.com,TSLA,Motor Vehicles & Parts
 Michael Dell,Dell Technologies,delltechnologies.com,DELL,Technology
@@ -990,6 +990,7 @@ Kevin T Conroy,Exact Sciences,exactsciences.com,EXAS,Health Care
 Rex D Geveden,BWX Technologies,bwxt.com,BWXT,Aerospace & Defense
 Scott R Wells,Clear Channel Outdoor Hldgs,clearchanneloutdoor.com,CCO,Business Services
 Paul Bay,Ingram Micro,ingrammicro.com,INGM,Telecommunications
+
 
 
 
