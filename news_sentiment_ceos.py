@@ -23,6 +23,7 @@ import os, time, re
 from datetime import datetime, timedelta, date
 from zoneinfo import ZoneInfo
 from urllib.parse import urlencode, urlparse
+from typing import Dict
 
 import feedparser
 import pandas as pd
@@ -76,14 +77,15 @@ BLOCKED_DOMAINS = {
 def today_str() -> str:
     return datetime.now(ZoneInfo("US/Eastern")).strftime("%Y-%m-%d")
 
-def load_ceo_company_map(path: str) -> dict:
+def load_ceo_company_map(path: str) -> Dict[str, str]:
     """Read ceo_aliases.csv (brand=CEO, alias=Company) -> {CEO: Company}"""
     if not os.path.exists(path):
         return {}
-    df = pd.read_csv(path)
-    return {str(row.get("brand", "")).strip(): str(row.get("alias", "")).strip() 
-            for _, row in df.iterrows() 
-            if str(row.get("brand", "")).strip() and str(row.get("alias", "")).strip()}
+    df = pd.read_csv(path, header=0, names=['brand', 'alias'])
+    df = df.dropna(subset=['brand', 'alias'])
+    df["brand"] = df["brand"].str.strip()
+    df["alias"] = df["alias"].str.strip()
+    return df.set_index('brand')['alias'].to_dict()
 
 def google_news_rss_url(query: str) -> str:
     base = "https://news.google.com/rss/search"
@@ -212,79 +214,81 @@ def purge_old_files():
 
     # Prune daily_counts.csv
     if os.path.exists(COUNTS_CSV):
-        df = pd.read_csv(COUNTS_CSV)
-        if not df.empty:
-            original_rows = len(df)
-            df = df[pd.to_datetime(df["date"]).dt.strftime("%Y-%m-%d") >= cutoff_date]
-            if len(df) < original_rows:
-                df.to_csv(COUNTS_CSV, index=False)
+        try:
+            df = pd.read_csv(COUNTS_CSV)
+            if not df.empty:
+                original_rows = len(df)
+                df = df[pd.to_datetime(df["date"]).dt.strftime("%Y-%m-%d") >= cutoff_date]
+                if len(df) < original_rows:
+                    df.to_csv(COUNTS_CSV, index=False)
+        except pd.errors.EmptyDataError:
+            print(f"Warning: {COUNTS_CSV} is empty.")
+        except Exception as e:
+            print(f"Error processing {COUNTS_CSV}: {e}")
 
 # ------------------ Main ------------------
 
-def process_ceo(ceo: str, company: str, today: str) -> tuple[pd.DataFrame, pd.Series]:
-    query = f'"{ceo}" "{company}"'
-    items = fetch_items_for_query(query, MAX_ITEMS_PER_QUERY)
-    if not items:
-        return pd.DataFrame(), pd.Series()
+def process_ceo_group(ceo_df: pd.DataFrame, today: str) -> tuple[pd.DataFrame, pd.DataFrame]:
+    all_articles = []
+    for ceo, company in ceo_df.itertuples(index=False):
+        query = f'"{ceo}" "{company}"'
+        items = fetch_items_for_query(query, MAX_ITEMS_PER_QUERY)
+        if items:
+            articles_df = pd.DataFrame(items)
+            articles_df["brand"] = ceo
+            articles_df["company"] = company
+            all_articles.append(articles_df)
+        time.sleep(REQUEST_PAUSE_SEC)
 
-    articles_df = pd.DataFrame(items)
-    articles_df = dedup_by_title_domain(articles_df)
+    if not all_articles:
+        return pd.DataFrame(), pd.DataFrame()
 
-    articles_df["date"] = today
-    articles_df["brand"] = ceo
-    articles_df["company"] = company
-    articles_df["sentiment"] = articles_df["title"].apply(label_sentiment)
+    # Combine, dedup, and analyze
+    articles = pd.concat(all_articles, ignore_index=True)
+    articles = dedup_by_title_domain(articles)
+    articles["date"] = today
+    articles["sentiment"] = articles["title"].apply(label_sentiment)
 
-    neg_titles = articles_df[articles_df["sentiment"] == "negative"]["title"].tolist()
+    # Create counts
+    counts = articles.groupby(["brand", "company"]).agg(
+        total=("sentiment", "size"),
+        positive=("sentiment", lambda s: (s == "positive")).sum(),
+        neutral=("sentiment", lambda s: (s == "neutral")).sum(),
+        negative=("sentiment", lambda s: (s == "negative")).sum(),
+    ).reset_index()
+
+    # Add themes
+    neg_titles = articles[articles["sentiment"] == "negative"]
+    themes = neg_titles.groupby(["brand", "company"])["title"].apply(list).reset_index(name="titles")
+    themes["theme"] = themes.apply(lambda row: theme_from_negatives(row["titles"], row["brand"], row["company"] ), axis=1)
     
-    sent_counts = articles_df["sentiment"].value_counts()
+    counts = counts.merge(themes[["brand", "company", "theme"]], on=["brand", "company"], how="left").fillna({"theme": "None"})
+    counts["date"] = today
 
-    counts_row = pd.Series({
-        "date": today,
-        "brand": ceo,
-        "company": company,
-        "total": len(articles_df),
-        "positive": sent_counts.get("positive", 0),
-        "neutral": sent_counts.get("neutral", 0),
-        "negative": sent_counts.get("negative", 0),
-        "theme": theme_from_negatives(neg_titles, ceo=ceo, company=company),
-    })
-
-    return articles_df, counts_row
+    return articles, counts
 
 def main():
     print("=== CEO Sentiment (improved themes) : start ===")
     ensure_dirs()
     purge_old_files()
 
-    ceo_to_company = load_ceo_company_map(ALIASES_CSV)
-    if not ceo_to_company:
+    ceo_map = load_ceo_company_map(ALIASES_CSV)
+    if not ceo_map:
         raise SystemExit(f"No rows found in {ALIASES_CSV}. Expected header 'brand,alias' with alias=Company.")
 
     today = today_str()
-    all_articles = []
-    all_counts = []
+    ceo_df = pd.DataFrame(list(ceo_map.items()), columns=["brand", "company"])
 
-    for i, (ceo, company) in enumerate(ceo_to_company.items()):
-        articles_df, counts_row = process_ceo(ceo, company, today)
-        if not articles_df.empty:
-            all_articles.append(articles_df)
-        if not counts_row.empty:
-            all_counts.append(counts_row)
-
-        if i < len(ceo_to_company) - 1:
-            time.sleep(REQUEST_PAUSE_SEC)
+    articles_df, counts_df = process_ceo_group(ceo_df, today)
 
     # Write articles
-    if all_articles:
-        articles_df = pd.concat(all_articles, ignore_index=True)
+    if not articles_df.empty:
         daily_articles_path = os.path.join(ARTICLES_DIR, f"{today}.csv")
         articles_df.to_csv(daily_articles_path, index=False)
         print(f"Wrote {len(articles_df)} articles -> {daily_articles_path}")
 
     # Upsert counts
-    if all_counts:
-        counts_df = pd.DataFrame(all_counts)
+    if not counts_df.empty:
         if os.path.exists(COUNTS_CSV):
             old_counts_df = pd.read_csv(COUNTS_CSV)
             old_counts_df = old_counts_df[old_counts_df["date"] != today]
