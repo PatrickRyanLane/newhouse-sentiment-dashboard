@@ -131,8 +131,8 @@ def label_sentiment(title: str) -> str:
         return "negative"
     return "neutral"
 
-def dedup_by_title_domain(items: list[dict]) -> list[dict]:
-    return list({(x["title"], x["domain"]): x for x in items}.values())
+def dedup_by_title_domain(items: pd.DataFrame) -> pd.DataFrame:
+    return items.drop_duplicates(subset=["title", "domain"])
 
 def clean_for_theme(s: str) -> str:
     s = s.lower()
@@ -141,7 +141,7 @@ def clean_for_theme(s: str) -> str:
     return s
 
 def tokens_from(s: str) -> set[str]:
-    return set(re.findall(r"[a-zA-Z][a-zA-Z\-']+", (s or "").lower()))
+    return set(re.findall(r"[a-zA-Z][a-zA-Z-']+", (s or "").lower()))
 
 def best_phrase_from(docs: list[str], stopwords: set[str], ngram_range=(2,3), min_df=2) -> str | None:
     """Return top phrase or None."""
@@ -202,12 +202,13 @@ def purge_old_files():
     cutoff_date = (date.today() - timedelta(days=PURGE_OLDER_THAN_DAYS)).isoformat()
 
     # Purge article files
-    for name in os.listdir(ARTICLES_DIR):
-        if name.endswith(".csv") and name.replace(".csv", "") < cutoff_date:
-            try:
-                os.remove(os.path.join(ARTICLES_DIR, name))
-            except OSError as e:
-                print(f"Error removing file {name}: {e}")
+    if os.path.exists(ARTICLES_DIR):
+        for name in os.listdir(ARTICLES_DIR):
+            if name.endswith(".csv") and name.replace(".csv", "") < cutoff_date:
+                try:
+                    os.remove(os.path.join(ARTICLES_DIR, name))
+                except OSError as e:
+                    print(f"Error removing file {name}: {e}")
 
     # Prune daily_counts.csv
     if os.path.exists(COUNTS_CSV):
@@ -220,40 +221,36 @@ def purge_old_files():
 
 # ------------------ Main ------------------
 
-def process_ceo(ceo: str, company: str, today: str) -> tuple[list[dict], dict]:
+def process_ceo(ceo: str, company: str, today: str) -> tuple[pd.DataFrame, pd.Series]:
     query = f'"{ceo}" "{company}"'
     items = fetch_items_for_query(query, MAX_ITEMS_PER_QUERY)
-    items = dedup_by_title_domain(items)
+    if not items:
+        return pd.DataFrame(), pd.Series()
 
-    sentiments = [label_sentiment(it["title"]) for it in items]
-    neg_titles = [it["title"] for it, sent in zip(items, sentiments) if sent == "negative"]
+    articles_df = pd.DataFrame(items)
+    articles_df = dedup_by_title_domain(articles_df)
 
-    article_rows = [
-        {
-            "date": today,
-            "brand": ceo,
-            "company": company,
-            "title": it["title"],
-            "url": it["link"],
-            "domain": it["domain"],
-            "sentiment": sent,
-            "published": it["published"],
-        }
-        for it, sent in zip(items, sentiments)
-    ]
+    articles_df["date"] = today
+    articles_df["brand"] = ceo
+    articles_df["company"] = company
+    articles_df["sentiment"] = articles_df["title"].apply(label_sentiment)
 
-    counts = pd.Series(sentiments).value_counts()
-    counts_row = {
+    neg_titles = articles_df[articles_df["sentiment"] == "negative"]["title"].tolist()
+    
+    sent_counts = articles_df["sentiment"].value_counts()
+
+    counts_row = pd.Series({
         "date": today,
         "brand": ceo,
         "company": company,
-        "total": len(items),
-        "positive": counts.get("positive", 0),
-        "neutral": counts.get("neutral", 0),
-        "negative": counts.get("negative", 0),
+        "total": len(articles_df),
+        "positive": sent_counts.get("positive", 0),
+        "neutral": sent_counts.get("neutral", 0),
+        "negative": sent_counts.get("negative", 0),
         "theme": theme_from_negatives(neg_titles, ceo=ceo, company=company),
-    }
-    return article_rows, counts_row
+    })
+
+    return articles_df, counts_row
 
 def main():
     print("=== CEO Sentiment (improved themes) : start ===")
@@ -269,30 +266,33 @@ def main():
     all_counts = []
 
     for i, (ceo, company) in enumerate(ceo_to_company.items()):
-        article_rows, counts_row = process_ceo(ceo, company, today)
-        all_articles.extend(article_rows)
-        all_counts.append(counts_row)
+        articles_df, counts_row = process_ceo(ceo, company, today)
+        if not articles_df.empty:
+            all_articles.append(articles_df)
+        if not counts_row.empty:
+            all_counts.append(counts_row)
+
         if i < len(ceo_to_company) - 1:
             time.sleep(REQUEST_PAUSE_SEC)
 
     # Write articles
-    articles_df = pd.DataFrame(all_articles)
-    daily_articles_path = os.path.join(ARTICLES_DIR, f"{today}.csv")
-    if not articles_df.empty:
+    if all_articles:
+        articles_df = pd.concat(all_articles, ignore_index=True)
+        daily_articles_path = os.path.join(ARTICLES_DIR, f"{today}.csv")
         articles_df.to_csv(daily_articles_path, index=False)
+        print(f"Wrote {len(articles_df)} articles -> {daily_articles_path}")
 
     # Upsert counts
-    counts_df = pd.DataFrame(all_counts)
-    if os.path.exists(COUNTS_CSV):
-        old_counts_df = pd.read_csv(COUNTS_CSV)
-        old_counts_df = old_counts_df[old_counts_df["date"] != today]
-        counts_df = pd.concat([old_counts_df, counts_df], ignore_index=True)
-    
-    if not counts_df.empty:
+    if all_counts:
+        counts_df = pd.DataFrame(all_counts)
+        if os.path.exists(COUNTS_CSV):
+            old_counts_df = pd.read_csv(COUNTS_CSV)
+            old_counts_df = old_counts_df[old_counts_df["date"] != today]
+            counts_df = pd.concat([old_counts_df, counts_df], ignore_index=True)
+        
         counts_df.to_csv(COUNTS_CSV, index=False)
+        print(f"Upserted {len(counts_df)} rows -> {COUNTS_CSV}")
 
-    print(f"Wrote {len(all_articles)} articles -> {daily_articles_path}")
-    print(f"Upserted {len(all_counts)} rows -> {COUNTS_CSV}")
     print("=== CEO Sentiment (improved themes) : done ===")
 
 if __name__ == "__main__":
