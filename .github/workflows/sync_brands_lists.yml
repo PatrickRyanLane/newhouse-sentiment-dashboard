@@ -1,10 +1,10 @@
-name: Sync BRAND helper lists from roster.csv
+name: Sync Brand helper list from roster.csv
 
 on:
   push:
     paths:
       - 'data/roster.csv'
-      - 'sync_brands_lists.py'
+      - 'scripts/sync_brands_from_roster.py'
   workflow_dispatch: {}
 
 permissions:
@@ -28,17 +28,16 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Generate brand list
-        run: python sync_brands_lists.py
+      - name: Generate brands.txt from roster.csv
+        run: python scripts/sync_brands_from_roster.py
 
       - name: Commit & push if changed
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"
           if [[ -n "$(git status --porcelain)" ]]; then
             git add brands.txt
-            git commit -m "chore(brand-lists): sync from data/roster.csv"
+            git commit -m "chore(brands-list): sync from data/roster.csv"
             git pull --rebase --autostash origin main || true
             git push origin HEAD:main
           else
