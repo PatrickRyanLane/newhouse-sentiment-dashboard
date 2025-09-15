@@ -34,7 +34,7 @@ GL   = "US"             # geography
 CEID = "US:en"          # country:lang
 
 REQUEST_PAUSE_SEC   = 1.0   # ← gentler to Google News
-MAX_ITEMS_PER_BRAND = 40    # ← cap headlines per brand
+MAX_ITEMS_PER_BRAND = 100    # ← cap headlines per brand
 
 # Negative-theme extraction
 MIN_THEME_FREQ = 2               # min occurrences for a phrase to count
@@ -45,7 +45,7 @@ EASTERN = ZoneInfo("US/Eastern")
 SOFT_SHIFT_HOURS = 6             # if before 6am ET, use previous date
 
 # Data retention (days)
-RETENTION_DAYS = 90              # ← purge older than this
+RETENTION_DAYS = 365              # ← purge older than this
 
 # Skip press-release wires etc. (you can add more)
 BLOCKED_DOMAINS = {
