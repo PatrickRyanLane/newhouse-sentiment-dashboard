@@ -9,8 +9,8 @@ Input:
 - roster.csv: Contains company names for control analysis.
 
 Output:
-- Processed SERP CSV with sentiment and control status columns, saved to S3:
-  s3://tk-public-data/processed_serps/ceos/YYYY-MM-DD.csv
+- Processed SERP CSV with sentiment and control status columns, saved locally to:
+  data_ceos/processed_serps/YYYY-MM-DD.csv
 """
 
 import os
@@ -21,8 +21,7 @@ from datetime import datetime
 from urllib.parse import urlparse
 from typing import Union
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
-import boto3
-from io import StringIO
+
 
 # --- Config ---
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -31,8 +30,7 @@ BASE_DIR = SCRIPT_DIR
 ROSTER_CSV = os.path.join(BASE_DIR, "data", "roster.csv")
 
 RAW_SERP_URL_TEMPLATE = "https://tk-public-data.s3.us-east-1.amazonaws.com/serp_files/{date}-ceo-serps.csv"
-S3_BUCKET = "tk-public-data"
-PROCESSED_SERPS_S3_KEY_TEMPLATE = "processed_serps/ceos/{date}.csv"
+
 
 CONTROLLED_SOCIAL_DOMAINS = {"facebook.com", "linkedin.com", "instagram.com", "twitter.com"}
 CONTROLLED_PATH_KEYWORDS = {"/leadership/", "/about/", "/governance/"}
@@ -141,14 +139,12 @@ def main():
     # Combine processed data
     final_df = pd.concat(processed_dfs, ignore_index=True)
 
-    # Save processed data to S3
-    s3_key = PROCESSED_SERPS_S3_KEY_TEMPLATE.format(date=today)
-    csv_buffer = StringIO()
-    final_df.to_csv(csv_buffer, index=False)
-    s3 = boto3.client("s3")
-    s3.put_object(Bucket=S3_BUCKET, Key=s3_key, Body=csv_buffer.getvalue(), ACL='public-read')
+    # Save processed data
+    output_path = os.path.join(BASE_DIR, "data_ceos", "processed_serps", f"{today}.csv")
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    final_df.to_csv(output_path, index=False)
 
-    print(f"Processed SERP data saved to: s3://{S3_BUCKET}/{s3_key}")
+    print(f"Processed SERP data saved to: {output_path}")
     print("SERP data processing complete.")
 
 if __name__ == "__main__":
