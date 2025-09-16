@@ -76,7 +76,7 @@
         <th id="thControl" class="p-3 text-left th-sort">SERP Control (%)
           <span class="arrows"><span class="arrow" data-dir="asc">▲</span><span class="arrow" data-dir="desc">▼</span></span>
         </th>
-        <th class="p-3 text-left th-sort">Risk
+        <th id="thRisk" class="p-3 text-left th-sort">Risk
           <span class="arrows"><span class="arrow" data-dir="asc">▲</span><span class="arrow" data-dir="desc">▼</span></span>
         </th>
 
@@ -221,7 +221,29 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   async function loadProcessedSerpDates() {
-    processedSerpDates = ['2025-09-15']; // Hardcoded as per existing file
+    const files = await fetchCsv('data_ceos/processed_serps/index.csv'); // Assuming an index file or similar
+    processedSerpDates = files.map(f => f.date).sort();
+    if (!processedSerpDates.length) {
+      // Fallback to listing directory if index.csv doesn't exist or is empty
+      const response = await fetch('/data_ceos/processed_serps/'); // This will likely fail in a browser due to CORS/directory listing
+      if (response.ok) {
+        const text = await response.text();
+        const parser = new DOMParser();
+        const htmlDoc = parser.parseFromString(text, 'text/html');
+        const links = Array.from(htmlDoc.querySelectorAll('a'));
+        processedSerpDates = links
+          .map(link => {
+            const match = link.href.match(/(\d{4}-\d{2}-\d{2})\.csv$/);
+            return match ? match[1] : null;
+          })
+          .filter(Boolean)
+          .sort();
+      }
+    }
+    if (!processedSerpDates.length) {
+      console.warn("Could not load processed SERP dates dynamically. Falling back to hardcoded value.");
+      processedSerpDates = ['2025-09-15']; // Fallback
+    }
   }
 
   function getLatestSerpDate(date) {
@@ -275,9 +297,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const good = rows.filter(r=> (r['date'] && /\d{4}-\d{2}-\d{2}/.test(r['date'])) && (r['brand']||r['ceo']));
     console.log(`loadCounts: ${good.length} good rows after filtering.`);
     allChartRows = good; // Populate allChartRows with all good data
-    allRows = good.filter(r => r.date === currentDate); // Filter allRows for the table
+    allRows = good; // allRows should contain all data
     dates = Array.from(new Set(allChartRows.map(r=>r.date))).sort(); // Use allChartRows to get all dates
-    currentDate = dates[dates.length-1] || null;
+    
   }
 
   function indexSeries(){
@@ -496,7 +518,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('thRisk').addEventListener('click',()=>toggleSort('risk'));
   function toggleSort(k){ if(sortKey===k){sortDir=(sortDir==='asc'?'desc':'asc');} else {sortKey=k; sortDir='desc';} page=0; renderTable(); }
 
-  dateSelect.addEventListener('change',()=>{currentDate=dateSelect.value; page=0; loadMetricsForDate(currentDate).then(renderTable);});
+  dateSelect.addEventListener('change',()=>{currentDate=dateSelect.value; page=0; loadMetricsForDate(dateSelect.value).then(renderTable);});
   filterInput.addEventListener('input',()=>{page=0; renderTable();});
   prevPageBtn.addEventListener('click',()=>{if(page>0){page--; renderTable();}});
   nextPageBtn.addEventListener('click',()=>{if((page+1)*pageSize<filteredRows.length){page++; renderTable();}});
@@ -504,17 +526,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('trendNext').addEventListener('click',()=>{trendPage=Math.max(0,trendPage-1); drawTrend();});
   refreshBtn.addEventListener('click', async()=>{ 
     statusEl.textContent='Refreshing…'; 
-    await loadRoster(); 
-    await loadProcessedSerpDates(); // Added this line
-    await Promise.all([loadMetricsForDate(currentDate), loadBoards()]); 
-    await loadCounts(); 
-    buildDateOptions(); 
-    page=0; renderTable(); 
+    await init();
   });
   selectAll.addEventListener('change',()=>{ 
     if(selectAll.checked){ 
-      filteredRows.slice(page*pageSize, (page+1)*pageSize).forEach(r=>selected.add(r.ceo)); 
+      filteredRows.forEach(r=>selected.add(r.ceo)); 
     } else selected.clear(); 
+    // Update individual checkboxes
+    document.querySelectorAll('#tableBody input[type="checkbox"]').forEach(cb => {
+      const ceo = cb.getAttribute('data-ceo');
+      cb.checked = selectAll.checked; // Set based on selectAll state
+    });
     renderTable(); 
   });
 
@@ -535,6 +557,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
     buildDateOptions();
+    currentDate = dateSelect.value;
     renderTable();
     console.log('Dates array:', JSON.stringify(dates));
   }
