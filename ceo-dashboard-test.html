@@ -277,7 +277,7 @@
 
   async function loadCounts(){
     const rows = await fetchCsv(COUNTS_CSV);
-    const good = rows.filter(r=> (r['date']) && (r['brand']||r['ceo']));
+    const good = rows.filter(r=> (r['date'] && /\d{4}-\d{2}-\d{2}/.test(r['date'])) && (r['brand']||r['ceo']));
     allRows = good.map(r=>{
       const ceo = r['brand']||r['ceo']||'';
       const company = r['company'] || rosterMap.get(ceo) || '';
@@ -552,7 +552,7 @@
     }
     buildDateOptions();
     renderTable();
-    console.log('Dates array:', dates);
+    console.log('Dates array:', JSON.stringify(dates));
   }
   init();
 })();
