@@ -293,13 +293,47 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   async function loadCounts(){
+    console.log('loadCounts: Starting to load COUNTS_CSV');
     const rows = await fetchCsv(COUNTS_CSV);
+    console.log(`loadCounts: Fetched ${rows.length} rows from COUNTS_CSV.`);
     const good = rows.filter(r=> (r['date'] && /\d{4}-\d{2}-\d{2}/.test(r['date'])) && (r['brand']||r['ceo']));
     console.log(`loadCounts: ${good.length} good rows after filtering.`);
     allChartRows = good; // Populate allChartRows with all good data
     allRows = good; // allRows should contain all data
     dates = Array.from(new Set(allChartRows.map(r=>r.date))).sort(); // Use allChartRows to get all dates
-    
+    console.log('loadCounts: Dates array:', dates);
+  }
+
+  function buildDateOptions(){
+    console.log('buildDateOptions: Dates array:', dates);
+    dateSelect.innerHTML = dates.map(d=>`<option value="${d}">${d}</option>`).join('');
+    if(currentDate) dateSelect.value=currentDate;
+    console.log('buildDateOptions: dateSelect.innerHTML set to:', dateSelect.innerHTML);
+  }
+
+  async function init(){
+    console.log('init: Starting initialization');
+    statusEl.textContent='Loading data…';
+    await loadRoster();
+    console.log('init: Roster loaded');
+    await loadCounts();
+    console.log('init: Counts loaded');
+    await loadProcessedSerpDates();
+    console.log('init: Processed SERP dates loaded');
+    await Promise.all([loadMetricsForDate(currentDate), loadBoards()]);
+    console.log('init: Metrics and Boards loaded');
+
+    if(!dates.length){
+      statusEl.textContent = lastError ? `Failed to load data: ${lastError}` : 'No rows found in data_ceos/daily_counts.csv';
+      console.error('init: No dates found, displaying error:', statusEl.textContent);
+      return;
+    }
+    buildDateOptions();
+    currentDate = dateSelect.value;
+    console.log('init: currentDate set to', currentDate);
+    renderTable();
+    console.log('init: Table rendered');
+    console.log('Dates array:', JSON.stringify(dates));
   }
 
   function indexSeries(){
