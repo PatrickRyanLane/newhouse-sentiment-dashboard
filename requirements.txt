@@ -1,4 +1,6 @@
 feedparser==6.0.11
 vaderSentiment==3.3.2
-pandas==2.2.2
-scikit-learn==1.4.2
+pandas>=2.2.2
+scikit-learn>=1.4.2
+boto3
+s3fs
