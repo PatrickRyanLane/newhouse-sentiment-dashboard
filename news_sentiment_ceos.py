@@ -256,9 +256,9 @@ def process_ceo_group(ceo_df: pd.DataFrame, today: str) -> tuple[pd.DataFrame, p
     # Create counts
     counts = articles.groupby(["brand", "company"]).agg(
         total=("sentiment", "size"),
-        positive=("sentiment", lambda s: (s == "positive")).sum(),
-        neutral=("sentiment", lambda s: (s == "neutral")).sum(),
-        negative=("sentiment", lambda s: (s == "negative")).sum(),
+        positive=("sentiment", lambda s: (s == "positive").sum()),
+        neutral=("sentiment", lambda s: (s == "neutral").sum()),
+        negative=("sentiment", lambda s: (s == "negative").sum()),
     ).reset_index()
 
     # Add themes
