@@ -92,6 +92,14 @@ def classify_control(row: pd.Series, company_name: str) -> str:
     # Rule 6: All other URLs are uncontrolled
     return "uncontrolled"
 
+def get_sentiment_label(score: float) -> str:
+    """Converts a VADER compound score to a sentiment label."""
+    if score >= 0.05:
+        return "positive"
+    if score <= -0.05:
+        return "negative"
+    return "neutral"
+
 def main():
     """Main function to process SERP data."""
     print("Starting SERP data processing...")
@@ -127,9 +135,10 @@ def main():
             )
 
             # Apply sentiment analysis
-            company_serps["sentiment"] = company_serps["snippet"].apply(
+            company_serps["sentiment_score"] = company_serps["snippet"].apply(
                 lambda snippet: analyzer.polarity_scores(str(snippet))["compound"]
             )
+            company_serps["sentiment"] = company_serps["sentiment_score"].apply(get_sentiment_label)
             processed_dfs.append(company_serps)
 
     if not processed_dfs:

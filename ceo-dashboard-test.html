@@ -466,7 +466,9 @@
         const sBadge = s === 'negative' ? 'bg-rose-100 text-rose-700' : s === 'positive' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-700';
         const cBadge = c === 'controlled' ? 'bg-sky-100 text-sky-700' : c === 'uncontrolled' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-700';
         return `<div class="p-3 border rounded-xl hover:bg-slate-50">
-          <div class="flex items-center gap-2 text-xs mb-1"><span class="inline-block px-2 py-0.5 rounded-full ${sBadge}">${s}</span>
+          <div class="flex items-center gap-2 text-xs mb-1">
+          <span class="inline-block px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">#${r.position}</span>
+          <span class="inline-block px-2 py-0.5 rounded-full ${sBadge}">${s}</span>
           <span class="inline-block px-2 py-0.5 rounded-full ${cBadge}">${c}</span></div>
           <a href="${r.link}" target="_blank" rel="noopener" class="font-medium underline">${esc(r.title || r.link || 'Open')}</a>
           ${r.snippet ? `<div class="text-xs text-slate-600 mt-1">${esc(r.snippet)}</div>` : ''}
