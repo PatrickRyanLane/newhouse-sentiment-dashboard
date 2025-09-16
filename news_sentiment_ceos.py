@@ -212,19 +212,23 @@ def purge_old_files():
                 except OSError as e:
                     print(f"Error removing file {name}: {e}")
 
-    # Prune daily_counts.csv
+    # Prune daily_counts.csv in a memory-efficient way
     if os.path.exists(COUNTS_CSV):
+        temp_csv = COUNTS_CSV + ".tmp"
         try:
-            df = pd.read_csv(COUNTS_CSV)
-            if not df.empty:
-                original_rows = len(df)
-                df = df[pd.to_datetime(df["date"]).dt.strftime("%Y-%m-%d") >= cutoff_date]
-                if len(df) < original_rows:
-                    df.to_csv(COUNTS_CSV, index=False)
-        except pd.errors.EmptyDataError:
-            print(f"Warning: {COUNTS_CSV} is empty.")
+            with open(COUNTS_CSV, 'r', newline='') as infile, open(temp_csv, 'w', newline='') as outfile:
+                reader = pd.read_csv(infile, chunksize=1000)
+                header_written = False
+                for chunk in reader:
+                    chunk = chunk[pd.to_datetime(chunk["date"]).dt.strftime("%Y-%m-%d") >= cutoff_date]
+                    if not chunk.empty:
+                        chunk.to_csv(outfile, header=not header_written, index=False)
+                        header_written = True
+            os.replace(temp_csv, COUNTS_CSV)
         except Exception as e:
             print(f"Error processing {COUNTS_CSV}: {e}")
+            if os.path.exists(temp_csv):
+                os.remove(temp_csv)
 
 # ------------------ Main ------------------
 
@@ -289,12 +293,22 @@ def main():
 
     # Upsert counts
     if not counts_df.empty:
-        if os.path.exists(COUNTS_CSV):
-            old_counts_df = pd.read_csv(COUNTS_CSV)
-            old_counts_df = old_counts_df[old_counts_df["date"] != today]
-            counts_df = pd.concat([old_counts_df, counts_df], ignore_index=True)
+        today = today_str()
+        temp_csv = COUNTS_CSV + ".tmp"
         
-        counts_df.to_csv(COUNTS_CSV, index=False)
+        # Write new counts to a temporary file
+        counts_df.to_csv(temp_csv, index=False)
+
+        # Append old counts (excluding today) from the original file
+        if os.path.exists(COUNTS_CSV):
+            with open(COUNTS_CSV, 'r', newline='') as infile, open(temp_csv, 'a', newline='') as outfile:
+                reader = pd.read_csv(infile, chunksize=1000)
+                for chunk in reader:
+                    chunk = chunk[chunk["date"] != today]
+                    if not chunk.empty:
+                        chunk.to_csv(outfile, header=False, index=False)
+
+        os.replace(temp_csv, COUNTS_CSV)
         print(f"Upserted {len(counts_df)} rows -> {COUNTS_CSV}")
 
     print("=== CEO Sentiment (improved themes) : done ===")
