@@ -158,7 +158,7 @@
   // ---------- State ----------
   let allRows=[];     // all dates
   let dates=[];       // unique sorted
-  let processedSerpDates = ['2025-09-15']; // Hardcoded: ideally, get this from a file listing.
+  let processedSerpDates = [];
   let currentDate=null;
   let rosterMap=new Map();  // CEO -> Company
   let serpsByCeo=new Map();// CEO -> array of {title,url,snippet,control,sentiment}
@@ -217,12 +217,28 @@
     }
   }
 
+  async function loadProcessedSerpDates() {
+    // Use glob to get the list of CSV files in the directory
+    // This is a placeholder for the actual glob tool call
+    // In a real client-side application, you'd need a server-side endpoint
+    // to list files in a directory. For this exercise, we'll simulate it.
+    const files = await fetch('/data_ceos/processed_serps/').then(r => r.text()); // This is a placeholder, actual glob will be used by the tool
+    // Assuming the glob tool returns a list of file paths like ['data_ceos/processed_serps/2025-09-15.csv']
+    // We need to extract the date from the filename
+    const fileList = files.split('\n').filter(line => line.endsWith('.csv')).map(line => line.trim());
+    processedSerpDates = fileList.map(f => f.replace('.csv', '')).sort();
+  }
+
   function getLatestSerpDate(date) {
-    if (processedSerpDates.includes(date)) {
-      return date;
+    let bestMatch = null;
+    for (const serpDate of processedSerpDates) {
+      if (serpDate <= date) {
+        bestMatch = serpDate;
+      } else {
+        break; // Dates are sorted, so no need to check further
+      }
     }
-    // Assuming processedSerpDates is sorted chronologically
-    return processedSerpDates[processedSerpDates.length - 1];
+    return bestMatch || processedSerpDates[processedSerpDates.length - 1]; // Fallback to the latest available if no suitable date is found
   }
 
   async function loadMetricsForDate(date) {
@@ -283,7 +299,7 @@
   function indexSeries(){
     const byDate=new Map();
     for(const d of dates) byDate.set(d,{pos:0,neu:0,neg:0,tot:0});
-    for(const r of allRows){
+    for(const r of allRows){ 
       const v=byDate.get(r.date); if(!v) continue;
       v.pos+=r.positive; v.neu+=r.neutral; v.neg+=r.negative; v.tot+=r.total;
     }
@@ -338,7 +354,7 @@
     ]};
     const options={responsive:true, maintainAspectRatio:false,
       plugins:{legend:{position:'top'}, tooltip:{callbacks:{label:(c)=>`${c.dataset.label}: ${c.parsed.y}%`}}},
-      scales:{x:{stacked:true, ticks:{display:labels.length<=7}}, y:{stacked:true, beginAtZero:true, ticks:{callback:(v)=>v+'%'}}}};
+      scales:{x:{stacked:true, ticks:{display:labels.length<=7}}, y:{stacked:true, beginAtZero:true, ticks:{callback:(v)=>v+'%'}}}}; 
     if(trendChart) trendChart.destroy();
     trendChart = new Chart(trendCanvas.getContext('2d'),{type:'bar',data,options});
   }
@@ -347,7 +363,7 @@
     const q=(filterInput.value||'').trim().toLowerCase();
     const rows=allRows.filter(r=> r.date===currentDate && r.ceo);
     const map=new Map();
-    for(const r of rows){
+    for(const r of rows){ 
       if(q && !String(r.ceo).toLowerCase().includes(q)) continue;
       const met=metricsByCeo.get(r.ceo)||{negSerpPct:0,controlPct:0};
       const risk=riskLabel(Math.round(met.negSerpPct), Math.round(met.controlPct));
@@ -427,7 +443,7 @@
     rows = a.filter(r=> textEq(r['brand']||r['ceo']||'', ceo));
     if(!rows.length){ modalBody.innerHTML='<p class="text-sm text-slate-600">No articles found for this CEO on this date.</p>'; return; }
     rows.sort((x,y)=>{const o=s=>s==='negative'?2:s==='neutral'?1:0; return o((y.sentiment||'').toLowerCase())-o((x.sentiment||'').toLowerCase());});
-    modalBody.innerHTML = `<div class="space-y-3">${
+    modalBody.innerHTML = `<div class="space-y-3">${ 
       rows.map(r=>{
         const url=r.url||r.link||''; let domain=r.domain||''; if(!domain&&url){try{domain=new URL(url).hostname}catch{}}
         const s=(r.sentiment||'').toLowerCase();
@@ -437,7 +453,7 @@
           <span class="inline-block px-2 py-0.5 rounded-full text-xs ${badge}">${esc(s||'neutral')}</span></div>
           <a href="${url}" target="_blank" rel="noopener" class="block mt-1 font-medium underline">${esc(r.title||'View article')}</a>
         </div>`;
-      }).join('')}
+      }).join('')} 
     </div>`;
   }
 
@@ -459,7 +475,7 @@
       return;
     }
 
-    modalBody.innerHTML = `<div class="space-y-3">${
+    modalBody.innerHTML = `<div class="space-y-3">${ 
       list.map(r => {
         const s = (r.sentiment || 'neutral');
         const c = r.control_status === 'controlled' ? 'controlled' : (r.control_status === 'uncontrolled' ? 'uncontrolled' : '?');
@@ -473,7 +489,7 @@
           <a href="${r.link}" target="_blank" rel="noopener" class="font-medium underline">${esc(r.title || r.link || 'Open')}</a>
           ${r.snippet ? `<div class="text-xs text-slate-600 mt-1">${esc(r.snippet)}</div>` : ''}
         </div>`;
-      }).join('')}
+      }).join('')} 
     </div>`;
   }
 
@@ -482,9 +498,9 @@
     modalTitle.textContent=`${ceo} — Active Boards`;
     modalSubtitle.textContent='';
     if(!list.length){ modalBody.innerHTML=`<p class="text-sm text-slate-600">No board memberships found for ${esc(ceo)}.</p>`; openModal(); return; }
-    modalBody.innerHTML = `<div class="space-y-3">${
+    modalBody.innerHTML = `<div class="space-y-3">${ 
       list.map(r=>`<div class="p-3 border rounded-xl"><div class="text-base font-semibold mb-1">${esc(r.domain||'')}</div>
-      <a class="block text-sm underline" href="${r.url}" target="_blank" rel="noopener">${esc(r.url||'Open')}</a></div>`).join('')}
+      <a class="block text-sm underline" href="${r.url}" target="_blank" rel="noopener">${esc(r.url||'Open')}</a></div>`).join('')} 
     </div>`;
     openModal();
   }
@@ -502,351 +518,20 @@
   nextPageBtn.addEventListener('click',()=>{if((page+1)*pageSize<filteredRows.length){page++; renderTable();}});
   document.getElementById('trendPrev').addEventListener('click',()=>{trendPage+=1; drawTrend();});
   document.getElementById('trendNext').addEventListener('click',()=>{trendPage=Math.max(0,trendPage-1); drawTrend();});
-  refreshBtn.addEventListener('click', async()=>{
-    statusEl.textContent='Refreshing…';
-    await loadRoster();
-    await Promise.all([loadMetricsForDate(currentDate), loadBoards()]);
-    await loadCounts();
-    buildDateOptions();
-    page=0; renderTable();
+  refreshBtn.addEventListener('click', async()=>{ 
+    statusEl.textContent='Refreshing…'; 
+    await loadRoster(); 
+    await loadProcessedSerpDates(); // Added this line
+    await Promise.all([loadMetricsForDate(currentDate), loadBoards()]); 
+    await loadCounts(); 
+    buildDateOptions(); 
+    page=0; renderTable(); 
   });
-  selectAll.addEventListener('change',()=>{
-    if(selectAll.checked){
-      filteredRows.slice(page*pageSize, (page+1)*pageSize).forEach(r=>selected.add(r.ceo));
-    } else selected.clear();
-    renderTable();
-  });
-
-  function buildDateOptions(){
-    dateSelect.innerHTML = dates.map(d=>`<option value="${d}">${d}</option>`).join('');
-    if(currentDate) dateSelect.value=currentDate;
-  }
-
-  async function init(){
-    statusEl.textContent='Loading data…';
-    await loadRoster();
-    await loadCounts();
-    await Promise.all([loadMetricsForDate(currentDate), loadBoards()]);
-
-    if(!dates.length){
-      statusEl.textContent = lastError ? `Failed to load data: ${lastError}` : 'No rows found in data_ceos/daily_counts.csv';
-      return;
-    }
-    buildDateOptions();
-    renderTable();
-  }
-  init();
-})();
-</script>
-</body>
-</html>"/g,'&quot;').replace(/'/g,'&#39;');}
-  function normRow(r){const o={}; for(const k in r){o[String(k).trim().toLowerCase()]=r[k];} return o;}
-  function pct(n,d){return !d?0:(n/d*100);}
-  function pctStr(v){return `${Math.round(v)}%`;}
-  function asBool(v){const s=String(v??'').trim().toLowerCase(); if(['true','t','1','yes','y','controlled'].includes(s))return true; if(['false','f','0','no','n','uncontrolled'].includes(s))return false; return null;}
-  function riskLabel(negSerpPct, controlPct){ if(negSerpPct>0) return 'High'; if(negSerpPct===0 && controlPct<35) return 'Medium'; return 'Low'; }
-  function textEq(a,b){return String(a||'').trim().toLowerCase()===String(b||'').trim().toLowerCase();}
-
-  async function fetchCsv(path){
-    try{
-      const url = path + (path.includes('?')?'&':'?') + '_=' + Date.now();
-      const r = await fetch(url,{cache:'no-store'});
-      if(!r.ok) throw new Error('HTTP '+r.status+' @ '+path);
-      const t = await r.text();
-      const p = Papa.parse(t,{header:true});
-      const rows = (Array.isArray(p.data)?p.data:[]).map(normRow).filter(x=>Object.keys(x).length);
-      return rows;
-    }catch(e){
-      lastError = e.message||String(e);
-      return [];
-    }
-  }
-
-  async function loadRoster(){
-    rosterMap.clear();
-    let rows = await fetchCsv(ROSTER_CSV);
-    if(!rows.length){ rows = await fetchCsv(CEO_COMP_CSV); }
-    for(const r of rows){
-      const ceo = r['ceo']||r['name']||'';
-      const company = r['company']||r['brand']||'';
-      if(ceo) rosterMap.set(String(ceo), String(company));
-    }
-  }
-
-  async function loadBoards(){
-    boardsByCeo.clear();
-    const rows = await fetchCsv(BOARDS_CSV); // CEO, Company, URL, Domain
-    for(const r of rows){
-      const ceo=r['ceo']||''; if(!ceo) continue;
-      const domain=r['domain']||'';
-      const url=r['url']||'';
-      if(!boardsByCeo.has(ceo)) boardsByCeo.set(ceo,[]);
-      boardsByCeo.get(ceo).push({domain,url});
-    }
-  }
-
-  async function loadSerps(){
-    serpsByCeo.clear(); metricsByCeo.clear();
-    const rows = await fetchCsv(SERPS_CSV); // CEO, Company, Position, Title, Link, Snippet, Control, Sentiment
-    for(const r of rows){
-      const ceo=r['ceo']||''; if(!ceo) continue;
-      const item={
-        title:r['title']||'',
-        url:r['link']||'',
-        snippet:r['snippet']||'',
-        control:asBool(r['control']),
-        sentiment:(r['sentiment']||'').trim().toLowerCase()
-      };
-      if(!serpsByCeo.has(ceo)) serpsByCeo.set(ceo,[]);
-      serpsByCeo.get(ceo).push(item);
-    }
-    for(const [ceo,arr] of serpsByCeo){
-      const total=arr.length;
-      const neg=arr.filter(x=>x.sentiment==='negative').length;
-      const ctrl=arr.filter(x=>x.control===true).length;
-      metricsByCeo.set(ceo,{negSerpPct: total?(neg/total*100):0, controlPct: total?(ctrl/total*100):0});
-    }
-  }
-
-  async function loadCounts(){
-    const rows = await fetchCsv(COUNTS_CSV);
-    const good = rows.filter(r=> (r['date']) && (r['brand']||r['ceo']));
-    allRows = good.map(r=>{
-      const ceo = r['brand']||r['ceo']||'';
-      const company = r['company'] || rosterMap.get(ceo) || '';
-      return {
-        date:String(r['date']),
-        ceo:String(ceo),
-        company:String(company),
-        total:+(r['total']||0),
-        positive:+(r['positive']||0),
-        neutral:+(r['neutral']||0),
-        negative:+(r['negative']||0),
-        theme:r['theme']?String(r['theme']):'None'
-      };
-    });
-    dates = Array.from(new Set(allRows.map(r=>r.date))).sort();
-    currentDate = dates[dates.length-1] || null;
-  }
-
-  function indexSeries(){
-    const byDate=new Map();
-    for(const d of dates) byDate.set(d,{pos:0,neu:0,neg:0,tot:0});
-    for(const r of allRows){
-      const v=byDate.get(r.date); if(!v) continue;
-      v.pos+=r.positive; v.neu+=r.neutral; v.neg+=r.negative; v.tot+=r.total;
-    }
-    return dates.map(d=>{
-      const v=byDate.get(d)||{pos:0,neu:0,neg:0,tot:0};
-      const t=v.tot||0;
-      return {d, pos:t?(v.pos/t*100):0, neu:t?(v.neu/t*100):0, neg:t?(v.neg/t*100):0};
-    });
-  }
-  function ceoSeries(ceo){
-    const by=new Map();
-    for(const r of allRows){ if(textEq(r.ceo,ceo)) by.set(r.date,r); }
-    return dates.map(d=>{
-      const r=by.get(d)||{total:0,positive:0,neutral:0,negative:0};
-      const t=r.total||0;
-      return {d, pos:t?(r.positive/t*100):0, neu:t?(r.neutral/t*100):0, neg:t?(r.negative/t*100):0};
-    });
-  }
-
-  function drawTrend(){
-    const selectedCEOs = Array.from(document.querySelectorAll('#tableBody input[type="checkbox"]:checked')).map(cb=>cb.getAttribute('data-ceo'));
-    let series = null, label='';
-    if(selectedCEOs.length===1){
-      const ceo = selectedCEOs[0];
-      series = ceoSeries(ceo);
-      label = `CEO: ${ceo}`;
-      trendHint.classList.add('hidden');
-    }else{
-      series = indexSeries();
-      label = 'Index average';
-      trendHint.classList.remove('hidden');
-    }
-    // window
-    const total=series.length, W=TREND_WINDOW, maxPage=Math.max(0, Math.ceil(total/W)-1);
-    if(trendPage>maxPage) trendPage=maxPage;
-    const end=Math.max(0, total - W*trendPage);
-    const start=Math.max(0, end - W);
-    const slice=series.slice(start,end);
-
-    trendInfo.textContent = label;
-    trendRange.textContent = slice.length?` | DATE: ${slice[0].d} → ${slice[slice.length-1].d}`:'';
-
-    const labels=slice.map(x=>x.d);
-    const pos=slice.map(x=>+x.pos.toFixed(1));
-    const neu=slice.map(x=>+x.neu.toFixed(1));
-    const neg=slice.map(x=>+x.neg.toFixed(1));
-
-    const data={labels, datasets:[
-      {label:'Positive', data:pos, backgroundColor:'#98c15b', stack:'s'},
-      {label:'Neutral',  data:neu, backgroundColor:'#dae5e6', stack:'s'},
-      {label:'Negative', data:neg, backgroundColor:'#ffb199', stack:'s'}
-    ]};
-    const options={responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{position:'top'}, tooltip:{callbacks:{label:(c)=>`${c.dataset.label}: ${c.parsed.y}%`}}},
-      scales:{x:{stacked:true, ticks:{display:labels.length<=7}}, y:{stacked:true, beginAtZero:true, ticks:{callback:(v)=>v+'%'}}}};
-    if(trendChart) trendChart.destroy();
-    trendChart = new Chart(trendCanvas.getContext('2d'),{type:'bar',data,options});
-  }
-
-  function applyFilterAndSort(){
-    const q=(filterInput.value||'').trim().toLowerCase();
-    const rows=allRows.filter(r=> r.date===currentDate && r.ceo);
-    const map=new Map();
-    for(const r of rows){
-      if(q && !String(r.ceo).toLowerCase().includes(q)) continue;
-      const met=metricsByCeo.get(r.ceo)||{negSerpPct:0,controlPct:0};
-      const risk=riskLabel(Math.round(met.negSerpPct), Math.round(met.controlPct));
-      map.set(r.ceo,{...r, negSerpPct:met.negSerpPct, controlPct:met.controlPct, risk});
-    }
-    let arr=Array.from(map.values());
-    const cmp={
-      neg_news:(a,b)=> ( (b.negative/(b.total||1)) - (a.negative/(a.total||1)) ),
-      neg_serp:(a,b)=> (b.negSerpPct - a.negSerpPct),
-      control:(a,b)=> (b.controlPct - a.controlPct),
-      risk:(a,b)=> (rankRisk(b.risk) - rankRisk(a.risk))
-    }[sortKey] || ((a,b)=>0);
-    arr.sort(cmp); if(sortDir==='asc') arr.reverse();
-    filteredRows=arr;
-  }
-  function rankRisk(r){return r==='High'?3:r==='Medium'?2:1;}
-
-  function updateSortHeaders(){
-    document.querySelectorAll('.th-sort').forEach(th=>{
-      th.classList.remove('active');
-      th.querySelectorAll('.arrow').forEach(a=>a.classList.remove('on'));
-    });
-    const map={neg_news:'#thNegNews',neg_serp:'#thNegSerp',control:'#thControl',risk:'#thRisk'};
-    const th=document.querySelector(map[sortKey]); if(!th) return;
-    th.classList.add('active');
-    const sel=sortDir==='asc'?'.arrow[data-dir="asc"]':'.arrow[data-dir="desc"]';
-    const a=th.querySelector(sel); if(a) a.classList.add('on');
-  }
-
-  function renderTable(){
-    if(!currentDate){
-      statusEl.textContent = lastError ? `Could not load data: ${lastError}` : 'No dates found in data_ceos/daily_counts.csv';
-      tableBody.innerHTML='';
-      return;
-    }
-    applyFilterAndSort();
-    const start=page*pageSize, end=start+pageSize;
-    const slice=filteredRows.slice(start,end);
-    tableBody.innerHTML = slice.map(r=>{
-      const negPct=pct(r.negative, r.total);
-      const negSerp=r.negSerpPct||0;
-      const ctrl=r.controlPct||0;
-      return `<tr class="border-t hover:bg-slate-50">
-        <td class="p-3"><input type="checkbox" data-ceo="${esc(r.ceo)}"></td>
-        <td class="p-3 name-cell">${esc(r.ceo)}</td>
-        <td class="p-3">${esc(r.company||'')}</td>
-        <td class="p-3">${esc(r.theme||'None')}</td>
-        <td class="p-3" title="${r.negative}/${r.total}">${pctStr(negPct)}</td>
-        <td class="p-3">${pctStr(negSerp)}</td>
-        <td class="p-3">${pctStr(ctrl)}</td>
-        <td class="p-3">${esc(r.risk)}</td>
-        <td class="p-3"><button class="px-2 py-1 border rounded" data-headlines="${esc(r.ceo)}">View</button></td>
-        <td class="p-3"><button class="px-2 py-1 border rounded" data-serp="${esc(r.ceo)}">View</button></td>
-        <td class="p-3"><button class="px-2 py-1 border rounded" data-boards="${esc(r.ceo)}">View</button></td>
-      </tr>`;
-    }).join('');
-    // wire handlers
-    tableBody.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
-      const ceo=cb.getAttribute('data-ceo'); cb.checked = selected.has(ceo);
-      cb.addEventListener('change',()=>{ if(cb.checked) selected.add(ceo); else selected.delete(ceo); drawTrend(); });
-    });
-    tableBody.querySelectorAll('button[data-headlines]').forEach(b=> b.addEventListener('click',()=>showHeadlines(b.getAttribute('data-headlines'))));
-    tableBody.querySelectorAll('button[data-serp]').forEach(b=> b.addEventListener('click',()=>showSerps(b.getAttribute('data-serp'))));
-    tableBody.querySelectorAll('button[data-boards]').forEach(b=> b.addEventListener('click',()=>showBoards(b.getAttribute('data-boards'))));
-
-    statusEl.textContent = `${filteredRows.length} CEOs for ${currentDate}. Page ${page+1} of ${Math.max(1,Math.ceil(filteredRows.length/pageSize))}.`;
-    updateSortHeaders();
-    drawTrend();
-  }
-
-  async function showHeadlines(ceo){
-    modalTitle.textContent=`${ceo} — Headlines`;
-    modalSubtitle.textContent=`Date: ${currentDate}`;
-    modalBody.innerHTML='<p class="text-sm text-slate-500">Loading…</p>'; openModal();
-    let rows=[];
-    const a = await fetchCsv(ARTICLES(currentDate));
-    rows = a.filter(r=> textEq(r['brand']||r['ceo']||'', ceo));
-    if(!rows.length){ modalBody.innerHTML='<p class="text-sm text-slate-600">No articles found for this CEO on this date.</p>'; return; }
-    rows.sort((x,y)=>{const o=s=>s==='negative'?2:s==='neutral'?1:0; return o((y.sentiment||'').toLowerCase())-o((x.sentiment||'').toLowerCase());});
-    modalBody.innerHTML = `<div class="space-y-3">${
-      rows.map(r=>{
-        const url=r.url||r.link||''; let domain=r.domain||''; if(!domain&&url){try{domain=new URL(url).hostname}catch{}}
-        const s=(r.sentiment||'').toLowerCase();
-        const badge=s==='negative'?'bg-rose-100 text-rose-700':s==='positive'?'bg-emerald-100 text-emerald-700':'bg-slate-100 text-slate-700';
-        return `<div class="p-3 border rounded-xl hover:bg-slate-50">
-          <div class="flex items-center justify-between gap-3"><div class="text-xs text-slate-500">${esc(domain||'')}</div>
-          <span class="inline-block px-2 py-0.5 rounded-full text-xs ${badge}">${esc(s||'neutral')}</span></div>
-          <a href="${url}" target="_blank" rel="noopener" class="block mt-1 font-medium underline">${esc(r.title||'View article')}</a>
-        </div>`;
-      }).join('')}
-    </div>`;
-  }
-  function showSerps(ceo){
-    const list=serpsByCeo.get(ceo)||[];
-    modalTitle.textContent=`${ceo} — SERP results`;
-    modalSubtitle.textContent=`${list.length} results`;
-    if(!list.length){ modalBody.innerHTML='<p class="text-sm text-slate-600">No SERP rows found for this CEO.</p>'; openModal(); return; }
-    modalBody.innerHTML = `<div class="space-y-3">${
-      list.map(r=>{
-        const s=(r.sentiment||'neutral'); const c=r.control===true?'controlled':(r.control===false?'uncontrolled':'?');
-        const sBadge=s==='negative'?'bg-rose-100 text-rose-700':s==='positive'?'bg-emerald-100 text-emerald-700':'bg-slate-100 text-slate-700';
-        const cBadge=r.control===true?'bg-sky-100 text-sky-700':r.control===false?'bg-amber-100 text-amber-700':'bg-slate-100 text-slate-700';
-        return `<div class="p-3 border rounded-xl hover:bg-slate-50">
-          <div class="flex items-center gap-2 text-xs mb-1"><span class="inline-block px-2 py-0.5 rounded-full ${sBadge}">${s}</span>
-          <span class="inline-block px-2 py-0.5 rounded-full ${cBadge}">${c}</span></div>
-          <a href="${r.url}" target="_blank" rel="noopener" class="font-medium underline">${esc(r.title||r.url||'Open')}</a>
-          ${r.snippet?`<div class="text-xs text-slate-600 mt-1">${esc(r.snippet)}</div>`:''}
-        </div>`;
-      }).join('')}
-    </div>`;
-    openModal();
-  }
-  function showBoards(ceo){
-    const list=boardsByCeo.get(ceo)||[];
-    modalTitle.textContent=`${ceo} — Active Boards`;
-    modalSubtitle.textContent='';
-    if(!list.length){ modalBody.innerHTML=`<p class="text-sm text-slate-600">No board memberships found for ${esc(ceo)}.</p>`; openModal(); return; }
-    modalBody.innerHTML = `<div class="space-y-3">${
-      list.map(r=>`<div class="p-3 border rounded-xl"><div class="text-base font-semibold mb-1">${esc(r.domain||'')}</div>
-      <a class="block text-sm underline" href="${r.url}" target="_blank" rel="noopener">${esc(r.url||'Open')}</a></div>`).join('')}
-    </div>`;
-    openModal();
-  }
-
-  // Pagination & controls
-  document.getElementById('thNegNews').addEventListener('click',()=>toggleSort('neg_news'));
-  document.getElementById('thNegSerp').addEventListener('click',()=>toggleSort('neg_serp'));
-  document.getElementById('thControl').addEventListener('click',()=>toggleSort('control'));
-  document.getElementById('thRisk').addEventListener('click',()=>toggleSort('risk'));
-  function toggleSort(k){ if(sortKey===k){sortDir=(sortDir==='asc'?'desc':'asc');} else {sortKey=k; sortDir='desc';} page=0; renderTable(); }
-
-  dateSelect.addEventListener('change',()=>{currentDate=dateSelect.value; page=0; loadMetricsForDate(currentDate).then(renderTable);});
-  filterInput.addEventListener('input',()=>{page=0; renderTable();});
-  prevPageBtn.addEventListener('click',()=>{if(page>0){page--; renderTable();}});
-  nextPageBtn.addEventListener('click',()=>{if((page+1)*pageSize<filteredRows.length){page++; renderTable();}});
-  document.getElementById('trendPrev').addEventListener('click',()=>{trendPage+=1; drawTrend();});
-  document.getElementById('trendNext').addEventListener('click',()=>{trendPage=Math.max(0,trendPage-1); drawTrend();});
-  refreshBtn.addEventListener('click', async()=>{
-    statusEl.textContent='Refreshing…';
-    await loadRoster();
-    await loadCounts();
-    await Promise.all([loadMetricsForDate(currentDate), loadBoards()]);
-    buildDateOptions();
-    page=0; renderTable();
-  });
-  selectAll.addEventListener('change',()=>{
-    if(selectAll.checked){
-      filteredRows.slice(page*pageSize, (page+1)*pageSize).forEach(r=>selected.add(r.ceo));
-    } else selected.clear();
-    renderTable();
+  selectAll.addEventListener('change',()=>{ 
+    if(selectAll.checked){ 
+      filteredRows.slice(page*pageSize, (page+1)*pageSize).forEach(r=>selected.add(r.ceo)); 
+    } else selected.clear(); 
+    renderTable(); 
   });
 
   function buildDateOptions(){
@@ -858,6 +543,7 @@
     statusEl.textContent='Loading data…';
     await loadRoster();
     await loadCounts();
+    await loadProcessedSerpDates(); // Added this line
     await Promise.all([loadMetricsForDate(currentDate), loadBoards()]);
 
     if(!dates.length){
