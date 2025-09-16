@@ -129,7 +129,7 @@
   // ---------- Config ----------
   const CSV_COUNTS   = 'data/daily_counts.csv';          // brand daily counts
   const CSV_ARTICLES = (d)=> `data/articles/${d}.csv`;    // per-day headlines
-  const CSV_SERPS    = 'data/serps/brand_serps.csv';      // brand SERPs (all-time)
+  const CSV_PROCESSED_SERPS = (d) => `data_brands/processed_serps/${d}.csv`; // brand SERPs (daily)
   const PAGE_SIZE    = 25;
   const TREND_WINDOW = 30;
   const RISK_MEDIUM_CONTROL_LT = 35; // set to 70 if you prefer the older threshold
