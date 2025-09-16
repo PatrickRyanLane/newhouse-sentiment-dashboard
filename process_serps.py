@@ -72,12 +72,16 @@ def fetch_serp_data(date: str) -> Union[pd.DataFrame, None]:
         print(f"Error processing SERP data from {url}: {e}")
         return None
 
-def classify_control(row: pd.Series, company_name: str) -> str:
+def classify_control(row: pd.Series, company_name: str, roster_website: str) -> str:
     """Classifies a URL as controlled or uncontrolled based on a set of rules."""
     url = row["link"]
     position = row["position"]
     parsed_url = urlparse(url)
     domain = parsed_url.netloc.replace("www.", "")
+
+    # New Rule: Roster website is controlled
+    if roster_website and isinstance(roster_website, str) and roster_website.lower() in domain.lower():
+        return "controlled"
 
     # Rule 5: Wikipedia is always uncontrolled
     if any(uncontrolled_domain in domain for uncontrolled_domain in UNCONTROLLED_DOMAINS):
@@ -136,12 +140,13 @@ def main():
     for _, roster_row in roster_df.iterrows():
         ceo_name = roster_row["CEO"]
         company_name = roster_row["Company"]
+        roster_website = roster_row["Website"]
         company_serps = serp_df[serp_df["company"].str.contains(ceo_name, case=False, na=False)].copy()
 
         if not company_serps.empty:
             # Apply control classification
             company_serps["control_status"] = company_serps.apply(
-                lambda row: classify_control(row, company_name), axis=1
+                lambda row: classify_control(row, company_name, roster_website), axis=1
             )
 
             # Apply sentiment analysis
