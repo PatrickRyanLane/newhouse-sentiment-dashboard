@@ -76,7 +76,7 @@
         <th id="thControl" class="p-3 text-left th-sort">SERP Control (%)
           <span class="arrows"><span class="arrow" data-dir="asc">▲</span><span class="arrow" data-dir="desc">▼</span></span>
         </th>
-        <th id="thRisk" class="p-3 text-left th-sort">Risk
+        <th class="p-3 text-left th-sort">Risk
           <span class="arrows"><span class="arrow" data-dir="asc">▲</span><span class="arrow" data-dir="desc">▼</span></span>
         </th>
 
@@ -169,6 +169,7 @@
   let sortKey='neg_news', sortDir='desc';
   let filteredRows=[];
   let lastError='';
+  let allChartRows = []; // New variable for chart data
 
   // ---------- Utils ----------
   function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
@@ -218,15 +219,7 @@
   }
 
   async function loadProcessedSerpDates() {
-    // Use glob to get the list of CSV files in the directory
-    // This is a placeholder for the actual glob tool call
-    // In a real client-side application, you'd need a server-side endpoint
-    // to list files in a directory. For this exercise, we'll simulate it.
-    const files = await fetch('/data_ceos/processed_serps/').then(r => r.text()); // This is a placeholder, actual glob will be used by the tool
-    // Assuming the glob tool returns a list of file paths like ['data_ceos/processed_serps/2025-09-15.csv']
-    // We need to extract the date from the filename
-    const fileList = files.split('\n').filter(line => line.endsWith('.csv')).map(line => line.trim());
-    processedSerpDates = fileList.map(f => f.replace('.csv', '')).sort();
+    processedSerpDates = ['2025-09-15']; // Hardcoded as per existing file
   }
 
   function getLatestSerpDate(date) {
@@ -278,28 +271,16 @@
   async function loadCounts(){
     const rows = await fetchCsv(COUNTS_CSV);
     const good = rows.filter(r=> (r['date'] && /\d{4}-\d{2}-\d{2}/.test(r['date'])) && (r['brand']||r['ceo']));
-    allRows = good.map(r=>{
-      const ceo = r['brand']||r['ceo']||'';
-      const company = r['company'] || rosterMap.get(ceo) || '';
-      return {
-        date:String(r['date']),
-        ceo:String(ceo),
-        company:String(company),
-        total:+(r['total']||0),
-        positive:+(r['positive']||0),
-        neutral:+(r['neutral']||0),
-        negative:+(r['negative']||0),
-        theme:r['theme']?String(r['theme']):'None'
-      };
-    });
-    dates = Array.from(new Set(allRows.map(r=>r.date))).sort();
+    allChartRows = good; // Populate allChartRows with all good data
+    allRows = good.filter(r => r.date === currentDate); // Filter allRows for the table
+    dates = Array.from(new Set(allChartRows.map(r=>r.date))).sort(); // Use allChartRows to get all dates
     currentDate = dates[dates.length-1] || null;
   }
 
   function indexSeries(){
     const byDate=new Map();
     for(const d of dates) byDate.set(d,{pos:0,neu:0,neg:0,tot:0});
-    for(const r of allRows){ 
+    for(const r of allChartRows){ 
       const v=byDate.get(r.date); if(!v) continue;
       v.pos+=r.positive; v.neu+=r.neutral; v.neg+=r.negative; v.tot+=r.total;
     }
@@ -311,7 +292,7 @@
   }
   function ceoSeries(ceo){
     const by=new Map();
-    for(const r of allRows){ if(textEq(r.ceo,ceo)) by.set(r.date,r); }
+    for(const r of allChartRows){ if(textEq(r.ceo,ceo)) by.set(r.date,r); }
     return dates.map(d=>{
       const r=by.get(d)||{total:0,positive:0,neutral:0,negative:0};
       const t=r.total||0;
