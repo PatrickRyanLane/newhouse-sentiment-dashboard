@@ -14,6 +14,7 @@ Output:
 """
 
 import os
+import sys
 import re
 import pandas as pd
 import requests
@@ -38,8 +39,17 @@ UNCONTROLLED_DOMAINS = {"wikipedia.org"}
 
 # --- Functions ---
 
-def get_today_date() -> str:
-    """Returns the current date in YYYY-MM-DD format."""
+def get_target_date() -> str:
+    """
+    Returns date from CLI args (YYYY-MM-DD) or today's date.
+    Usage: python process_serps.py [YYYY-MM-DD]
+    """
+    if len(sys.argv) > 1:
+        try:
+            datetime.strptime(sys.argv[1], "%Y-%m-%d")
+            return sys.argv[1]
+        except ValueError:
+            print(f"Warning: Invalid date format '{sys.argv[1]}'. Using today's date.")
     return datetime.now().strftime("%Y-%m-%d")
 
 def load_roster(path: str) -> pd.DataFrame:
@@ -102,8 +112,8 @@ def get_sentiment_label(score: float) -> str:
 
 def main():
     """Main function to process SERP data."""
-    print("Starting SERP data processing...")
-    today = get_today_date()
+    target_date = get_target_date()
+    print(f"Starting SERP data processing for {target_date}...")
 
     # Load roster
     try:
@@ -113,7 +123,7 @@ def main():
         return
 
     # Fetch SERP data
-    serp_df = fetch_serp_data(today)
+    serp_df = fetch_serp_data(target_date)
     if serp_df is None:
         print("No SERP data to process.")
         return
@@ -149,7 +159,7 @@ def main():
     final_df = pd.concat(processed_dfs, ignore_index=True)
 
     # Save processed data
-    output_path = os.path.join(BASE_DIR, "data_ceos", "processed_serps", f"{today}.csv")
+    output_path = os.path.join(BASE_DIR, "data_ceos", "processed_serps", f"{target_date}.csv")
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     final_df.to_csv(output_path, index=False)
 
