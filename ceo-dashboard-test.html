@@ -359,8 +359,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       {label:'Negative', data:neg, backgroundColor:'#ffb199', stack:'s'}
     ]};
     const options={responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{position:'top'}, tooltip:{callbacks:{label:(c)=>`${c.dataset.label}: ${c.parsed.y}%`}}},
-      scales:{x:{stacked:true, ticks:{display:labels.length<=7}}, y:{stacked:true, beginAtZero:true, ticks:{callback:(v)=>v+'%'}}}};
+      plugins:{legend:{position:'top'}, tooltip:{callbacks:{label:(c)=>`${c.dataset.label}: ${c.parsed.y}%`}}}, scales:{x:{stacked:true, ticks:{display:labels.length<=7}}, y:{stacked:true, beginAtZero:true, ticks:{callback:(v)=>v+'%'}}}};
     if(trendChart) trendChart.destroy();
     trendChart = new Chart(trendCanvas.getContext('2d'),{type:'bar',data,options});
   }
