@@ -188,9 +188,11 @@
       const t = await r.text();
       const p = Papa.parse(t,{header:true});
       const rows = (Array.isArray(p.data)?p.data:[]).map(normRow).filter(x=>Object.keys(x).length);
+      console.log(`fetchCsv(${path}) returned ${rows.length} rows.`);
       return rows;
     }catch(e){
       lastError = e.message||String(e);
+      console.error(`Error fetching ${path}: ${lastError}`);
       return [];
     }
   }
@@ -271,6 +273,7 @@
   async function loadCounts(){
     const rows = await fetchCsv(COUNTS_CSV);
     const good = rows.filter(r=> (r['date'] && /\d{4}-\d{2}-\d{2}/.test(r['date'])) && (r['brand']||r['ceo']));
+    console.log(`loadCounts: ${good.length} good rows after filtering.`);
     allChartRows = good; // Populate allChartRows with all good data
     allRows = good.filter(r => r.date === currentDate); // Filter allRows for the table
     dates = Array.from(new Set(allChartRows.map(r=>r.date))).sort(); // Use allChartRows to get all dates
