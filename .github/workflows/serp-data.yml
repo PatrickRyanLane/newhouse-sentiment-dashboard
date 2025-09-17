@@ -15,7 +15,9 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: python -m pip install pandas requests
+  run: |
+    python -m pip install --upgrade pip
+    python -m pip install pandas requests vaderSentiment
 
       - name: Build daily SERP index (backfill from first day you have)
         run: python scripts/process_serps.py --backfill 2025-09-15 $(date -I)
