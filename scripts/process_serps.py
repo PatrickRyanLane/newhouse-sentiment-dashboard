@@ -227,7 +227,6 @@ def classify_control(url: str, position, company: str, controlled_domains: set[s
       - Company name appears within the hostname (simplified)
       - Known controlled social (FB/LI/IG/Twitter/X)
       - Governance/about-like paths
-      - Rank 1 (optional rule; keep or remove)
     Always uncontrolled if host is in UNCONTROLLED_DOMAINS (Wikipedia, YouTube, TikTok).
     """
     try:
@@ -237,23 +236,25 @@ def classify_control(url: str, position, company: str, controlled_domains: set[s
     except Exception:
         domain, path = "", ""
 
+    # Always uncontrolled
     if any(d in domain for d in UNCONTROLLED_DOMAINS):
         return False
 
+    # Domain from roster
     if domain in controlled_domains:
         return True
 
+    # Company in domain (simplified)
     comp_simple = simplify_company(company)
     if comp_simple and comp_simple.replace(" ", "") in domain.replace(".", ""):
         return True
 
+    # Controlled social
     if any(s in domain for s in CONTROLLED_SOCIAL_DOMAINS):
         return True
 
+    # Controlled paths
     if any(k in path for k in CONTROLLED_PATH_KEYWORDS):
-        return True
-
-    if position == 1:
         return True
 
     return False
