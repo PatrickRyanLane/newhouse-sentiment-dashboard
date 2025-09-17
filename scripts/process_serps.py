@@ -1,37 +1,36 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Process daily CEO SERP CSVs from S3, classify sentiment & control,
-and write both row-level outputs (for the modal) and daily aggregates
-(for the dashboard table and trend charts).
+Process daily CEO SERPs with sentiment & control classification,
+and write both row-level and aggregate outputs for the dashboard.
 
 Inputs
 ------
 Raw S3 CSV per day:
   https://tk-public-data.s3.us-east-1.amazonaws.com/serp_files/{date}-ceo-serps.csv
-  Note: in these raw files the column named "company" contains the *query alias*
-        like "Tim Cook Apple" (not the canonical company).
+  NOTE: In raw files, the column named "company" holds the alias text
+        (e.g., "Tim Cook Apple"), not the canonical company.
 
 Local maps:
-  data/ceo_aliases.csv             (alias,ceo,company)  -> primary map
-  data/roster.csv or data/ceo_companies.csv (ceo,company) -> fallback
+  data/ceo_aliases.csv             (alias, ceo, company)  -> primary
+  data/roster.csv or data/ceo_companies.csv (ceo, company [+ optional domain/website/url]) -> fallback + controlled domains
 
 Outputs
 -------
-Row-level (for modal):
+Row-level processed SERPs (modal):
   data_ceos/serp_rows/{date}-ceo-serps-rows.csv
 
 Per-CEO daily aggregate:
   data_ceos/processed_serps/{date}-ceo-serps-processed.csv
 
-Rolling index used by dashboard:
+Rolling index (dashboard table & SERP trend):
   data/serps/ceo_serps_daily.csv
 
 Usage
 -----
 python scripts/process_serps.py --date 2025-09-17
 python scripts/process_serps.py --backfill 2025-09-15 2025-09-30
-(no args) -> tries today, then yesterday (skips if before first date)
+(no args) -> tries today, then yesterday (skips if before FIRST_AVAILABLE_DATE)
 """
 
 from __future__ import annotations
@@ -51,9 +50,10 @@ from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 S3_TEMPLATE = "https://tk-public-data.s3.us-east-1.amazonaws.com/serp_files/{date}-ceo-serps.csv"
 
+# First day you said CEO SERPs exist
 FIRST_AVAILABLE_DATE = dt.date(2025, 9, 15)
 
-ALIASES_PATH = Path("data/ceo_aliases.csv")  # alias,ceo,company
+ALIASES_PATH = Path("data/ceo_aliases.csv")            # columns: alias, ceo, company
 ROSTER_CANDIDATES = [Path("data/roster.csv"), Path("data/ceo_companies.csv")]
 
 OUT_DIR_ROWS = Path("data_ceos/serp_rows")
@@ -64,11 +64,16 @@ INDEX_PATH = INDEX_DIR / "ceo_serps_daily.csv"
 for p in (OUT_DIR_ROWS, OUT_DIR_DAILY, INDEX_DIR):
     p.mkdir(parents=True, exist_ok=True)
 
-# Control rules (similar to your old script; extend any time)
-CONTROLLED_SOCIAL_DOMAINS = {"facebook.com", "linkedin.com", "instagram.com", "twitter.com", "x.com", "youtube.com", "tiktok.com"}
-CONTROLLED_PATH_KEYWORDS   = {"/leadership/", "/about/", "/governance/", "/team/", "/investors/", "/board-of-directors"}
-UNCONTROLLED_DOMAINS       = {"wikipedia.org"}
-
+# Control rules
+CONTROLLED_SOCIAL_DOMAINS = {
+    "facebook.com", "linkedin.com", "instagram.com", "twitter.com", "x.com"
+}
+CONTROLLED_PATH_KEYWORDS = {
+    "/leadership/", "/about/", "/governance/", "/team/", "/investors/", "/board-of-directors"
+}
+UNCONTROLLED_DOMAINS = {
+    "wikipedia.org", "youtube.com", "youtu.be", "tiktok.com"
+}
 
 # ------------------------ Small helpers -----------------------
 
@@ -104,6 +109,7 @@ def fetch_csv_text(url: str, timeout=30):
     return r.text
 
 def load_roster_map() -> dict[str, str]:
+    """Return {CEO -> Company} from the first roster-like file we can read."""
     for p in ROSTER_CANDIDATES:
         if p.exists():
             df = read_csv_safely(p)
@@ -115,6 +121,7 @@ def load_roster_map() -> dict[str, str]:
     return {}
 
 def load_alias_index():
+    """Build alias map {alias_norm -> (CEO, Company)} and CEO->Company map."""
     alias_map: dict[str, tuple[str, str]] = {}
     ceo_to_company = load_roster_map()
 
@@ -132,13 +139,43 @@ def load_alias_index():
             if alias:
                 alias_map[norm(alias)] = (ceo, comp)
 
-    # Ensure "{ceo} {company}" exists for each roster entry
+    # Ensure basic "ceo + company" aliases exist
     for ceo, comp in ceo_to_company.items():
-        key = norm(f"{ceo} {comp}")
-        alias_map.setdefault(key, (ceo, comp))
+        alias_map.setdefault(norm(f"{ceo} {comp}"), (ceo, comp))
 
     return alias_map, ceo_to_company
 
+def load_controlled_domains_from_roster() -> set[str]:
+    """
+    Read domains from roster files and return hostnames treated as controlled.
+    Accept columns like: domain, website, url, site, homepage.
+    """
+    candidates = ROSTER_CANDIDATES
+    domains: set[str] = set()
+
+    def norm_host(val: str) -> str:
+        try:
+            u = urlparse(val if val.startswith("http") else f"https://{val}")
+            host = (u.netloc or u.path or "").lower().strip()
+            host = host.replace("www.", "")
+            return host
+        except Exception:
+            return ""
+
+    for p in candidates:
+        if not p.exists():
+            continue
+        df = read_csv_safely(p)
+        cols = {c.lower(): c for c in df.columns}
+        for hdr in ("domain", "website", "url", "site", "homepage"):
+            if hdr in cols:
+                for v in df[cols[hdr]].dropna().astype(str):
+                    host = norm_host(v.strip())
+                    if host and "." in host:
+                        domains.add(host)
+                break  # only use the first matching column
+
+    return domains
 
 # -------------------- Normalization & rules --------------------
 
@@ -171,7 +208,7 @@ def resolve_ceo_company(query_alias: str, alias_map: dict[str, tuple[str,str]], 
     if qn in alias_map:
         return alias_map[qn]
 
-    # lightweight fallback: CEO + simplified company tokens contained in alias
+    # Fallback: CEO + simplified company tokens all present in alias
     best = None
     best_score = 0
     for ceo, comp in ceo_to_company.items():
@@ -183,9 +220,15 @@ def resolve_ceo_company(query_alias: str, alias_map: dict[str, tuple[str,str]], 
                 best_score = score
     return best if best else ("", "")
 
-def classify_control(url: str, position, company: str) -> bool:
+def classify_control(url: str, position, company: str, controlled_domains: set[str]) -> bool:
     """
-    Return True if 'controlled' by brand (company domain/social/paths/rank-1), else False.
+    Return True if URL is 'controlled' by the brand:
+      - Host is in controlled_domains (from roster)
+      - Company name appears within the hostname (simplified)
+      - Known controlled social (FB/LI/IG/Twitter/X)
+      - Governance/about-like paths
+      - Rank 1 (optional rule; keep or remove)
+    Always uncontrolled if host is in UNCONTROLLED_DOMAINS (Wikipedia, YouTube, TikTok).
     """
     try:
         parsed = urlparse(url or "")
@@ -196,6 +239,9 @@ def classify_control(url: str, position, company: str) -> bool:
 
     if any(d in domain for d in UNCONTROLLED_DOMAINS):
         return False
+
+    if domain in controlled_domains:
+        return True
 
     comp_simple = simplify_company(company)
     if comp_simple and comp_simple.replace(" ", "") in domain.replace(".", ""):
@@ -222,7 +268,6 @@ def vader_label(analyzer: SentimentIntensityAnalyzer, text: str) -> str:
         return "negative"
     return "neutral"
 
-
 # ---------------------------- Core ----------------------------
 
 def process_one_date(date_str: str, alias_map, ceo_to_company):
@@ -241,7 +286,7 @@ def process_one_date(date_str: str, alias_map, ceo_to_company):
     raw = read_csv_safely(text)
     base = normalize_raw_columns(raw)
 
-    # Map to CEO + Company
+    # Map alias -> (CEO, Company)
     mapped = base.copy()
     mapped[["ceo", "company"]] = mapped.apply(
         lambda r: pd.Series(resolve_ceo_company(r["query_alias"], alias_map, ceo_to_company)),
@@ -250,8 +295,13 @@ def process_one_date(date_str: str, alias_map, ceo_to_company):
 
     # Sentiment + Control per row
     analyzer = SentimentIntensityAnalyzer()
+    controlled_domains = load_controlled_domains_from_roster()
+
     mapped["sentiment"]  = mapped.apply(lambda r: vader_label(analyzer, r["snippet"] or r["title"]), axis=1)
-    mapped["controlled"] = mapped.apply(lambda r: classify_control(r["url"], r["position"], r["company"]), axis=1)
+    mapped["controlled"] = mapped.apply(lambda r: classify_control(r["url"], r["position"], r["company"], controlled_domains), axis=1)
+
+    # Controlled -> positive (override)
+    mapped.loc[mapped["controlled"] == True, "sentiment"] = "positive"
 
     # ---- Row-level output (for modal) ----
     rows_df = pd.DataFrame({
@@ -270,13 +320,20 @@ def process_one_date(date_str: str, alias_map, ceo_to_company):
     print(f"[write] {rows_path}")
 
     # ---- Per-CEO aggregate for the day ----
+    # Choose the most frequent non-empty company name per CEO for display
+    def majority_company(series: pd.Series) -> str:
+        s = pd.Series(series).replace("", pd.NA).dropna()
+        if s.empty:
+            return ""
+        return s.mode().iloc[0]
+
     ag = mapped.groupby("ceo", dropna=False).agg(
         total=("sentiment", "size"),
         controlled=("controlled", "sum"),
         negative_serp=("sentiment", lambda s: (s == "negative").sum()),
         neutral_serp=("sentiment",  lambda s: (s == "neutral").sum()),
         positive_serp=("sentiment", lambda s: (s == "positive").sum()),
-        company=("company", lambda s: pd.Series(s).replace("", pd.NA).dropna().mode().iloc[0] if pd.Series(s).replace("", pd.NA).dropna().size else ""),
+        company=("company", majority_company),
     ).reset_index()
     ag.insert(0, "date", date_str)
 
@@ -301,7 +358,6 @@ def process_one_date(date_str: str, alias_map, ceo_to_company):
 
     return day_path
 
-
 def backfill(start: str, end: str, alias_map, ceo_to_company):
     d0 = dt.date.fromisoformat(start)
     d1 = dt.date.fromisoformat(end)
@@ -311,7 +367,6 @@ def backfill(start: str, end: str, alias_map, ceo_to_company):
     while d <= d1:
         process_one_date(d.isoformat(), alias_map, ceo_to_company)
         d += dt.timedelta(days=1)
-
 
 # ---------------------------- CLI ----------------------------
 
