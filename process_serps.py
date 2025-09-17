@@ -1,175 +1,250 @@
-
-
 #!/usr/bin/env python3
-"""
-Processes daily CEO SERP data to add sentiment and control analysis.
-
-Input:
-- Daily SERP CSV from S3 URL: https://tk-public-data.s3.us-east-1.amazonaws.com/serp_files/YYYY-MM-DD-ceo-serps.csv
-- roster.csv: Contains company names for control analysis.
-
-Output:
-- Processed SERP CSV with sentiment and control status columns, saved locally to:
-  data_ceos/processed_serps/YYYY-MM-DD.csv
-"""
-
-import os
-import sys
-import re
+# scripts/process_serps.py
+import argparse, os, sys, io
+import datetime as dt
+from pathlib import Path
 import pandas as pd
 import requests
-from datetime import datetime
-from urllib.parse import urlparse
-from typing import Union
-from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+import re
 
+S3_TEMPLATE = "https://tk-public-data.s3.us-east-1.amazonaws.com/serp_files/{date}-ceo-serps.csv"
 
-# --- Config ---
-SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
-BASE_DIR = SCRIPT_DIR
+OUT_DIR = Path("data_ceos/processed_serps")
+OUT_DIR.mkdir(parents=True, exist_ok=True)
 
-ROSTER_CSV = os.path.join(BASE_DIR, "data", "roster.csv")
+INDEX_DIR = Path("data/serps")
+INDEX_DIR.mkdir(parents=True, exist_ok=True)
+INDEX_PATH = INDEX_DIR / "ceo_serps_daily.csv"
 
-RAW_SERP_URL_TEMPLATE = "https://tk-public-data.s3.us-east-1.amazonaws.com/serp_files/{date}-ceo-serps.csv"
+# Canonical sources
+ALIASES_PATH = Path("data/ceo_aliases.csv")     # alias,ceo,company  (alias == raw S3 'company' field)
+ROSTER_CANDIDATES = [Path("data/roster.csv"), Path("data/ceo_companies.csv")]  # ceo,company
 
+FIRST_AVAILABLE_DATE = dt.date(2025, 9, 15)  # earliest SERP date you have
 
-CONTROLLED_SOCIAL_DOMAINS = {"facebook.com", "linkedin.com", "instagram.com", "twitter.com"}
-CONTROLLED_PATH_KEYWORDS = {"/leadership/", "/about/", "/governance/"}
-UNCONTROLLED_DOMAINS = {"wikipedia.org"}
+def norm(s: str) -> str:
+    s = str(s or "").lower().strip()
+    # keep letters/numbers/spaces; collapse whitespace
+    s = re.sub(r"[^a-z0-9\s]+", " ", s)
+    s = re.sub(r"\s+", " ", s).strip()
+    return s
 
-# --- Functions ---
+LEGAL_SUFFIXES = {"inc", "inc.", "corp", "co", "co.", "llc", "plc", "ltd", "ltd.", "ag", "sa", "nv"}
 
-def get_target_date() -> str:
+def simplify_company(s: str) -> str:
+    toks = norm(s).split()
+    toks = [t for t in toks if t not in LEGAL_SUFFIXES]
+    return " ".join(toks)
+
+def load_roster_map():
+    """Return ceo->company from roster-like files (best-effort)."""
+    for p in ROSTER_CANDIDATES:
+        if p.exists():
+            df = pd.read_csv(p)
+            cols = {c.lower(): c for c in df.columns}
+            ceo_c  = next((cols[c] for c in cols if c in ("ceo","name","person")), None)
+            comp_c = next((cols[c] for c in cols if c in ("company","brand","org","employer")), None)
+            if ceo_c and comp_c:
+                return { str(r[ceo_c]).strip(): str(r[comp_c]).strip() for _, r in df.iterrows() }
+    return {}
+
+def load_alias_index():
     """
-    Returns date from CLI args (YYYY-MM-DD) or today's date.
-    Usage: python process_serps.py [YYYY-MM-DD]
+    Build alias indexes:
+      - alias_norm -> (ceo, company)  [from data/ceo_aliases.csv]
+      - ceo->company (from roster)
+    Also auto-add "{ceo} {company}" as an alias if not present.
     """
-    if len(sys.argv) > 1:
-        try:
-            datetime.strptime(sys.argv[1], "%Y-%m-%d")
-            return sys.argv[1]
-        except ValueError:
-            print(f"Warning: Invalid date format '{sys.argv[1]}'. Using today's date.")
-    return datetime.now().strftime("%Y-%m-%d")
+    alias_map = {}
+    ceo_to_company = load_roster_map()
 
-def load_roster(path: str) -> pd.DataFrame:
-    """Loads the roster CSV into a DataFrame."""
-    if not os.path.exists(path):
-        raise FileNotFoundError(f"Roster file not found at: {path}")
-    return pd.read_csv(path)
+    if ALIASES_PATH.exists():
+        a = pd.read_csv(ALIASES_PATH)
+        need_cols = {"alias","ceo","company"}
+        if not need_cols.issubset({c.lower() for c in a.columns}):
+            raise SystemExit("data/ceo_aliases.csv must have columns: alias, ceo, company")
+        # tolerate case variants
+        cols = {c.lower(): c for c in a.columns}
+        for _, r in a.iterrows():
+            alias = str(r[cols["alias"]]).strip()
+            ceo   = str(r[cols["ceo"]]).strip()
+            comp  = str(r[cols["company"]]).strip()
+            if alias:
+                alias_map[norm(alias)] = (ceo, comp)
 
-def fetch_serp_data(date: str) -> Union[pd.DataFrame, None]:
-    """Fetches the SERP data for a given date from S3."""
-    url = RAW_SERP_URL_TEMPLATE.format(date=date)
+    # Auto-generate "{ceo} {company}" aliases from roster if missing
+    for ceo, comp in ceo_to_company.items():
+        auto = f"{ceo} {comp}"
+        na = norm(auto)
+        if na and na not in alias_map:
+            alias_map[na] = (ceo, comp)
+
+    return alias_map, ceo_to_company
+
+def fetch_csv_text(url: str, timeout=30):
+    r = requests.get(url, timeout=timeout)
+    if r.status_code == 404:
+        return None
+    r.raise_for_status()
+    r.encoding = r.apparent_encoding or "utf-8"
+    return r.text
+
+def normalize_columns(df: pd.DataFrame):
+    """
+    Map the raw S3 columns into a working frame with:
+      query_alias (raw S3 'company' field that actually holds 'CEO Company'),
+      sentiment   (negative/neutral/positive),
+      controlled  (boolean).
+    """
+    cols = {c.lower(): c for c in df.columns}
+
+    # In your raw S3, 'company' holds the query "CEO Company"
+    query_c   = cols.get("company") or cols.get("query") or cols.get("search")  # tolerant
+    # Sentiment/control candidates
+    sent_c    = cols.get("sentiment") or cols.get("sentiment_label") or cols.get("serp_sentiment") or cols.get("label")
+    control_c = cols.get("control") or cols.get("controlled") or cols.get("is_controlled") or cols.get("serp_control") or cols.get("control_flag")
+
+    out = pd.DataFrame()
+    out["query_alias"] = df[query_c].astype(str).str.strip() if query_c else ""
+
+    if sent_c is not None:
+        mapping = {
+            "neg":"negative", "negative":"negative", "-1":"negative",
+            "neu":"neutral",  "neutral":"neutral",   "0":"neutral",
+            "pos":"positive", "positive":"positive", "1":"positive",
+        }
+        out["sentiment"] = df[sent_c].astype(str).str.strip().str.lower().map(lambda s: mapping.get(s, "neutral"))
+    else:
+        out["sentiment"] = "neutral"
+
+    if control_c is not None:
+        v = df[control_c].astype(str).str.strip().str.lower()
+        out["controlled"] = v.isin(("1","true","t","yes","y","controlled"))
+    else:
+        out["controlled"] = False
+
+    return out
+
+def resolve_ceo_company(query_alias: str, alias_map: dict, ceo_to_company: dict):
+    """
+    1) Exact alias match on the normalized query.
+    2) Light fallback: if query contains both the CEO name and the simplified company name, accept it.
+    """
+    qn = norm(query_alias)
+    if qn in alias_map:
+        return alias_map[qn]
+
+    # Lightweight heuristic fallback
+    # Try to find a (ceo,company) whose "{ceo} {company}" is mostly contained in the query.
+    q_tokens = set(qn.split())
+    best = None
+    best_score = 0
+    for ceo, comp in ceo_to_company.items():
+        ceo_n = norm(ceo)
+        comp_n = simplify_company(comp)
+        target = f"{ceo_n} {comp_n}".strip()
+        t_tokens = set(target.split())
+        if t_tokens.issubset(q_tokens):
+            score = len(t_tokens)
+            if score > best_score:
+                best = (ceo, comp)
+                best_score = score
+    return best if best else ("", "")  # unresolved -> blanks
+
+def process_one_date(date_str: str, alias_map: dict, ceo_to_company: dict):
     try:
-        response = requests.get(url)
-        response.raise_for_status()
-        return pd.read_csv(url)
-    except requests.exceptions.RequestException as e:
-        print(f"Error fetching SERP data from {url}: {e}")
-        return None
-    except Exception as e:
-        print(f"Error processing SERP data from {url}: {e}")
+        day = dt.date.fromisoformat(date_str)
+    except Exception:
+        raise SystemExit(f"Bad date format: {date_str}. Use YYYY-MM-DD.")
+
+    if day < FIRST_AVAILABLE_DATE:
+        print(f"[skip] {date_str} < first available ({FIRST_AVAILABLE_DATE})")
         return None
 
-def classify_control(row: pd.Series, company_name: str, roster_website: str) -> str:
-    """Classifies a URL as controlled or uncontrolled based on a set of rules."""
-    url = row["link"]
-    position = row["position"]
-    parsed_url = urlparse(url)
-    domain = parsed_url.netloc.replace("www.", "")
+    url = S3_TEMPLATE.format(date=date_str)
+    print(f"[fetch] {url}")
+    text = fetch_csv_text(url)
+    if text is None:
+        print(f"[missing] No S3 file for {date_str}")
+        return None
 
-    # New Rule: Roster website is controlled
-    if roster_website and isinstance(roster_website, str) and roster_website.lower() in domain.lower():
-        return "controlled"
+    raw = pd.read_csv(io.StringIO(text))
+    wf = normalize_columns(raw)
 
-    # Rule 5: Wikipedia is always uncontrolled
-    if any(uncontrolled_domain in domain for uncontrolled_domain in UNCONTROLLED_DOMAINS):
-        return "uncontrolled"
+    # Map query_alias -> (ceo, company)
+    mapped = wf.copy()
+    mapped[["ceo","company"]] = mapped.apply(
+        lambda r: pd.Series(resolve_ceo_company(r["query_alias"], alias_map, ceo_to_company)),
+        axis=1
+    )
 
-    # Rule 1: Company name in domain
-    if company_name.lower() in domain.lower():
-        return "controlled"
+    # Aggregate to per-CEO metrics
+    if mapped.empty:
+        print(f"[warn] No rows after mapping for {date_str}")
+        return None
 
-    # Rule 2: Controlled social media domains
-    if any(social_domain in domain for social_domain in CONTROLLED_SOCIAL_DOMAINS):
-        return "controlled"
+    def dominant_company(group):
+        s = group["company"].replace("", pd.NA).dropna()
+        return s.mode().iloc[0] if len(s) else ""
 
-    # Rule 3: Controlled path keywords
-    if any(keyword in parsed_url.path for keyword in CONTROLLED_PATH_KEYWORDS):
-        return "controlled"
+    grouped = mapped.groupby("ceo", dropna=False).agg(
+        total=("sentiment","size"),
+        controlled=("controlled","sum"),
+        negative_serp=("sentiment", lambda s: (s=="negative").sum()),
+        neutral_serp=("sentiment",  lambda s: (s=="neutral").sum()),
+        positive_serp=("sentiment", lambda s: (s=="positive").sum()),
+        company=("company", dominant_company),
+    ).reset_index()
 
-    # Rule 4: Rank 1 is controlled
-    if position == 1:
-        return "controlled"
+    # Stamp date and write daily processed file
+    grouped.insert(0, "date", date_str)
+    out_day = OUT_DIR / f"{date_str}-ceo-serps-processed.csv"
+    grouped.to_csv(out_day, index=False)
+    print(f"[write] {out_day}")
 
-    # Rule 6: All other URLs are uncontrolled
-    return "uncontrolled"
+    # Merge into rolling index
+    if INDEX_PATH.exists():
+        idx = pd.read_csv(INDEX_PATH)
+        idx = idx[idx["date"] != date_str]
+        idx = pd.concat([idx, grouped], ignore_index=True)
+    else:
+        idx = grouped
 
-def get_sentiment_label(score: float) -> str:
-    """Converts a VADER compound score to a sentiment label."""
-    if score >= 0.05:
-        return "positive"
-    if score <= -0.05:
-        return "negative"
-    return "neutral"
+    idx["date"] = pd.to_datetime(idx["date"], errors="coerce")
+    idx = idx.sort_values(["date","ceo"]).reset_index(drop=True)
+    idx["date"] = idx["date"].dt.strftime("%Y-%m-%d")
+    idx.to_csv(INDEX_PATH, index=False)
+    print(f"[update] {INDEX_PATH} ({len(idx)} rows total)")
+    return out_day
+
+def backfill(start: str, end: str, alias_map: dict, ceo_to_company: dict):
+    d0 = dt.date.fromisoformat(start)
+    d1 = dt.date.fromisoformat(end)
+    if d0 > d1:
+        d0, d1 = d1, d0
+    d = d0
+    while d <= d1:
+        process_one_date(d.isoformat(), alias_map, ceo_to_company)
+        d += dt.timedelta(days=1)
 
 def main():
-    """Main function to process SERP data."""
-    target_date = get_target_date()
-    print(f"Starting SERP data processing for {target_date}...")
+    ap = argparse.ArgumentParser(description="Process daily CEO SERP files and update daily index (with alias mapping).")
+    ap.add_argument("--date", help="Process a single date (YYYY-MM-DD).")
+    ap.add_argument("--backfill", nargs=2, metavar=("START","END"),
+                    help="Process a date range inclusive (YYYY-MM-DD YYYY-MM-DD).")
+    args = ap.parse_args()
 
-    # Load roster
-    try:
-        roster_df = load_roster(ROSTER_CSV)
-    except FileNotFoundError as e:
-        print(e)
-        return
+    alias_map, ceo_to_company = load_alias_index()
 
-    # Fetch SERP data
-    serp_df = fetch_serp_data(target_date)
-    if serp_df is None:
-        print("No SERP data to process.")
-        return
-
-    # Initialize sentiment analyzer
-    analyzer = SentimentIntensityAnalyzer()
-
-    # Process each company in the roster
-    processed_dfs = []
-    for _, roster_row in roster_df.iterrows():
-        ceo_name = roster_row["CEO"]
-        company_name = roster_row["Company"]
-        roster_website = roster_row["Website"]
-        company_serps = serp_df[serp_df["company"].str.contains(ceo_name, case=False, na=False)].copy()
-
-        if not company_serps.empty:
-            # Apply control classification
-            company_serps["control_status"] = company_serps.apply(
-                lambda row: classify_control(row, company_name, roster_website), axis=1
-            )
-
-            # Apply sentiment analysis
-            company_serps["sentiment_score"] = company_serps["snippet"].apply(
-                lambda snippet: analyzer.polarity_scores(str(snippet))["compound"]
-            )
-            company_serps["sentiment"] = company_serps["sentiment_score"].apply(get_sentiment_label)
-            processed_dfs.append(company_serps)
-
-    if not processed_dfs:
-        print("No SERP data processed.")
-        return
-
-    # Combine processed data
-    final_df = pd.concat(processed_dfs, ignore_index=True)
-
-    # Save processed data
-    output_path = os.path.join(BASE_DIR, "data_ceos", "processed_serps", f"{target_date}.csv")
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    final_df.to_csv(output_path, index=False)
-
-    print(f"Processed SERP data saved to: {output_path}")
-    print("SERP data processing complete.")
+    if args.date:
+        process_one_date(args.date, alias_map, ceo_to_company)
+    elif args.backfill:
+        backfill(args.backfill[0], args.backfill[1], alias_map, ceo_to_company)
+    else:
+        today = dt.date.today()
+        for cand in (today, today - dt.timedelta(days=1)):
+            if process_one_date(cand.isoformat(), alias_map, ceo_to_company):
+                break
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main() or 0)
