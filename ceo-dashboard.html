@@ -130,7 +130,152 @@ const ROSTER_CANDIDATES = [
   'data/ceo_companies.csv'
 ];
 const BOARDS_CSV = 'data/serps/ceo_boards.csv';
+// Try multiple candidate CSV paths, return the first that loads.
+async function fetchCsvAny(candidates){
+  for (const url of candidates){
+    try {
+      const resp = await fetch(url, {cache:'no-store'});
+      if (!resp.ok) continue;
+      const txt = await resp.text();
+      return new Promise((res, rej)=>{
+        Papa.parse(txt, {header:true, skipEmptyLines:true, complete:r=>res(r.data), error:rej});
+      });
+    } catch { /* try next */ }
+  }
+  return null;
+}
 
+async function showHeadlines(ceo, date){
+  const c = document.getElementById('modalContent');
+
+  // Try a few reasonable filenames (adjust later if you settle on one)
+  const files = [
+    `data_ceos/articles/${date}-articles.csv`,
+    `data_ceos/articles/${date}-ceo-articles.csv`,
+    `data/articles/${date}-articles.csv`,
+    `data/articles/${date}.csv`,
+  ];
+
+  const rows = await fetchCsvAny(files);
+  if (!rows || !rows.length){
+    c.innerHTML = `<div class="muted">No article file found for ${date}.</div>`;
+    return;
+  }
+
+  // Normalize common columns
+  const norm = r => ({
+    ceo: String(r.ceo || r.CEO || '').trim(),
+    company: String(r.company || r.Company || '').trim(),
+    title: String(r.title || r.headline || '').trim(),
+    url: String(r.url || r.link || '').trim(),
+    pub: String(r.source || r.publisher || r.site || '').trim(),
+    sent: String(r.sentiment || r.sentiment_label || '').toLowerCase().trim()
+  });
+
+  const filtered = rows.map(norm).filter(r => r.ceo === ceo);
+  if (!filtered.length){
+    c.innerHTML = `<div class="muted">No headlines for ${ceo} on ${date}.</div>`;
+    return;
+  }
+
+  const items = filtered.map(r=>{
+    const kind = r.sent.startsWith('neg') ? 'neg' : r.sent.startsWith('pos') ? 'pos' : 'neu';
+    const pub = r.pub ? `<span class="muted"> — ${r.pub}</span>` : '';
+    const link = r.url ? `<a href="${r.url}" target="_blank" rel="noopener">${r.title || '(untitled)'}</a>` : (r.title || '(untitled)');
+    return `<li style="margin:8px 0">${link}${badge(r.sent || 'neutral', kind)}${pub}</li>`;
+  });
+
+  c.innerHTML = `<ul style="padding-left:18px;margin:0">${items.join('')}</ul>`;
+}
+
+async function showSerps(ceo, company, date){
+  const c = document.getElementById('modalContent');
+
+  // Your public S3 pattern (raw daily SERPs)
+  const url = `https://tk-public-data.s3.us-east-1.amazonaws.com/serp_files/${date}-ceo-serps.csv`;
+
+  // Try to fetch; if missing (e.g., before 2025-09-15), say so.
+  let rows = null;
+  try {
+    const resp = await fetch(url, {cache:'no-store'});
+    if (!resp.ok) {
+      c.innerHTML = `<div class="muted">No SERP file found for ${date}.</div>`;
+      return;
+    }
+    const txt = await resp.text();
+    rows = await new Promise((res,rej)=>Papa.parse(txt,{header:true,skipEmptyLines:true,complete:r=>res(r.data),error:rej}));
+  } catch {
+    c.innerHTML = `<div class="muted">Could not load SERP file for ${date}.</div>`;
+    return;
+  }
+
+  // In your raw S3, the column named "company" holds the search query "CEO Company"
+  const alias = `${ceo} ${company}`.trim().toLowerCase();
+  const norm = r => ({
+    alias: String(r.company || r.query || '').trim().toLowerCase(),
+    title: String(r.title || r.page_title || r.result || '').trim(),
+    url: String(r.url || r.link || '').trim(),
+    pos: Number(r.position || r.rank || r.pos || 0) || null,
+    sent: String(r.sentiment || r.sentiment_label || r.serp_sentiment || '').trim().toLowerCase(),
+    ctrl: String(r.control || r.controlled || r.is_controlled || '').trim().toLowerCase()
+  });
+
+  const filtered = rows.map(norm).filter(r => r.alias === alias);
+  if (!filtered.length){
+    c.innerHTML = `<div class="muted">No SERP rows for “${ceo} ${company}” on ${date}.</div>`;
+    return;
+  }
+
+  // Simple summary
+  const total = filtered.length;
+  const neg = filtered.filter(r=>r.sent.startsWith('neg')).length;
+  const ctrl = filtered.filter(r=>['1','true','yes','y','controlled'].includes(r.ctrl)).length;
+
+  // Table
+  const head = `
+    <thead><tr>
+      <th style="text-align:right;padding:6px 8px;width:60px">Pos</th>
+      <th style="text-align:left;padding:6px 8px">Title</th>
+      <th style="text-align:left;padding:6px 8px">URL</th>
+      <th style="text-align:center;padding:6px 8px">Sentiment</th>
+      <th style="text-align:center;padding:6px 8px">Control</th>
+    </tr></thead>`;
+
+  const rowsHtml = filtered
+    .sort((a,b)=>(a.pos??999)-(b.pos??999))
+    .slice(0,50)
+    .map(r=>{
+      const kind = r.sent.startsWith('neg') ? 'neg' : r.sent.startsWith('pos') ? 'pos' : 'neu';
+      const ctrlTxt = ['1','true','yes','y','controlled'].includes(r.ctrl) ? 'Controlled' : 'Uncontrolled';
+      const pos = r.pos ?? '';
+      const t = r.title || '(no title)';
+      const link = r.url ? `<a href="${r.url}" target="_blank" rel="noopener">${t}</a>` : t;
+      return `<tr>
+        <td style="text-align:right;padding:6px 8px">${pos}</td>
+        <td style="padding:6px 8px">${link}</td>
+        <td style="padding:6px 8px"><span class="muted">${r.url||''}</span></td>
+        <td style="text-align:center;padding:6px 8px">${badge(r.sent || 'neutral', kind)}</td>
+        <td style="text-align:center;padding:6px 8px">${ctrlTxt}</td>
+      </tr>`;
+    }).join('');
+
+  const summary = `
+    <div class="muted" style="margin:0 0 8px 0">
+      ${total} results — ${neg} negative — ${ctrl} controlled
+    </div>`;
+
+  c.innerHTML = summary + `<div style="overflow:auto;max-height:60vh;border:1px solid #23314d;border-radius:12px">
+    <table style="width:100%;border-collapse:collapse">${head}<tbody>${rowsHtml}</tbody></table>
+  </div>`;
+}
+
+// Badge helper for sentiments / control
+function badge(txt, kind){
+  const cls = kind==='neg' ? 'pill high' : kind==='pos' ? 'pill low' : 'pill med';
+  return `<span class="${cls}" style="margin-left:6px">${txt}</span>`;
+}
+
+  
 // Runtime state
 let rosterMap = new Map(); // CEO -> Company
 let companyToCeo = new Map(); // Company -> CEO (built from roster)
@@ -431,22 +576,37 @@ function drawSerpTrend(){
 }
 
 /******************** Modal (basic) ********************/
-function openModal(kind, ceo, date){
-  $('#modalTitle').textContent = kind.charAt(0).toUpperCase()+kind.slice(1) + (ceo?` — ${ceo}`:'');
-  const c = $('#modalContent');
-  if(kind==='boards'){
-    const boards = boardsByCeo.get(ceo)||[];
-    if(!boards.length){ c.innerHTML = '<div class="muted">No boards found.</div>'; }
-    else{ c.innerHTML = '<ul>'+boards.map(b=>`<li style="margin:6px 0">${b.url?`<a href="${b.url}" target="_blank">${b.domain||b.url}</a>`:(b.domain||'Board')}</li>`).join('')+'</ul>'; }
-  }else if(kind==='headlines'){
-    c.innerHTML = '<div class="muted">Headlines viewer will appear here once article files are wired in.</div>';
-  }else if(kind==='serp'){
-    c.innerHTML = '<div class="muted">SERP snapshot viewer will appear here once linked.</div>';
+async function openModal(kind, ceo, date){
+  document.getElementById('modalTitle').textContent =
+    (kind.charAt(0).toUpperCase()+kind.slice(1)) + (ceo ? ` — ${ceo}` : '');
+  const box = document.getElementById('modalContent');
+  box.innerHTML = 'Loading…';
+  document.getElementById('modal').style.display = 'flex';
+
+  if (kind === 'boards'){
+    const boards = boardsByCeo.get(ceo) || [];
+    if(!boards.length){ box.innerHTML = '<div class="muted">No boards found.</div>'; return; }
+    box.innerHTML = '<ul style="padding-left:18px;margin:0">' +
+      boards.map(b => `<li style="margin:6px 0">${b.url ? `<a href="${b.url}" target="_blank">${b.domain||b.url}</a>` : (b.domain||'Board')}</li>`).join('') +
+    '</ul>';
+    return;
   }
-  $('#modal').style.display='flex';
+
+  if (kind === 'headlines'){
+    await showHeadlines(ceo, currentDate);
+    return;
+  }
+
+  if (kind === 'serp'){
+    // We need company to filter the S3 file. If table row didn’t pass it, re-derive it from current rows.
+    let company = '';
+    const match = filteredRows.find(r => r.ceo === ceo);
+    if (match) company = match.company || '';
+    await showSerps(ceo, company, currentDate);
+    return;
+  }
 }
-$('#modalClose').addEventListener('click',()=> $('#modal').style.display='none');
-$('#modal').addEventListener('click',e=>{ if(e.target.id==='modal') $('#modal').style.display='none'; });
+
 
 /******************** Init & events ********************/
 async function init(){
