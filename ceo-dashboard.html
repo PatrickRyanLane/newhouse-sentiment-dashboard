@@ -127,7 +127,7 @@ const ROSTER_CANDIDATES = [
   'data/roster.csv',
   'data/ceo_companies.csv'
 ];
-const BOARDS_CSV = 'data/serps/ceo_boards.csv'; // ceo,domain,url
+const BOARDS_CSV = 'data/ceo_boards.csv'; // ceo,domain,url
 
 // Try multiple paths and return the first CSV that loads
 async function fetchCsvAny(candidates){
@@ -208,16 +208,26 @@ async function loadRoster(){
   }
 }
 async function loadBoards(){
+  boardsByCeo = new Map();
+
   try{
     const rows = await fetchCsv(BOARDS_CSV);
-    for(const r of rows){
-      const ceo = String(r.ceo||r.CEO||'').trim();
-      const domain = String(r.domain||r.board||'').trim();
-      const url = String(r.url||r.link||'').trim();
-      if(!ceo) continue;
-      const arr = boardsByCeo.get(ceo) || []; arr.push({domain,url}); boardsByCeo.set(ceo,arr);
+    for (const r of rows){
+      const ceo = String(r.ceo || r.CEO || '').trim();
+      const domain = String(r.Domain || r.domain || '').trim();
+      const url = String(r.URL || r.url || '').trim();
+      if (!ceo) continue;
+
+      const list = boardsByCeo.get(ceo) || [];
+      // Avoid duplicates
+      if (!list.some(x => x.url === url && x.domain === domain)){
+        list.push({ domain, url });
+      }
+      boardsByCeo.set(ceo, list);
     }
-  }catch{}
+  } catch (e) {
+    console.warn('Boards CSV not found or unreadable:', e);
+  }
 }
 async function loadSerpsDaily(){
   try{
@@ -522,31 +532,28 @@ async function openModal(kind, ceo, date){
   box.innerHTML = 'Loading…';
   document.getElementById('modal').style.display = 'flex';
 
-  if (kind === 'boards'){
-    let boards = boardsByCeo.get(ceo) || [];
-    if (!boards.length) {
-      const comp = rosterMap.get(ceo) || '';
-      if (comp && companyToCeo.has(comp.toLowerCase())) {
-        const altCeo = companyToCeo.get(comp.toLowerCase());
-        boards = boardsByCeo.get(altCeo) || [];
-      }
-    }
-    if (!boards.length){ box.innerHTML = '<div class="muted">No boards found.</div>'; return; }
-    box.innerHTML = '<ul style="padding-left:18px;margin:0">'
-      + boards.map(b => `<li style="margin:6px 0">${b.url ? `<a href="${b.url}" target="_blank" rel="noopener">${b.domain||b.url}</a>` : (b.domain||'Board')}</li>`).join('')
-      + '</ul>';
+ if (kind === 'boards'){
+  // Exact-match first; if empty, try a case-insensitive lookup
+  let boards = boardsByCeo.get(ceo) || [];
+  if (!boards.length) {
+    const key = Array.from(boardsByCeo.keys()).find(k => k.toLowerCase() === ceo.toLowerCase());
+    if (key) boards = boardsByCeo.get(key) || [];
+  }
+
+  if (!boards.length){
+    box.innerHTML = '<div class="muted">No boards found.</div>';
     return;
   }
-  if (kind === 'headlines'){ await showHeadlines(ceo, currentDate); return; }
-  if (kind === 'serp'){
-    // prefer nearest processed rows date ≤ current
-    const chosen = currentDate;
-    let company = '';
-    const match = filteredRows.find(r => r.ceo === ceo);
-    if (match) company = match.company || '';
-    await showSerps(ceo, company, chosen);
-    return;
-  }
+
+  box.innerHTML = '<ul style="padding-left:18px;margin:0">' +
+    boards.map(b => {
+      const text = b.domain || (b.url ? new URL(b.url).hostname.replace(/^www\./,'') : 'Board');
+      const href = b.url || '#';
+      return `<li style="margin:6px 0"><a href="${href}" target="_blank" rel="noopener">${text}</a></li>`;
+    }).join('') +
+  '</ul>';
+  return;
+}
 }
 
 /* =================== Events / init =================== */
