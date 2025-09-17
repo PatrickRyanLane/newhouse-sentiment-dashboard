@@ -183,9 +183,13 @@ def process_one_date(date_str: str, alias_map: dict, ceo_to_company: dict):
         print(f"[warn] No rows after mapping for {date_str}")
         return None
 
-    def dominant_company(group):
-        s = group["company"].replace("", pd.NA).dropna()
-        return s.mode().iloc[0] if len(s) else ""
+    def dominant_company(series):
+    # `series` is the one column "company" for the current CEO group
+    s = pd.Series(series).astype(str)
+    s = s.replace("", pd.NA).dropna()
+    if s.empty:
+        return ""
+    return s.mode().iloc[0]
 
     grouped = mapped.groupby("ceo", dropna=False).agg(
         total=("sentiment","size"),
