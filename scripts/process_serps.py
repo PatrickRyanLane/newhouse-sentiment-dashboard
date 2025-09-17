@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Build daily CEO SERP aggregates and a rolling index for the dashboard.
+Build daily CEO SERP aggregates + row-level outputs and a rolling index for the dashboard.
 
 Inputs
 ------
@@ -18,8 +18,9 @@ Inputs
 
 Outputs
 -------
-- data_ceos/processed_serps/{date}-ceo-serps-processed.csv
-- data/serps/ceo_serps_daily.csv   (rolling index used by the dashboard)
+- data_ceos/processed_serps/{date}-ceo-serps-processed.csv   (per-CEO aggregates)
+- data_ceos/serp_rows/{date}-ceo-serps-rows.csv              (row-level results for modal)
+- data/serps/ceo_serps_daily.csv                             (rolling per-CEO index used by dashboard)
 
 Usage
 -----
@@ -52,10 +53,12 @@ ROSTER_CANDIDATES = [Path("data/roster.csv"), Path("data/ceo_companies.csv")]  #
 
 # Outputs
 OUT_DIR = Path("data_ceos/processed_serps")
+ROWS_DIR = Path("data_ceos/serp_rows")
 INDEX_DIR = Path("data/serps")
 INDEX_PATH = INDEX_DIR / "ceo_serps_daily.csv"
 
 OUT_DIR.mkdir(parents=True, exist_ok=True)
+ROWS_DIR.mkdir(parents=True, exist_ok=True)
 INDEX_DIR.mkdir(parents=True, exist_ok=True)
 
 
@@ -249,7 +252,27 @@ def process_one_date(date_str: str, alias_map: dict[str, tuple[str, str]], ceo_t
         axis=1,
     )
 
-    # Aggregate per CEO
+    # --- Row-level processed output (for the dashboard SERP modal) ---
+    raw_cols = {c.lower(): c for c in raw.columns}
+    title_c = raw_cols.get("title") or raw_cols.get("page_title") or raw_cols.get("result")
+    url_c   = raw_cols.get("url") or raw_cols.get("link")
+    pos_c   = raw_cols.get("position") or raw_cols.get("rank") or raw_cols.get("pos")
+
+    rows_df = pd.DataFrame({
+        "date": date_str,
+        "ceo":  mapped["ceo"],
+        "company": mapped["company"],
+        "title": raw[title_c] if title_c else "",
+        "url":   raw[url_c]   if url_c   else "",
+        "position": raw[pos_c] if pos_c else "",
+        "sentiment": mapped["sentiment"],
+        "controlled": mapped["controlled"],
+    })
+    rows_path = ROWS_DIR / f"{date_str}-ceo-serps-rows.csv"
+    rows_df.to_csv(rows_path, index=False)
+    print(f"[write] {rows_path}")
+
+    # --- Aggregate per CEO for the day ---
     if mapped.empty:
         print(f"[warn] No rows after mapping for {date_str}")
         return None
@@ -258,15 +281,14 @@ def process_one_date(date_str: str, alias_map: dict[str, tuple[str, str]], ceo_t
         total=("sentiment", "size"),
         controlled=("controlled", "sum"),
         negative_serp=("sentiment", lambda s: (s == "negative").sum()),
-        neutral_serp=("sentiment", lambda s: (s == "neutral").sum()),
+        neutral_serp=("sentiment",  lambda s: (s == "neutral").sum()),
         positive_serp=("sentiment", lambda s: (s == "positive").sum()),
         company=("company", dominant_company),
     ).reset_index()
 
-    # If ceo is blank (failed mapping), keep but with empty company; dashboard can ignore/flag later.
     grouped.insert(0, "date", date_str)
 
-    # Write daily processed file
+    # Write daily per-CEO processed file
     out_day = OUT_DIR / f"{date_str}-ceo-serps-processed.csv"
     grouped.to_csv(out_day, index=False)
     print(f"[write] {out_day}")
