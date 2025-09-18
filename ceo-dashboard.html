@@ -27,12 +27,15 @@ html,body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,syst
 h1{font-size:24px;margin:0 0 12px}
 .controls{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:12px 0}
 .card{background:var(--card);border:1px solid #0e3240;border-radius:12px;padding:16px;box-shadow:0 4px 20px rgba(0,0,0,.25)}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-@media(min-width:980px){.grid{grid-template-columns:2fr 1fr}}
+/* charts stacked vertically, full width */
+#chartsStack{display:flex;flex-direction:column;gap:12px;margin-bottom:16px;}
+.chartCard{background:var(--card);border:1px solid #0e3240;border-radius:12px;padding:12px 16px}
+/* form */
 select,input[type="text"]{background:#0c1220;border:1px solid #23314d;color:var(--text);border-radius:10px;padding:8px 10px}
 button{background:#18243b;border:1px solid #2a3b5e;color:var(--text);border-radius:10px;padding:8px 10px;cursor:pointer}
 button:hover{border-color:#35d8ea}
 
+/* table */
 .table{width:100%;border-collapse:separate;border-spacing:0 8px}
 thead th{font-size:12px;color:var(--muted);text-align:left;padding:0 8px}
 tbody tr{background:#0e1524}
@@ -44,6 +47,7 @@ tbody tr td:last-child{border-right:1px solid #17223a;border-radius:0 10px 10px 
 .pill.low{background:rgba(34,197,94,.15);color:#5fe08b}
 .pill.med{background:rgba(234,179,8,.15);color:#f5e37a}
 .pill.high{background:rgba(244,63,94,.15);color:#ff7b7b}
+
 .muted{color:var(--muted)}
 .right{text-align:right}
 .center{text-align:center}
@@ -78,12 +82,13 @@ tbody tr td:last-child{border-right:1px solid #17223a;border-radius:0 10px 10px 
     </div>
   </div>
 
-  <div class="grid">
-    <div class="card" id="newsChart"> </div>
-    <div class="card" id="serpChart"> </div>
+  <!-- STACKED CHARTS (bar on top, line beneath) -->
+  <div id="chartsStack">
+    <div class="chartCard" id="newsChart"></div>
+    <div class="chartCard" id="serpChart"></div>
   </div>
 
-  <div class="card" style="margin-top:16px">
+  <div class="card">
     <div class="muted" style="margin-bottom:10px">
       Select exactly one CEO using the checkbox to see brand-level charts. Selecting another will automatically unselect the previous one.
     </div>
@@ -114,7 +119,7 @@ tbody tr td:last-child{border-right:1px solid #17223a;border-radius:0 10px 10px 
   </div>
 </div>
 
-<!-- Headlines modal -->
+<!-- Headlines/SERP/Boards modal -->
 <div class="modal" id="modal">
   <div class="box">
     <header>
@@ -129,24 +134,23 @@ tbody tr td:last-child{border-right:1px solid #17223a;border-radius:0 10px 10px 
 /* ===================== Config & globals ===================== */
 const COUNTS_CANDIDATES = [
   'data_ceos/daily_counts.csv',     // preferred
-  'data/serps/daily_counts.csv',    // legacy fallback (if you had this)
-  'data/daily_counts.csv'           // last-ditch
+  'data/serps/daily_counts.csv',
+  'data/daily_counts.csv'
 ];
-
 const SERPS_DAILY_CSV = 'data/serps/ceo_serps_daily.csv';
-
 const ROSTER_CANDIDATES = [
   'data/serps/roster.csv',
   'data/roster.csv',
   'data/ceo_companies.csv'
 ];
+const BOARDS_CSV = 'data/ceo_boards.csv';
 
-const BOARDS_CSV = 'data/ceo_boards.csv';   // correct path
+const LAST_N_DATES = 5; // show last N dates in both charts (aligned)
 
 let rosterMap = new Map();      // CEO -> Company
 let companyToCeo = new Map();   // Company -> CEO
-let allCountsRows = [];         // normalized rows from daily_counts (all dates)
-let serpDaily = [];             // per-date SERP aggregates (index)
+let allCountsRows = [];         // from daily_counts
+let serpDaily = [];             // from ceo_serps_daily
 let boardsByCeo = new Map();    // CEO -> [{domain,url},...]
 
 let filteredRows = [];          // table rows for current date after filter
@@ -154,7 +158,7 @@ let currentSort = { key: null, dir: 1 };
 let currentPage = 1;
 const PAGE_SIZE = 25;
 
-let newSchart, serpChart;
+let selectedCeo = '';
 
 const isISODate = s => /^\d{4}-\d{2}-\d{2}$/.test(String(s||'').trim());
 
@@ -181,8 +185,6 @@ async function fetchCsvAny(candidates){
 }
 
 /* ===================== Loaders ===================== */
-
-// Boards (CEO, URL, Domain)
 async function loadBoards(){
   try{
     const rows = await fetchCsv(BOARDS_CSV);
@@ -207,15 +209,13 @@ async function loadBoards(){
   }
 }
 
-// Roster -> CEO <-> Company
 async function loadRoster(){
   try{
     const rows = await fetchCsvAny(ROSTER_CANDIDATES);
-    const norm = r => {
-      const ceo = String(r.ceo || r.CEO || '').trim();
-      const company = String(r.company || r.Company || '').trim();
-      return {ceo, company};
-    };
+    const norm = r => ({
+      ceo: String(r.ceo || r.CEO || '').trim(),
+      company: String(r.company || r.Company || '').trim()
+    });
     const arr = rows.map(norm).filter(r => r.ceo && r.company);
     rosterMap = new Map(arr.map(r => [r.ceo, r.company]));
     companyToCeo = new Map(arr.map(r => [r.company, r.ceo]));
@@ -224,7 +224,6 @@ async function loadRoster(){
   }
 }
 
-// News counts (daily_counts.csv)
 async function loadCounts(){
   try{
     const rows = await fetchCsvAny(COUNTS_CANDIDATES);
@@ -245,12 +244,12 @@ async function loadCounts(){
   }
 }
 
-// SERP daily → compute % and risk
 function computeRisk(negPct, controlPct){
   if (negPct >= 40 || controlPct <= 30) return "High";
   if (negPct >= 20 || controlPct <= 50) return "Medium";
   return "Low";
 }
+
 async function loadSerpDaily(){
   try{
     const rows = await fetchCsv(SERPS_DAILY_CSV);
@@ -318,32 +317,147 @@ async function initDatesAndRender(){
   renderAll();
 }
 
-/* ===================== Rendering ===================== */
-let selectedCeo = '';
+/* ===================== Charts helpers ===================== */
+function getLastNDates(allDates, n){
+  const ds = Array.from(new Set(allDates)).filter(isISODate).sort();
+  return ds.slice(Math.max(0, ds.length - n));
+}
 
+function drawNewsStackedBar(sel, rows, dates){
+  // build per-date totals then convert to %
+  const perDate = new Map();
+  for (const r of rows){
+    if (!dates.includes(r.date)) continue;
+    const a = perDate.get(r.date) || {pos:0, neu:0, neg:0};
+    a.pos += (+r.positive||0);
+    a.neu += (+r.neutral||0);
+    a.neg += (+r.negative||0);
+    perDate.set(r.date, a);
+  }
+  const data = dates.map(d => {
+    const a = perDate.get(d) || {pos:0, neu:0, neg:0};
+    const tot = a.pos + a.neu + a.neg;
+    return {date:d,
+      posPct: tot ? (a.pos/tot)*100 : 0,
+      neuPct: tot ? (a.neu/tot)*100 : 0,
+      negPct: tot ? (a.neg/tot)*100 : 0
+    };
+  });
+
+  sel.html('');
+  const W = Math.max(360, sel.node().clientWidth || 360);
+  const H = 240, M = {t:16,r:16,b:36,l:42};
+  const svg = sel.append('svg').attr('width', W).attr('height', H);
+  const g = svg.append('g').attr('transform', `translate(${M.l},${M.t})`);
+  const w = W - M.l - M.r, h = H - M.t - M.b;
+
+  const x = d3.scaleBand().domain(dates).range([0, w]).padding(0.2);
+  const y = d3.scaleLinear().domain([0,100]).range([h, 0]);
+
+  const colors = {pos:'#82c616', neu:'#cedcdd', neg:'#ff8261'};
+  data.forEach(d => {
+    let y0 = 0;
+    const parts = [
+      {k:'posPct', c:colors.pos},
+      {k:'neuPct', c:colors.neu},
+      {k:'negPct', c:colors.neg},
+    ];
+    const gx = g.append('g').attr('transform', `translate(${x(d.date)},0)`);
+    parts.forEach(p => {
+      const v = d[p.k];
+      const y1 = y(y0 + v), yStart = y(y0);
+      gx.append('rect')
+        .attr('x', 0).attr('y', y1)
+        .attr('width', x.bandwidth())
+        .attr('height', Math.max(0, yStart - y1))
+        .attr('fill', p.c);
+      y0 += v;
+    });
+  });
+
+  g.append('g').attr('transform', `translate(0,${h})`)
+    .call(d3.axisBottom(x).tickSizeOuter(0));
+  g.append('g').call(d3.axisLeft(y).ticks(5).tickFormat(d => d + '%'));
+
+  const legend = svg.append('g').attr('transform', `translate(${W-220},8)`);
+  [{label:'Positive %', c:colors.pos},{label:'Neutral %', c:colors.neu},{label:'Negative %', c:colors.neg}]
+  .forEach((it,i)=>{
+    const gg = legend.append('g').attr('transform', `translate(${i*75},0)`);
+    gg.append('rect').attr('width',10).attr('height',10).attr('fill',it.c);
+    gg.append('text').attr('x',14).attr('y',10).attr('font-size',12).text(it.label);
+  });
+}
+
+function drawSerpLines(sel, serpRows, dates){
+  const per = new Map();
+  dates.forEach(d => per.set(d, {neg:[], ctrl:[]}));
+  for (const r of serpRows){
+    if (!dates.includes(r.date)) continue;
+    per.get(r.date).neg.push(+r.negative_serp_pct || 0);
+    per.get(r.date).ctrl.push(+r.serp_control_pct || 0);
+  }
+  const data = dates.map(d => {
+    const a = per.get(d);
+    const avg = arr => arr.length ? arr.reduce((x,y)=>x+y,0)/arr.length : 0;
+    return {date:d, neg:avg(a.neg), ctrl:avg(a.ctrl)};
+  });
+
+  sel.html('');
+  const W = Math.max(360, sel.node().clientWidth || 360);
+  const H = 240, M = {t:16,r:16,b:36,l:42};
+  const svg = sel.append('svg').attr('width', W).attr('height', H);
+  const g = svg.append('g').attr('transform', `translate(${M.l},${M.t})`);
+  const w = W - M.l - M.r, h = H - M.t - M.b;
+
+  const x = d3.scalePoint().domain(dates).range([0, w]).padding(0.5);
+  const y = d3.scaleLinear().domain([0,100]).nice().range([h, 0]);
+
+  const line = d3.line().x(d => x(d.date)).y(d => y(d.value));
+
+  const series = [
+    {name:'Negative SERP %', key:'neg', color:'#ff8261'},
+    {name:'SERP Control %', key:'ctrl', color:'#58dbed'}
+  ];
+
+  series.forEach(s=>{
+    const pathData = data.map(d => ({date:d.date, value:d[s.key]}));
+    g.append('path')
+      .attr('fill','none')
+      .attr('stroke-width',2)
+      .attr('stroke', s.color)
+      .attr('d', line(pathData));
+  });
+
+  g.append('g').attr('transform', `translate(0,${h})`)
+    .call(d3.axisBottom(x).tickSizeOuter(0));
+  g.append('g').call(d3.axisLeft(y).ticks(5).tickFormat(d => d + '%'));
+
+  const legend = svg.append('g').attr('transform', `translate(${W-230},8)`);
+  [{label:'Negative SERP %', c:'#ff8261'},{label:'SERP Control %', c:'#58dbed'}]
+  .forEach((it,i)=>{
+    const gg = legend.append('g').attr('transform', `translate(${i*110},0)`);
+    gg.append('rect').attr('width',10).attr('height',10).attr('fill',it.c);
+    gg.append('text').attr('x',14).attr('y',10).attr('font-size',12).text(it.label);
+  });
+}
+
+/* ===================== Rendering ===================== */
 function sortByKey(rows){
   const k = currentSort.key, dir = currentSort.dir;
   if (!k) return rows;
   const val = r => (k === 'risk') ? ({'High':3,'Medium':2,'Low':1}[r.risk]||0) : r[k];
   return rows.slice().sort((a,b)=> (val(a) > val(b) ? 1 : -1) * dir);
 }
-
 function applyFilter(rows){
   const q = document.getElementById('filterInput').value || '';
   const v = q.trim().toLowerCase();
   if (!v) return rows;
-  return rows.filter(r =>
-    r.ceo.toLowerCase().includes(v) ||
-    r.company.toLowerCase().includes(v)
-  );
+  return rows.filter(r => r.ceo.toLowerCase().includes(v) || r.company.toLowerCase().includes(v));
 }
-
 function fmtPct(n){ return (isFinite(n) ? n.toFixed(1) : '0.0') + '%'; }
 
 function buildRowsForDate(date){
-  // build a map from SERP daily for the date
   const serpMap = new Map(serpDaily.filter(r => r.date === date).map(r => [r.ceo.toLowerCase(), r]));
-  // base rows from news counts (fall back to roster if missing)
   const base = allCountsRows.filter(r => r.date === date);
   const fromRoster = [...rosterMap.entries()].map(([ceo,company]) => ({date, ceo, company, theme:'None', neg_pct:0, total:0, positive:0, neutral:0, negative:0}));
   const merged = (base.length ? base : fromRoster).map(r => {
@@ -377,7 +491,6 @@ function renderTable(rows){
     tdCeo.innerHTML = `<label><input class="checkbox" type="checkbox" ${selectedCeo===r.ceo?'checked':''} /> <strong>${r.ceo}</strong></label>`;
     tdCeo.querySelector('input').addEventListener('change', (e)=>{
       selectedCeo = e.target.checked ? r.ceo : '';
-      // uncheck other checkboxes
       document.querySelectorAll('#dataTable tbody input[type="checkbox"]').forEach(box=>{
         if (box!==e.target) box.checked = false;
       });
@@ -399,7 +512,6 @@ function renderTable(rows){
     tdRisk.innerHTML = `<span class="pill ${riskClass}">${r.risk}</span>`;
     tr.appendChild(tdRisk);
 
-    // actions
     const mkBtn = (label, fn) => {
       const td = document.createElement('td'); td.className='center';
       const b = document.createElement('button'); b.textContent = label;
@@ -420,6 +532,38 @@ function renderTable(rows){
   document.getElementById('nextBtn').onclick = () => { if (currentPage<totalPages){ currentPage++; renderTable(rows);} };
 }
 
+function renderChartsForSelection(){
+  const target = selectedCeo;
+  const newsDiv = d3.select('#newsChart'); newsDiv.html('');
+  const serpDiv = d3.select('#serpChart'); serpDiv.html('');
+
+  // aligned dates for both charts
+  const unionDates = [...new Set([...allCountsRows.map(r=>r.date), ...serpDaily.map(r=>r.date)])];
+  const dates = getLastNDates(unionDates, LAST_N_DATES);
+
+  // NEWS stacked 100% bar
+  let newsRows = allCountsRows.filter(r => dates.includes(r.date));
+  if (target) newsRows = newsRows.filter(r => r.ceo === target);
+  drawNewsStackedBar(newsDiv, newsRows, dates);
+
+  // add small caption
+  const totals = newsRows.reduce((a,r)=>({pos:a.pos+(+r.positive||0), neu:a.neu+(+r.neutral||0), neg:a.neg+(+r.negative||0)}), {pos:0, neu:0, neg:0});
+  newsDiv.insert('div',':first-child')
+    .html(`<strong>News sentiment (percent)</strong><br/><span class="muted">Positive: ${totals.pos} | Neutral: ${totals.neu} | Negative: ${totals.neg}</span>`)
+    .style('margin-bottom','6px');
+
+  // SERP dual lines
+  let sRows = serpDaily.filter(r => dates.includes(r.date));
+  if (target) sRows = sRows.filter(r => r.ceo === target);
+  drawSerpLines(serpDiv, sRows, dates);
+
+  const sAgg = sRows.reduce((a,r)=>({neg:a.neg + (+r.negative_serp_pct||0), ctrl:a.ctrl + (+r.serp_control_pct||0)}), {neg:0, ctrl:0});
+  const cnt = Math.max(1, sRows.length);
+  serpDiv.insert('div',':first-child')
+    .html(`<strong>SERP (average %)</strong><br/><span class="muted">Negative: ${(sAgg.neg/cnt).toFixed(1)}% | Control: ${(sAgg.ctrl/cnt).toFixed(1)}%</span>`)
+    .style('margin-bottom','6px');
+}
+
 function renderAll(){
   const date = document.getElementById('dateSelect').value;
   let rows = buildRowsForDate(date);
@@ -429,40 +573,6 @@ function renderAll(){
   currentPage = Math.min(currentPage, Math.max(1, Math.ceil(rows.length / PAGE_SIZE)));
   renderTable(rows);
   renderChartsForSelection();
-}
-
-/* ===================== Charts (simple summary) ===================== */
-function renderChartsForSelection(){
-  const date = document.getElementById('dateSelect').value;
-  const target = selectedCeo;
-  const newsDiv = d3.select('#newsChart'); newsDiv.html('');
-  const serpDiv = d3.select('#serpChart'); serpDiv.html('');
-
-  const base = allCountsRows.filter(r => r.date===date);
-  if (!base.length){ newsDiv.append('div').text('No news data.'); return; }
-
-  let rows = base;
-  if (target){
-    rows = base.filter(r => r.ceo === target);
-    if (!rows.length){ newsDiv.append('div').text('No news for selected CEO.'); }
-  }
-
-  // Build stacked bar for Positive/Neutral/Negative counts across the set
-  const data = rows.map(r => ({ label: r.ceo || 'All', pos:+r.positive||0, neu:+r.neutral||0, neg:+r.negative||0 }));
-  // simple total summary
-  const total = data.reduce((a,r)=>({pos:a.pos+r.pos, neu:a.neu+r.neu, neg:a.neg+r.neg}), {pos:0,neu:0,neg:0});
-  newsDiv.append('div').html(`<strong>News sentiment (counts)</strong><br/>Positive: ${total.pos} | Neutral: ${total.neu} | Negative: ${total.neg}`);
-
-  // SERP summary
-  const serpRows = serpDaily.filter(r => r.date===date && (!target || r.ceo===target));
-  if (!serpRows.length){ serpDiv.append('div').text('No SERP data.'); return; }
-  const sTot = serpRows.reduce((a,r)=>({
-    neg: a.neg + (+r.negative_serp_pct||0),
-    ctrl: a.ctrl + (+r.serp_control_pct||0)
-  }), {neg:0, ctrl:0});
-  const avgNeg = sTot.neg / serpRows.length;
-  const avgCtrl = sTot.ctrl / serpRows.length;
-  serpDiv.append('div').html(`<strong>SERP (average %)</strong><br/>Negative: ${fmtPct(avgNeg)} | Control: ${fmtPct(avgCtrl)}`);
 }
 
 /* ===================== Popups ===================== */
@@ -504,14 +614,13 @@ async function showSerp(row){
   let items = [];
   try{
     const rows = await fetchCsv(path);
-    const alias = `${row.ceo} ${row.company}`.toLowerCase();
+    const alias = `${row.ceo} ${row.company}`.toLowerCase(); // your alias rule
     items = rows.filter(r => String(r.company||'').toLowerCase() === alias);
   }catch(e){}
   if (!items.length){
     openModal(`Serp — ${row.ceo}`, `<div class="muted">Could not load SERP file for ${d}.</div>`);
     return;
   }
-  // Expect columns: position, title, link, sentiment, control_status, ...
   const top = items.slice(0, 50).map((r,i)=>{
     const s = String(r.sentiment||'neutral').toLowerCase();
     const c = String(r.control_status||'uncontrolled').toLowerCase();
