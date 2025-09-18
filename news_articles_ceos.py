@@ -58,4 +58,125 @@ def read_aliases(path: Path) -> pd.DataFrame:
     df = pd.read_csv(path)
     cols = {c.lower(): c for c in df.columns}
 
-    def col(na
+    def col(name: str) -> str:
+        for k, v in cols.items():
+            if k == name:
+                return v
+        raise KeyError(f"Expected column '{name}' in {path.name}")
+
+    # normalize & keep required columns
+    out = df[[col("alias"), col("ceo"), col("company")]].copy()
+    out.columns = ["alias", "ceo", "company"]
+    out["alias"] = out["alias"].astype(str).str.strip()
+    out["ceo"] = out["ceo"].astype(str).str.strip()
+    out["company"] = out["company"].astype(str).str.strip()
+    out = out[(out["alias"] != "") & (out["ceo"] != "")]
+    if out.empty:
+        raise ValueError("No alias rows after normalization.")
+    return out.drop_duplicates()
+
+
+def fetch_rss(query: str) -> feedparser.FeedParserDict:
+    url = RSS_TMPL.format(query=quote_plus(query))
+    headers = {"User-Agent": USER_AGENT}
+    resp = requests.get(url, headers=headers, timeout=20)
+    resp.raise_for_status()
+    # feedparser handles bytes/text
+    return feedparser.parse(resp.content)
+
+
+def label_sentiment(analyzer: SentimentIntensityAnalyzer, text: str) -> str:
+    s = analyzer.polarity_scores(text or "")
+    c = s.get("compound", 0.0)
+    if c >= 0.05:
+        return "positive"
+    if c <= -0.05:
+        return "negative"
+    return "neutral"
+
+
+def extract_source(entry) -> str:
+    # feedparser sometimes puts the publisher in entry.source.title
+    try:
+        src = entry.get("source", {}).get("title", "") or ""
+    except Exception:
+        src = ""
+    if src:
+        return str(src).strip()
+    # fallback: domain from link
+    link = entry.get("link") or entry.get("id") or ""
+    try:
+        host = urlparse(link).hostname or ""
+        return host.replace("www.", "")
+    except Exception:
+        return ""
+
+
+def build_articles_for_alias(alias: str, ceo: str, company: str, analyzer) -> list[dict]:
+    try:
+        feed = fetch_rss(alias)
+    except Exception as e:
+        print(f"ERROR fetching RSS for {alias!r}: {e}")
+        return []
+
+    rows = []
+    for entry in (feed.entries or [])[:MAX_PER_ALIAS]:
+        title = html.unescape(entry.get("title", "")).strip()
+        link = (entry.get("link") or entry.get("id") or "").strip()
+        source = extract_source(entry)
+        if not title:
+            continue
+        sent = label_sentiment(analyzer, title)
+        rows.append({
+            "ceo": ceo,
+            "company": company,
+            "title": title,
+            "url": link,
+            "source": source,
+            "sentiment": sent,
+        })
+    return rows
+
+
+def main() -> int:
+    out_date = target_date()
+    out_path = OUT_DIR / f"{out_date}-articles.csv"
+    print(f"Building articles for {out_date} → {out_path}")
+
+    try:
+        aliases = read_aliases(ALIASES_CSV)
+    except Exception as e:
+        print(f"FATAL: {e}")
+        # Still write an empty file so the UI is predictable
+        pd.DataFrame(columns=["ceo","company","title","url","source","sentiment"]).to_csv(out_path, index=False)
+        return 1
+
+    analyzer = SentimentIntensityAnalyzer()
+    all_rows: list[dict] = []
+
+    for i, row in aliases.iterrows():
+        alias = row["alias"]
+        ceo = row["ceo"]
+        company = row["company"]
+        if not alias:
+            continue
+        print(f"[{i+1}/{len(aliases)}] {alias}")
+        rows = build_articles_for_alias(alias, ceo, company, analyzer)
+        all_rows.extend(rows)
+        time.sleep(SLEEP_SEC)
+
+    # de-duplicate (same ceo/title/url)
+    if all_rows:
+        df = pd.DataFrame(all_rows)
+        df = df.drop_duplicates(subset=["ceo","title","url"]).reset_index(drop=True)
+    else:
+        df = pd.DataFrame(columns=["ceo","company","title","url","source","sentiment"])
+
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    df.to_csv(out_path, index=False)
+    print(f"✔ Wrote {len(df):,} rows → {out_path}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
