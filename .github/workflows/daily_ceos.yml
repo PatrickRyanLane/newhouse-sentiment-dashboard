@@ -78,11 +78,13 @@ jobs:
 
       # Normalize the daily counts (this overwrites data_ceos/daily_counts.csv)
       - name: Run daily CEO sentiment (counts)
-        run: |
-          # Try with aliases in data/ first; if that fails, fallback to data/serps/
-          set -e
-          python news_sentiment_ceos.py --counts data_ceos/daily_counts.csv --aliases data/ceo_aliases.csv --out data_ceos/daily_counts.csv \
-          || python news_sentiment_ceos.py --counts data_ceos/daily_counts.csv --aliases data/serps/ceo_aliases.csv --out data_ceos/daily_counts.csv
+  run: |
+    python news_sentiment_ceos.py \
+      --aliases data/ceo_aliases.csv \
+      --articles-dir data_ceos/articles \
+      --daily-dir data_ceos \
+      --out data_ceos/daily_counts.csv
+
 
       # Build today's articles (Google News RSS) → data_ceos/articles/YYYY-MM-DD-articles.csv
       - name: Build daily CEO articles (Google News RSS)
