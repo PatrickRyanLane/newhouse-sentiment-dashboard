@@ -627,33 +627,87 @@ function normalizeKey(s){
 async function showSerp(row){
   const d = document.getElementById('dateSelect').value;
   const path = `data_ceos/processed_serps/${d}-ceo-serps-processed.csv`;
-  let items = [];
-  try{
-    const rows = await fetchCsv(path);
-    const alias = normalizeKey(`${row.ceo} ${row.company}`);
-    items = rows.filter(r => {
-      const comp = normalizeKey(r.company || r.alias || '');
-      return comp === alias || (comp.includes(normalizeKey(row.ceo)) && comp.includes(normalizeKey(row.company)));
-    });
-  }catch(e){}
-  if (!items.length){
+
+  // Try to fetch the file
+  let fetched = false, rows = [];
+  try { rows = await fetchCsv(path); fetched = true; } catch(e) {}
+
+  if (!fetched){
+    // True file load failure (wrong path/date/missing file)
     openModal(`Serp — ${row.ceo}`, `<div class="muted">Could not load SERP file for ${d}.</div>`);
     return;
   }
-  const top = items.slice(0, 50).map((r,i)=>{
-    const s = String(r.sentiment||'neutral').toLowerCase();
-    const c = String(r.control_status||'uncontrolled').toLowerCase();
-    const sChip = s==='negative' ? 'high' : (s==='neutral' ? 'med' : 'low');
-    const cLabel = c==='controlled' ? 'Controlled' : 'Uncontrolled';
+
+  // Canonicalize strings for robust matching (ignore case/punctuation/extra spaces)
+  const canon = s => String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+  const wantCEO   = canon(row.ceo);
+  const wantCo    = canon(row.company);
+  const wantAlias = canon(`${row.ceo} ${row.company}`);
+
+  // Accept multiple possible column names from processed_serps
+  const get = (r, ...names) => {
+    for (const n of names) if (r[n] != null) return r[n];
+    return '';
+  };
+
+  // Match strategy:
+  // 1) exact alias match (e.g., "Rob Katz Vail Resorts")
+  // 2) record contains both CEO name AND company name
+  // 3) fallback to ceo-only if present as a dedicated column
+  const matches = rows.filter(r => {
+    const f = [
+      get(r,'company','Company','alias','Alias'),
+      get(r,'search_term','query'),
+      `${get(r,'ceo','CEO')} ${get(r,'company','Company')}`,
+      get(r,'ceo','CEO'),
+    ].map(canon);
+
+    const hasExactAlias = f.some(v => v && v === wantAlias);
+    const hasBothParts  = f.some(v => v && v.includes(wantCEO) && v.includes(wantCo));
+    const ceoOnly       = f.some(v => v && v === wantCEO); // last resort
+
+    return hasExactAlias || hasBothParts || ceoOnly;
+  });
+
+  if (!matches.length){
+    // File loaded, but no rows matched this CEO/company
+    openModal(
+      `Serp — ${row.ceo}`,
+      `<div class="muted">No SERP rows matched “${row.ceo} ${row.company}” in <code>${d}-ceo-serps-processed.csv</code>.</div>`
+    );
+    return;
+  }
+
+  // Normalize a few fields (sentiment/control may have different header names)
+  const normSent = r => String(get(r,'sentiment','Sentiment','sentiment_label')).toLowerCase() || 'neutral';
+  const normCtrl = r => {
+    const raw = String(get(r,'control_status','Control_Status','control','is_controlled')).toLowerCase();
+    // treat anything that looks like "control" or truthy as controlled
+    if (/control/.test(raw) || raw === 'yes' || raw === 'true' || raw === '1') return 'Controlled';
+    return 'Uncontrolled';
+  };
+  const num = v => +v || 0;
+
+  const sorted = matches.sort((a,b) => num(get(a,'position','rank')) - num(get(b,'position','rank')));
+
+  const top = sorted.slice(0,50).map((r,i) => {
+    const pos = num(get(r,'position','rank')) || (i+1);
+    const url = String(get(r,'link','url','URL'));
+    const title = String(get(r,'title','Title')) || '(no title)';
+    const sent = normSent(r);
+    const ctrlLabel = normCtrl(r);
+    const sChip = sent==='negative' ? 'high' : (sent==='neutral' ? 'med' : 'low');
     return `<tr>
-      <td class="right">${r.position||i+1}</td>
-      <td><a class="link" href="${r.link}" target="_blank" rel="noopener">${r.title||'(no title)'}</a></td>
-      <td><span class="pill ${sChip}">${s}</span></td>
-      <td>${cLabel}</td>
+      <td class="right">${pos}</td>
+      <td><a class="link" href="${url}" target="_blank" rel="noopener">${title}</a></td>
+      <td><span class="pill ${sChip}">${sent}</span></td>
+      <td>${ctrlLabel}</td>
     </tr>`;
   }).join('');
-  openModal(`Serp — ${row.ceo}`,
-    `<div class="muted">${items.length} results — showing ${Math.min(50, items.length)} (date ${d})</div>
+
+  openModal(
+    `Serp — ${row.ceo}`,
+    `<div class="muted">${sorted.length} results — showing ${Math.min(50, sorted.length)} (date ${d})</div>
      <table class="table"><thead><tr>
        <th class="right">#</th><th>Result</th><th>Sentiment</th><th>Control</th>
      </tr></thead><tbody>${top}</tbody></table>`
