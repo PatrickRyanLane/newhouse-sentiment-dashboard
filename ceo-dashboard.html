@@ -450,43 +450,93 @@ function drawSerpTrend(){
 }
 
 /* =================== Modals =================== */
-async function showHeadlines(ceo, date){
+async function showHeadlines(ceo, date, companyHint=''){
   const c = document.getElementById('modalContent');
-  try{
-    const files = [
-      `data_ceos/articles/${date}-articles.csv`,
-      `data/articles/${date}-articles.csv`,
-      `data/articles/${date}.csv`,
-    ];
-    const rows = await fetchCsvAny(files);
-    if (!rows.length){
-      c.innerHTML = `<div class="muted">No article file found for ${date}.</div>`;
-      return;
+
+  // Try this date, then walk back up to 14 days to find the first file that exists
+  const dayList = [];
+  try {
+    const base = new Date(date);
+    for (let i = 0; i <= 14; i++){
+      const d = new Date(base); d.setDate(base.getDate() - i);
+      const iso = d.toISOString().slice(0,10);
+      dayList.push(iso);
     }
-    const norm = r => ({
-      ceo: String(r.ceo||r.CEO||'').trim(),
-      title: String(r.title||r.headline||'').trim(),
-      url: String(r.url||r.link||'').trim(),
-      pub: String(r.source||r.publisher||r.site||'').trim(),
-      sent: String(r.sentiment||r.sentiment_label||'').toLowerCase().trim()
-    });
-    const filtered = rows.map(norm).filter(r => r.ceo === ceo);
-    if (!filtered.length){
-      c.innerHTML = `<div class="muted">No headlines for ${ceo} on ${date}.</div>`;
-      return;
-    }
-    const items = filtered.map(r=>{
-      const kind = r.sent.startsWith('neg') ? 'neg' : r.sent.startsWith('pos') ? 'pos' : 'neu';
-      const pub = r.pub ? `<span class="muted"> — ${r.pub}</span>` : '';
-      const link = r.url ? `<a href="${r.url}" target="_blank" rel="noopener">${r.title || '(untitled)'}</a>` : (r.title || '(untitled)');
-      return `<li style="margin:8px 0">${link}${badge(r.sent || 'neutral', kind)}${pub}</li>`;
-    });
-    c.innerHTML = `<ul style="padding-left:18px;margin:0">${items.join('')}</ul>`;
-  }catch(err){
-    console.error('showHeadlines error:', err);
-    c.innerHTML = `<div class="muted">Could not load headlines (${date}).</div>`;
+  } catch { dayList.push(date); }
+
+  // Common filename patterns we’ll try for each day
+  const patterns = d => ([
+    `data_ceos/articles/${d}-articles.csv`,
+    `data/articles/${d}-articles.csv`,
+    `data/articles/articles-${d}.csv`,
+    `data/articles/${d}.csv`
+  ]);
+
+  // Try to fetch the first available articles file across the lookback window
+  let usedDate = null, rows = [];
+  for (const d of dayList){
+    try {
+      rows = await fetchCsvAny(patterns(d));
+      if (rows.length >= 0) { usedDate = d; break; } // found a file (even if empty)
+    } catch {/* keep searching */}
   }
+
+  if (usedDate === null){
+    c.innerHTML = `<div class="muted">No articles file found for ${date} or the previous 14 days.</div>`;
+    return;
+  }
+
+  if (!rows.length){
+    c.innerHTML = `<div class="muted">Articles file for ${usedDate} is empty.</div>`;
+    return;
+  }
+
+  // Normalize columns
+  const norm = (r) => ({
+    ceo:      String(r.ceo||r.CEO||r.name||r.person||'').trim(),
+    company:  String(r.company||r.Company||r.brand||r.org||'').trim(),
+    title:    String(r.title||r.headline||'').trim(),
+    url:      String(r.url||r.link||'').trim(),
+    source:   String(r.source||r.publisher||r.site||'').trim(),
+    sent:     String(r.sentiment||r.sentiment_label||'').toLowerCase().trim()
+  });
+
+  const all = rows.map(norm);
+
+  // Matching strategy:
+  // 1) exact CEO match
+  // 2) if nothing, exact company match (prefer the company from the table if we have it)
+  // 3) if still nothing, title contains CEO name (case-insensitive)
+  const ceoLower = ceo.toLowerCase();
+  const company = companyHint || (rosterMap.get(ceo) || '');
+  const companyLower = company.toLowerCase();
+
+  let filtered = all.filter(r => r.ceo.toLowerCase() === ceoLower);
+
+  if (!filtered.length && companyLower){
+    filtered = all.filter(r => r.company.toLowerCase() === companyLower);
+  }
+
+  if (!filtered.length){
+    filtered = all.filter(r => r.title.toLowerCase().includes(ceoLower));
+  }
+
+  if (!filtered.length){
+    c.innerHTML = `<div class="muted">No headlines for ${ceo} on ${usedDate}.</div>`;
+    return;
+  }
+
+  const items = filtered.map(r=>{
+    const kind = r.sent.startsWith('neg') ? 'neg' : r.sent.startsWith('pos') ? 'pos' : 'neu';
+    const pub = r.source ? `<span class="muted"> — ${r.source}</span>` : '';
+    const link = r.url ? `<a href="${r.url}" target="_blank" rel="noopener">${r.title || '(untitled)'}</a>` : (r.title || '(untitled)');
+    return `<li style="margin:8px 0">${link}${badge(r.sent || 'neutral', kind)}${pub}</li>`;
+  });
+
+  c.innerHTML = `<div class="muted" style="margin:0 0 8px 0">Showing ${usedDate}</div>
+  <ul style="padding-left:18px;margin:0">${items.join('')}</ul>`;
 }
+
 async function showSerps(ceo, company, date){
   const c = document.getElementById('modalContent');
   try{
@@ -583,9 +633,13 @@ async function openModal(kind, ceo, date){
     }
 
     if (kind === 'headlines'){
-      const d = date || currentDate;
-      await showHeadlines(ceo, d);
-      return;
+  // Pass a company hint if we have it for better matching
+  let company = '';
+  const match = filteredRows.find(r => r.ceo === ceo);
+  if (match) company = match.company || '';
+  const d = date || currentDate;
+  await showHeadlines(ceo, d, company);
+  return;
     }
 
     if (kind === 'serp'){
