@@ -45,7 +45,7 @@ ARTICLES_DIR = os.path.join(OUTPUT_BASE, "articles")
 COUNTS_CSV   = os.path.join(OUTPUT_BASE, "daily_counts.csv")
 
 REQUEST_PAUSE_SEC     = 1.0   # polite delay between CEOs
-MAX_ITEMS_PER_QUERY   = 100    # cap per CEO per day
+MAX_ITEMS_PER_QUERY   = 40    # cap per CEO per day
 PURGE_OLDER_THAN_DAYS = 365
 
 MAX_THEME_WORDS = 10
