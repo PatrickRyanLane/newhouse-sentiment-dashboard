@@ -628,15 +628,131 @@ async function showSerp(row){
   const d = document.getElementById('dateSelect').value;
   const path = `data_ceos/processed_serps/${d}-ceo-serps-processed.csv`;
 
-  // Try to fetch the file
-  let fetched = false, rows = [];
-  try { rows = await fetchCsv(path); fetched = true; } catch(e) {}
+  // Load file
+  let rows = [];
+  try { rows = await fetchCsv(path); }
+  catch { openModal(`Serp — ${row.ceo}`, `<div class="muted">Could not load SERP file for ${d}.</div>`); return; }
+  if (!rows.length){
+    openModal(`Serp — ${row.ceo}`, `<div class="muted">SERP file is empty for ${d}.</div>`); return;
+  }
 
-  if (!fetched){
-    // True file load failure (wrong path/date/missing file)
-    openModal(`Serp — ${row.ceo}`, `<div class="muted">Could not load SERP file for ${d}.</div>`);
+  // Canon helpers
+  const canon = s => String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+  const tokens = s => canon(s).split(' ').filter(Boolean);
+  const wantCEO   = canon(row.ceo);
+  const wantCo    = canon(row.company);
+  const wantAlias = canon(`${row.ceo} ${row.company}`);
+  const ceoWords  = new Set(tokens(row.ceo));
+  const coWords   = new Set(tokens(row.company));
+
+  // Generic field getter with aliases
+  const get = (r, ...names) => {
+    for (const n of names) if (r[n] != null) return r[n];
+    return '';
+  };
+
+  // Build a text blob of relevant fields for matching
+  const blob = r => [
+    get(r,'company','Company','alias','Alias','search_term','query'),
+    get(r,'ceo','CEO'),
+    `${get(r,'ceo','CEO')} ${get(r,'company','Company')}`
+  ].map(canon).join(' | ');
+
+  // Score each row (the higher the better)
+  function scoreRow(r){
+    const b = blob(r);
+    let s = 0;
+    if (b.includes(wantAlias)) s += 5;
+    if (b.includes(wantCEO) && b.includes(wantCo)) s += 4;
+
+    // partial token bonuses (helps when file uses slightly different text)
+    const bw = new Set(tokens(b));
+    let hits = 0; ceoWords.forEach(w => { if (bw.has(w)) hits++; });
+    let hitsCo = 0; coWords.forEach(w => { if (bw.has(w)) hitsCo++; });
+    s += Math.min(hits, 2);   // +0..2
+    s += Math.min(hitsCo, 2); // +0..2
+    return s;
+  }
+
+  // Keep rows that look like the target; broaden if we got too few
+  let scored = rows.map(r => ({ r, sc: scoreRow(r) })).filter(x => x.sc > 0);
+  if (scored.length < 5) {
+    // Gentle broaden: allow ceo-only or company-only matches
+    scored = rows.map(r => {
+      const b = blob(r);
+      let s = 0;
+      if (b.includes(wantAlias)) s += 5;
+      if (b.includes(wantCEO))   s += 2;
+      if (b.includes(wantCo))    s += 2;
+      return { r, sc: s };
+    }).filter(x => x.sc > 0);
+  }
+  if (!scored.length){
+    openModal(
+      `Serp — ${row.ceo}`,
+      `<div class="muted">No SERP rows matched “${row.ceo} ${row.company}” in <code>${d}-ceo-serps-processed.csv</code>.</div>`
+    );
     return;
   }
+
+  // Normalize display fields
+  const num = v => +v || 0;
+  const titleOf = r =>
+      get(r,'title','Title','headline','Headline','result_title','page_title','result','Result','text','snippet') || '';
+  const urlOf   = r => get(r,'link','url','URL') || '#';
+  const sentOf  = r => (get(r,'sentiment','Sentiment','sentiment_label') || 'neutral').toString().toLowerCase();
+  const ctrlOf  = r => {
+    const raw = (get(r,'control_status','Control_Status','control','is_controlled') || '').toString().toLowerCase();
+    if (/control/.test(raw) || raw==='yes' || raw==='true' || raw==='1') return 'Controlled';
+    return 'Uncontrolled';
+  };
+  const posOf   = r => num(get(r,'position','rank','Rank'));
+
+  // Sort by score (desc) then by position (asc)
+  scored.sort((a,b) => (b.sc - a.sc) || (posOf(a.r) - posOf(b.r)));
+
+  // Render top N
+  const top = scored.slice(0,50).map((x,i) => {
+    const r = x.r;
+    const pos = posOf(r) || (i+1);
+    const url = urlOf(r);
+    let title = titleOf(r).trim();
+
+    // Fallback title from URL
+    if (!title) {
+      try {
+        const u = new URL(url);
+        const pathPart = u.pathname.split('/').filter(Boolean).slice(-1)[0] || u.hostname;
+        title = pathPart.replace(/[-_]/g,' ');
+      } catch { title = '(no title)'; }
+    }
+
+    // Domain/source for context
+    let domain = '';
+    try { domain = new URL(url).hostname.replace(/^www\./,''); } catch {}
+    const source = domain ? ` — <span class="muted">${domain}</span>` : '';
+
+    const sent = sentOf(r);
+    const sChip = sent==='negative' ? 'high' : (sent==='neutral' ? 'med' : 'low');
+    const ctrl = ctrlOf(r);
+
+    return `<tr>
+      <td class="right">${pos}</td>
+      <td><a class="link" href="${url}" target="_blank" rel="noopener">${title || '(no title)'}</a>${source}</td>
+      <td><span class="pill ${sChip}">${sent}</span></td>
+      <td>${ctrl}</td>
+    </tr>`;
+  }).join('');
+
+  openModal(
+    `Serp — ${row.ceo}`,
+    `<div class="muted">${scored.length} results — showing ${Math.min(50, scored.length)} (date ${d})</div>
+     <table class="table"><thead><tr>
+       <th class="right">#</th><th>Result</th><th>Sentiment</th><th>Control</th>
+     </tr></thead><tbody>${top}</tbody></table>`
+  );
+}
+
 
   // Canonicalize strings for robust matching (ignore case/punctuation/extra spaces)
   const canon = s => String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
