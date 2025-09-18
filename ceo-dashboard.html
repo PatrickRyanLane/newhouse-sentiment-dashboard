@@ -27,9 +27,15 @@ html,body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,syst
 h1{font-size:24px;margin:0 0 12px}
 .controls{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:12px 0}
 .card{background:var(--card);border:1px solid #0e3240;border-radius:12px;padding:16px;box-shadow:0 4px 20px rgba(0,0,0,.25)}
+
 /* charts stacked vertically, full width */
 #chartsStack{display:flex;flex-direction:column;gap:12px;margin-bottom:16px;}
 .chartCard{background:var(--card);border:1px solid #0e3240;border-radius:12px;padding:12px 16px}
+/* make svg texts white for readability */
+.chartCard svg text{fill:var(--text)}
+/* optional (thin axis lines on dark) */
+.chartCard svg .domain, .chartCard svg .tick line{stroke:#37576a}
+
 /* form */
 select,input[type="text"]{background:#0c1220;border:1px solid #23314d;color:var(--text);border-radius:10px;padding:8px 10px}
 button{background:#18243b;border:1px solid #2a3b5e;color:var(--text);border-radius:10px;padding:8px 10px;cursor:pointer}
@@ -133,7 +139,7 @@ tbody tr td:last-child{border-right:1px solid #17223a;border-radius:0 10px 10px 
 <script>
 /* ===================== Config & globals ===================== */
 const COUNTS_CANDIDATES = [
-  'data_ceos/daily_counts.csv',     // preferred
+  'data_ceos/daily_counts.csv',
   'data/serps/daily_counts.csv',
   'data/daily_counts.csv'
 ];
@@ -145,7 +151,7 @@ const ROSTER_CANDIDATES = [
 ];
 const BOARDS_CSV = 'data/ceo_boards.csv';
 
-const LAST_N_DATES = 5; // show last N dates in both charts (aligned)
+const LAST_N_DATES = 5; // show last N aligned dates
 
 let rosterMap = new Map();      // CEO -> Company
 let companyToCeo = new Map();   // Company -> CEO
@@ -315,6 +321,7 @@ async function initDatesAndRender(){
   document.getElementById('filterInput').addEventListener('input', () => { currentPage = 1; renderAll(); });
 
   renderAll();
+  setupResize(); // <— responsive re-render
 }
 
 /* ===================== Charts helpers ===================== */
@@ -324,7 +331,6 @@ function getLastNDates(allDates, n){
 }
 
 function drawNewsStackedBar(sel, rows, dates){
-  // build per-date totals then convert to %
   const perDate = new Map();
   for (const r of rows){
     if (!dates.includes(r.date)) continue;
@@ -433,7 +439,7 @@ function drawSerpLines(sel, serpRows, dates){
   g.append('g').call(d3.axisLeft(y).ticks(5).tickFormat(d => d + '%'));
 
   const legend = svg.append('g').attr('transform', `translate(${W-230},8)`);
-  [{label:'Negative SERP %', c:'#ff8261'},{label:'SERP Control %', c:'#58dbed'}]
+  [{label:'Negative SERP %', c:'#ff8261'},{label:'SERP Control %',  c:'#58dbed'}]
   .forEach((it,i)=>{
     const gg = legend.append('g').attr('transform', `translate(${i*110},0)`);
     gg.append('rect').attr('width',10).attr('height',10).attr('fill',it.c);
@@ -537,7 +543,6 @@ function renderChartsForSelection(){
   const newsDiv = d3.select('#newsChart'); newsDiv.html('');
   const serpDiv = d3.select('#serpChart'); serpDiv.html('');
 
-  // aligned dates for both charts
   const unionDates = [...new Set([...allCountsRows.map(r=>r.date), ...serpDaily.map(r=>r.date)])];
   const dates = getLastNDates(unionDates, LAST_N_DATES);
 
@@ -564,15 +569,22 @@ function renderChartsForSelection(){
     .style('margin-bottom','6px');
 }
 
-function renderAll(){
-  const date = document.getElementById('dateSelect').value;
-  let rows = buildRowsForDate(date);
-  rows = applyFilter(rows);
-  rows = sortByKey(rows);
-  filteredRows = rows;
-  currentPage = Math.min(currentPage, Math.max(1, Math.ceil(rows.length / PAGE_SIZE)));
-  renderTable(rows);
-  renderChartsForSelection();
+/* ===================== Responsive charts ===================== */
+function setupResize(){
+  if (window.__chartsResizeSetup) return;
+  window.__chartsResizeSetup = true;
+
+  let t;
+  const debounced = () => { clearTimeout(t); t = setTimeout(()=>renderChartsForSelection(), 150); };
+
+  // Observe the charts container
+  const el = document.getElementById('chartsStack');
+  if (el && 'ResizeObserver' in window){
+    const ro = new ResizeObserver(debounced);
+    ro.observe(el);
+  }
+  // Fallback: window resize
+  window.addEventListener('resize', debounced);
 }
 
 /* ===================== Popups ===================== */
@@ -608,14 +620,26 @@ async function showHeadlines(row){
   openModal(`Headlines — ${row.ceo}`, `<div class="muted">Showing ${d}</div><ul>${list}</ul>`);
 }
 
+function normalizeKey(s){
+  return String(s||'')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g,' ')
+    .trim()
+    .replace(/\s+/g,' ');
+}
+
 async function showSerp(row){
   const d = document.getElementById('dateSelect').value;
   const path = `data_ceos/processed_serps/${d}-ceo-serps-processed.csv`;
   let items = [];
   try{
     const rows = await fetchCsv(path);
-    const alias = `${row.ceo} ${row.company}`.toLowerCase(); // your alias rule
-    items = rows.filter(r => String(r.company||'').toLowerCase() === alias);
+    // robust alias match: "CEO Company"
+    const alias = normalizeKey(`${row.ceo} ${row.company}`);
+    items = rows.filter(r => {
+      const comp = normalizeKey(r.company || r.alias || '');
+      return comp === alias || (comp.includes(normalizeKey(row.ceo)) && comp.includes(normalizeKey(row.company)));
+    });
   }catch(e){}
   if (!items.length){
     openModal(`Serp — ${row.ceo}`, `<div class="muted">Could not load SERP file for ${d}.</div>`);
