@@ -202,7 +202,14 @@ const PAGE_SIZE = 25;
 let newsChart, serpChart;
 
 const isISODate = s => /^\d{4}-\d{2}-\d{2}$/.test(String(s||'').trim());
-
+// --- add right after: const isISODate = s => ...
+function computeRisk(negPct, controlPct){
+  // Tweak thresholds as you like
+  if (negPct >= 40 || controlPct <= 30) return "High";
+  if (negPct >= 20 || controlPct <= 50) return "Medium";
+  return "Low";
+}
+  
 /* ====================== CSV helpers ====================== */
 async function fetchCsv(url){
   const r = await fetch(url, {cache:'no-store'});
@@ -279,22 +286,51 @@ async function loadCounts(){
   allCountsRows = rows.map(norm).filter(x => isISODate(x.date));
 }
 
+<script>
 async function loadSerpDaily(){
   try{
+    // Load rows from data/serps/ceo_serps_daily.csv (case-insensitive headers)
     const rows = await fetchCsv(SERPS_DAILY_CSV);
-    const norm = r => ({
-      date: (r.date || r.Date || '').trim(),
-      ceo: String(r.ceo || r.CEO || '').trim(),
-      company: String(r.company || r.Company || '').trim(),
-      neg_serp_pct: +((r.neg_serp_pct || r.negative_serp_pct || 0) || 0),
-      ctrl_pct: +((r.ctrl_pct || r.control_pct || r.serp_control_pct || 0) || 0)
-    });
+
+    // Normalize + compute %
+    const norm = r => {
+      const date   = String(r.date || r.Date || '').trim();
+      const ceo    = String(r.ceo || r.CEO || '').trim();
+      const company= String(r.company || r.Company || '').trim();
+
+      const total       = +((r.total ?? r.Total) || 0);
+      const controlled  = +((r.controlled ?? r.Controlled) || 0);
+      const negCount    = +((r.negative_serp ?? r.Negative_Serp ?? r.neg_serp ?? r.Negative) || 0);
+      // we don’t actually need neutral/positive for the two % fields:
+      // const neuCount = +((r.neutral_serp ?? r.Neutral_Serp) || 0);
+      // const posCount = +((r.positive_serp ?? r.Positive_Serp) || 0);
+
+      const serpControlPct  = total ? (controlled / total) * 100 : 0;
+      const negativeSerpPct = total ? (negCount  / total) * 100 : 0;
+
+      return {
+        date,
+        ceo,
+        company,
+        total,
+        controlled,
+        negative_serp: negCount,
+
+        // fields the table expects
+        serp_control_pct:  +serpControlPct.toFixed(1),
+        negative_serp_pct: +negativeSerpPct.toFixed(1),
+        risk: computeRisk(negativeSerpPct, serpControlPct)
+      };
+    };
+
     serpDaily = rows.map(norm).filter(x => isISODate(x.date));
   }catch(e){
     console.error('Could not load SERPS_DAILY_CSV', e);
     serpDaily = [];
   }
 }
+</script>
+
 
 /* ====================== UI bootstrap ====================== */
 async function initDatesAndRender(){
