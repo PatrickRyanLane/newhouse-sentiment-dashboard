@@ -34,7 +34,7 @@ GL   = "US"             # geography
 CEID = "US:en"          # country:lang
 
 REQUEST_PAUSE_SEC   = 1.0   # ← gentler to Google News
-MAX_ITEMS_PER_BRAND = 100    # ← cap headlines per brand
+MAX_ITEMS_PER_BRAND = 40    # ← cap headlines per brand
 
 # Negative-theme extraction
 MIN_THEME_FREQ = 2               # min occurrences for a phrase to count
@@ -61,7 +61,7 @@ the a an and or but of for to in on at by with from as about after over under in
 this that these those it its their his her they we you our your i
 is are was were be been being has have had do does did will would should can could may might must
 new update updates report reports reported says say said see sees seen watch market stock shares share price prices
-wins loss losses gain gains up down news today latest analyst analysts rating cut cuts downgrade downgrades
+wins gain gains up down news today latest analyst analysts rating
 quarter q1 q2 q3 q4 year yrs 2022 2023 2024 2025 2026 usd billion million percent pct vs inc corp co ltd plc
 """.split())
 
