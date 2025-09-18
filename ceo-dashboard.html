@@ -12,38 +12,94 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
   <style>
-    :root{--bg:#0b0d12;--card:#111724;--muted:#8c9bb0;--text:#e7ecf4;--accent:#5ea0ff}
-    *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-    .wrap{max-width:1200px;margin:0 auto;padding:24px}
-    h1{font-size:24px;margin:0 0 12px}
-    .controls{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:12px 0}
-    .card{background:var(--card);border-radius:16px;padding:16px;box-shadow:0 4px 20px rgb(0 0 0 / .25)}
-    .grid{display:grid;grid-template-columns:1fr;gap:16px}
-    @media(min-width:980px){.grid{grid-template-columns:2fr 1fr}}
-    select,input[type="text"]{background:#0c1220;border:1px solid #23314d;color:var(--text);border-radius:10px;padding:8px 10px}
-    button{background:#18243b;border:1px solid #2a3b5e;color:var(--text);border-radius:10px;padding:8px 10px;cursor:pointer}
-    button:hover{border-color:#3d568a}
-    table{width:100%;border-collapse:separate;border-spacing:0 8px}
-    thead th{font-size:12px;color:var(--muted);text-align:left;padding:0 8px}
-    tbody tr{background:#0e1524}
-    tbody td{padding:10px 8px;border-top:1px solid #17223a;border-bottom:1px solid #17223a}
-    tbody tr td:first-child{border-left:1px solid #17223a;border-radius:10px 0 0 10px}
-    tbody tr td:last-child{border-right:1px solid #17223a;border-radius:0 10px 10px 0}
-    .pill{padding:4px 8px;border-radius:999px;font-size:12px}
-    .pill.low{background:rgba(34,197,94,.15);color:#22c55e}
-    .pill.med{background:rgba(245,158,11,.15);color:#f59e0b}
-    .pill.high{background:rgba(255,107,107,.15);color:#ff7b7b}
-    .muted{color:var(--muted)}
-    .right{text-align:right}
-    .center{text-align:center}
-    .pagination{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:8px}
-    .checkbox{accent-color:var(--accent)}
-    .notice{display:none;font-size:12px;margin:4px 0;color:#f59e0b}
-    .modal{position:fixed;inset:0;background:rgb(0 0 0 / .65);display:none;align-items:center;justify-content:center;padding:24px;z-index:50}
-    .modal>.box{background:#0e1524;border:1px solid #23314d;border-radius:16px;max-width:900px;width:100%;max-height:80vh;overflow:auto}
-    .modal header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #1f2b46}
-    .modal .content{padding:16px}
+    :root{
+  /* Brand palette (from your swatches) */
+  --tk-ink:      #1f2121;
+  --tk-navy-900: #082e37;
+  --tk-navy-800: #034151;
+  --tk-navy-600: #00809e;
+
+  --tk-cyan-400: #58dbed;
+  --tk-cyan-300: #92e8ef;
+
+  --tk-gray-300: #cedcdd;
+  --tk-gray-200: #ebf2f2;
+
+  --tk-red-500:  #ff8261;
+  --tk-red-300:  #ffb199;
+
+  --tk-green-600:#82c616;
+  --tk-green-300:#b8e276;
+
+  --tk-amber-500:#ffc32e;
+  --tk-amber-400:#fdd834;
+
+  /* App tokens */
+  --bg:         #0b0d12;          /* keep dark canvas */
+  --card:       #101725;          /* card surface */
+  --card-2:     #0e1524;          /* table rows, modal body */
+  --border:     #23314d;
+  --text:       #e7ecf4;
+  --muted:      #8c9bb0;
+
+  --brand:      var(--tk-navy-600);
+  --brand-2:    var(--tk-navy-800);
+
+  /* Data colors */
+  --pos:        var(--tk-green-600);
+  --neu:        var(--tk-gray-300);
+  --neg:        var(--tk-red-500);
+  --ctrl:       var(--tk-green-600);
+  --negSerp:    var(--tk-red-500);
+}
+
+/* Base */
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+.wrap{max-width:1200px;margin:0 auto;padding:24px}
+h1{font-size:24px;margin:0 0 12px}
+
+/* Controls + chips */
+.controls{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:12px 0}
+select,input[type="text"]{background:#0c1220;border:1px solid var(--border);color:var(--text);border-radius:10px;padding:8px 10px}
+button{background:var(--brand-2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:8px 10px;cursor:pointer}
+button:hover{background:var(--brand)}
+.checkbox{accent-color:var(--brand)}
+
+/* Cards + grid */
+.card{background:var(--card);border-radius:16px;padding:16px;box-shadow:0 4px 20px rgb(0 0 0 / .25)}
+.grid{display:grid;grid-template-columns:1fr;gap:16px}
+@media(min-width:980px){.grid{grid-template-columns:2fr 1fr}}
+
+/* Table */
+table{width:100%;border-collapse:separate;border-spacing:0 8px}
+thead th{font-size:12px;color:var(--muted);text-align:left;padding:0 8px}
+tbody tr{background:var(--card-2);transition:background .15s ease}
+tbody tr:hover{background:#0f1a2a}
+tbody td{padding:10px 8px;border-top:1px solid #17223a;border-bottom:1px solid #17223a}
+tbody tr td:first-child{border-left:1px solid #17223a;border-radius:10px 0 0 10px}
+tbody tr td:last-child{border-right:1px solid #17223a;border-radius:0 10px 10px 0}
+.right{text-align:right}
+.center{text-align:center}
+.pagination{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:8px}
+.muted{color:var(--muted)}
+
+/* Risk pills */
+.pill{padding:3px 8px;border-radius:999px;font-size:12px;border:1px solid transparent}
+.pill.low   {background:color-mix(in oklab, var(--tk-green-300) 20%, transparent); color:var(--tk-green-600); border-color:color-mix(in oklab, var(--tk-green-300) 50%, transparent);}
+.pill.med   {background:color-mix(in oklab, var(--tk-amber-400) 22%, transparent); color:var(--tk-amber-500); border-color:color-mix(in oklab, var(--tk-amber-400) 55%, transparent);}
+.pill.high  {background:color-mix(in oklab, var(--tk-red-300) 24%, transparent);  color:var(--tk-red-500);   border-color:color-mix(in oklab, var(--tk-red-300) 55%, transparent);}
+
+/* Modal */
+.modal{position:fixed;inset:0;background:rgb(0 0 0 / .65);display:none;align-items:center;justify-content:center;padding:24px;z-index:50}
+.modal>.box{background:var(--card-2);border:1px solid var(--border);border-radius:16px;max-width:900px;width:100%;max-height:80vh;overflow:auto;box-shadow:0 10px 30px rgb(0 0 0 / .5)}
+.modal header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);background:linear-gradient(0deg, var(--card-2), var(--card))}
+.modal header strong{font-weight:600}
+.modal .content{padding:16px}
+.modal a{color:var(--tk-cyan-300)}
+.modal a:hover{color:var(--tk-cyan-400)}
+.notice{display:none;font-size:12px;margin:4px 0;color:var(--tk-amber-500)}
+
   </style>
 </head>
 <body>
@@ -128,6 +184,15 @@ const ROSTER_CANDIDATES = [
   'data/ceo_companies.csv'
 ];
 const BOARDS_CSV = 'data/ceo_boards.csv'; // ceo,domain,url
+
+const PALETTE = {
+  pos:  getComputedStyle(document.documentElement).getPropertyValue('--pos').trim(),
+  neu:  getComputedStyle(document.documentElement).getPropertyValue('--neu').trim(),
+  neg:  getComputedStyle(document.documentElement).getPropertyValue('--neg').trim(),
+  ctrl: getComputedStyle(document.documentElement).getPropertyValue('--ctrl').trim(),
+  negSerp: getComputedStyle(document.documentElement).getPropertyValue('--negSerp').trim(),
+  grid: '#16233c'
+};
 
 // Try a list of candidates; return [] if none worked (not null)
 async function fetchCsvAny(candidates){
@@ -407,12 +472,19 @@ function drawNewsTrend(){
   newsChart = new Chart(ctx,{
     type:'bar',
     data:{labels:labs,datasets:[
-      {label:'Positive %',data:pos,stack:'s'},
-      {label:'Neutral %', data:neu,stack:'s'},
-      {label:'Negative %',data:neg,stack:'s'}]},
-    options:{responsive:true,animation:false,scales:{y:{suggestedMax:100,ticks:{callback:v=>v+'%'}}},plugins:{legend:{position:'bottom'}}}
-  });
+  {label:'Positive %', data:pos, stack:'s', backgroundColor: PALETTE.pos},
+  {label:'Neutral %',  data:neu, stack:'s', backgroundColor: PALETTE.neu},
+  {label:'Negative %', data:neg, stack:'s', backgroundColor: PALETTE.neg}
+]},
+options:{
+  responsive:true,animation:false,
+  scales:{
+    y:{suggestedMax:100, grid:{color:PALETTE.grid}, ticks:{callback:v=>v+'%'}},
+    x:{grid:{color:'transparent'}}
+  },
+  plugins:{legend:{position:'bottom'}}
 }
+
 function computeSerpSeries(selectedCeo){
   const byDate = new Map();
   for(const r of serpDaily){
@@ -441,12 +513,14 @@ function drawSerpTrend(){
   serpTrendChart = new Chart(ctx,{
     type:'line',
     data:{labels,datasets:[
-      {label:'Negative SERP %',data:neg,tension:.25,pointRadius:0},
-      {label:'SERP Control %',data:ctrl,tension:.25,pointRadius:0}]},
-    options:{responsive:true,animation:false,
-      scales:{y:{suggestedMin:0,suggestedMax:100,ticks:{callback:v=>v+'%'}}},
-      plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.parsed.y}%`}}}}
-  });
+  {label:'Negative SERP %', data:neg, tension:.3, pointRadius:0, borderWidth:2, borderColor: PALETTE.negSerp},
+  {label:'SERP Control %',  data:ctrl, tension:.3, pointRadius:0, borderWidth:2, borderColor: PALETTE.ctrl}
+]},
+options:{
+  responsive:true,animation:false,
+  scales:{y:{suggestedMin:0,suggestedMax:100, grid:{color:PALETTE.grid}, ticks:{callback:v=>v+'%'}},
+          x:{grid:{color:'transparent'}}},
+  plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.parsed.y}%`}}}
 }
 
 /* =================== Modals =================== */
