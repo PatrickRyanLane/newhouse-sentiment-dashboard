@@ -77,7 +77,7 @@ jobs:
           fi
 
       # Normalize the daily counts (this overwrites data_ceos/daily_counts.csv)
-      - name: Run daily CEO sentiment (counts)
+- name: Run daily CEO sentiment (counts)
   run: |
     python news_sentiment_ceos.py \
       --aliases data/ceo_aliases.csv \
@@ -85,15 +85,14 @@ jobs:
       --daily-dir data_ceos \
       --out data_ceos/daily_counts.csv
 
-
-      # Build today's articles (Google News RSS) → data_ceos/articles/YYYY-MM-DD-articles.csv
-      - name: Build daily CEO articles (Google News RSS)
-        env:
-          ARTICLES_MAX_PER_ALIAS: "25"   # adjust if you want fewer/more per CEO
-          ARTICLES_SLEEP_SEC: "0.35"     # polite delay between RSS fetches
-          # ARTICLES_DATE: "YYYY-MM-DD"  # optional override for backfills
-        run: |
-          python news_articles_ceos.py
+# Build today's articles (Google News RSS) → data_ceos/articles/YYYY-MM-DD-articles.csv
+- name: Build daily CEO articles (Google News RSS)
+  env:
+    ARTICLES_MAX_PER_ALIAS: "25"   # adjust if you want fewer/more per CEO
+    ARTICLES_SLEEP_SEC: "0.35"     # polite delay between RSS fetches
+    # ARTICLES_DATE: "YYYY-MM-DD"  # optional override for backfills
+  run: |
+    python news_articles_ceos.py
 
       # Commit only if there are changes
       - name: Commit & push changes (if any)
