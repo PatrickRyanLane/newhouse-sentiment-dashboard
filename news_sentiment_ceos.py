@@ -2,235 +2,223 @@
 # -*- coding: utf-8 -*-
 
 """
-Daily CEO News Sentiment — robust loader and normalizer.
+Daily CEO News Sentiment — counts normalizer (restored legacy outputs).
 
-- Accepts new ceo_aliases.csv headers (alias,ceo,company) and older formats.
-- Robustly parses 'date' and normalizes to YYYY-MM-DD (string column).
-- Validates/normalizes essential sentiment columns; computes rates if missing.
+WHAT THIS DOES
+--------------
+- Reads aliases (CEO + company + alias).
+- Reads today's headline articles (if present) and aggregates per-CEO counts.
+- Writes BOTH of the legacy artifacts the dashboard expects:
+    1) Per-day file:        data_ceos/YYYY-MM-DD.csv
+    2) Master index file:   data_ceos/daily_counts.csv   (append/replace rows for that date)
 
-Inputs (defaults):
-  --counts   data_ceos/daily_counts.csv
-  --aliases  data/ceo_aliases.csv
+BEHAVIOR WHEN THERE ARE NO ARTICLES
+-----------------------------------
+- If `data_ceos/articles/YYYY-MM-DD-articles.csv` is missing or empty,
+  we still create rows (0 positive / 0 neutral / 0 negative) for every CEO
+  in aliases, so the date appears in the dashboard date picker.
 
-Output (default):
-  --out      data_ceos/daily_counts.csv   (overwrite with cleaned data)
+OUTPUT COLUMNS (match legacy)
+------------------------------
+date, ceo, company, positive, neutral, negative, total, neg_pct, theme, alias
 
-Usage:
-  python news_sentiment_ceos.py
-  python news_sentiment_ceos.py --counts path/to/daily_counts.csv --aliases data/ceo_aliases.csv --out path/to/out.csv
+USAGE (optional flags)
+----------------------
+python news_sentiment_ceos.py \
+  --date 2025-09-18 \
+  --aliases data/ceo_aliases.csv \
+  --articles-dir data_ceos/articles \
+  --daily-dir data_ceos \
+  --out data_ceos/daily_counts.csv
 """
 
 from __future__ import annotations
 import argparse
+from datetime import datetime, timezone
 from pathlib import Path
+from typing import List
+
 import pandas as pd
 
 
-# ----------------------------- Helpers ----------------------------- #
+# -------- Defaults (can be overridden by CLI flags) -------- #
+DEFAULT_ALIASES = "data/ceo_aliases.csv"
+DEFAULT_ARTICLES_DIR = "data_ceos/articles"
+DEFAULT_DAILY_DIR = "data_ceos"
+DEFAULT_OUT = "data_ceos/daily_counts.csv"
 
-def read_csv(path: Path) -> pd.DataFrame:
+
+# ---------------------- Helpers ---------------------------- #
+def iso_today_utc() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+
+def load_aliases(path: Path) -> pd.DataFrame:
+    """
+    Expected headers (case-insensitive): alias, ceo, company
+    """
     if not path.exists():
-        raise FileNotFoundError(f"File not found: {path}")
-    try:
-        return pd.read_csv(path)
-    except Exception:
-        return pd.read_csv(path, engine="python")
+        raise FileNotFoundError(f"Aliases file not found: {path}")
 
-
-def normalize_date_column(df: pd.DataFrame, date_col_name: str | None = None) -> pd.DataFrame:
-    """
-    Parse any reasonable date strings to normalized YYYY-MM-DD in df['date'] (string).
-    Unparsable rows become empty strings (not NaN) to keep dtype stable.
-    """
-    if date_col_name is None:
-        date_col_name = next((c for c in df.columns if c.lower() == "date"), None)
-        if date_col_name is None:
-            raise ValueError("No 'date' column found in counts file.")
-
-    # First broad attempt
-    parsed = pd.to_datetime(df[date_col_name], errors="coerce")
-
-    # If all NaT, try common explicit formats
-    if parsed.isna().all():
-        for fmt in ("%Y-%m-%d", "%m/%d/%Y", "%Y/%m/%d", "%d-%m-%Y"):
-            try:
-                parsed = pd.to_datetime(df[date_col_name], format=fmt, errors="coerce")
-                if not parsed.isna().all():
-                    break
-            except Exception:
-                pass
-
-    if parsed.isna().all():
-        sample = df[date_col_name].head(5).tolist()
-        raise ValueError(f"Could not parse any dates; sample: {sample}")
-
-    # Normalize to string and keep dtype stable
-    df["date"] = parsed.dt.strftime("%Y-%m-%d")
-    df["date"] = df["date"].fillna("")  # ensure pure string column
-    return df
-
-
-def load_alias_table(path: Path) -> pd.DataFrame:
-    """
-    Return a DataFrame with standardized columns: brand, alias.
-    Accepts:
-      - brand, alias
-      - ceo, alias
-      - ceo, company            -> alias = "CEO Company"
-      - alias, ceo[, company]   -> use alias; fallback to "CEO Company" if alias blank
-    """
-    df = read_csv(path)
+    df = pd.read_csv(path)
     cols = {c.lower(): c for c in df.columns}
 
-    def col(name: str) -> str | None:
-        return cols.get(name)
+    def col(name: str) -> str:
+        for k, v in cols.items():
+            if k == name:
+                return v
+        raise KeyError(f"Expected '{name}' column in {path}")
 
-    # Case 1: brand, alias
-    if col("brand") and col("alias"):
-        out = df[[col("brand"), col("alias")]].rename(columns={col("brand"): "brand", col("alias"): "alias"})
-
-    # Case 2: ceo, alias
-    elif col("ceo") and col("alias"):
-        out = df[[col("ceo"), col("alias")]].rename(columns={col("ceo"): "brand", col("alias"): "alias"})
-
-    # Case 3: ceo, company
-    elif col("ceo") and col("company"):
-        tmp = df[[col("ceo"), col("company")]].copy()
-        tmp["alias"] = tmp[col("ceo")].astype(str).str.strip() + " " + tmp[col("company")].astype(str).str.strip()
-        out = tmp.rename(columns={col("ceo"): "brand"})[["brand", "alias"]]
-
-    # Case 4: alias, ceo[,company]
-    elif col("alias") and col("ceo"):
-        tmp = df.copy()
-        if col("company"):
-            fallback = tmp[col("ceo")].astype(str).str.strip() + " " + tmp[col("company")].astype(str).str.strip()
-        else:
-            fallback = tmp[col("ceo")].astype(str).str.strip()
-        tmp["alias"] = tmp[col("alias")].astype(str)
-        mask_empty = tmp["alias"].str.strip().eq("") | tmp["alias"].isna()
-        tmp.loc[mask_empty, "alias"] = fallback
-        out = tmp.rename(columns={col("ceo"): "brand"})[["brand", "alias"]]
-
-    else:
-        raise ValueError(
-            "ceo_aliases.csv must contain either (brand,alias) OR (ceo,alias) OR (ceo,company) OR (alias,ceo[,company])."
-        )
-
-    out["brand"] = out["brand"].astype(str).str.strip()
-    out["alias"] = out["alias"].astype(str).str.strip()
-    out = out[(out["brand"] != "") & (out["alias"] != "")].drop_duplicates()
+    out = df[[col("alias"), col("ceo"), col("company")]].copy()
+    out.columns = ["alias", "ceo", "company"]
+    # normalize strings
+    for c in ["alias", "ceo", "company"]:
+        out[c] = out[c].astype(str).fillna("").str.strip()
+    out = out[(out["alias"] != "") & (out["ceo"] != "")]
+    out = out.drop_duplicates(subset=["ceo"]).reset_index(drop=True)
     if out.empty:
-        raise ValueError("No rows found after normalizing aliases.")
+        raise ValueError("No alias rows after normalization.")
     return out
 
 
-def normalize_counts_columns(df: pd.DataFrame) -> pd.DataFrame:
+def load_articles(articles_dir: Path, date_str: str) -> pd.DataFrame:
     """
-    Ensure standard columns exist:
-      date, ceo, company, positive, neutral, negative, total, neg_pct, theme
-    Accept common variants; compute total & neg_pct if missing.
+    Reads data_ceos/articles/YYYY-MM-DD-articles.csv if present.
+    Expected columns (case-insensitive): ceo, company, title, url, source, sentiment
+    Returns empty DataFrame (with expected columns) if file missing/empty.
     """
-    cols = {c.lower(): c for c in df.columns}
+    f = articles_dir / f"{date_str}-articles.csv"
+    cols = ["ceo", "company", "title", "url", "source", "sentiment"]
+    if not f.exists():
+        return pd.DataFrame(columns=cols)
 
-    def pick(*names) -> str | None:
-        for n in names:
-            if n in cols:
-                return cols[n]
-        return None
+    df = pd.read_csv(f)
+    if df.empty:
+        return pd.DataFrame(columns=cols)
 
-    ceo_c = pick("ceo", "name", "person", "brand")
-    if not ceo_c:
-        raise ValueError("Counts file must contain a CEO column (ceo/name/person/brand).")
-    company_c = pick("company", "brand", "org", "employer")
+    # normalize
+    df = df.rename(columns={c: c.lower() for c in df.columns})
+    for c in cols:
+        if c not in df.columns:
+            df[c] = ""
+    for c in ["ceo", "company", "title", "url", "source", "sentiment"]:
+        df[c] = df[c].astype(str).fillna("").str.strip()
+    df["sentiment"] = df["sentiment"].str.lower()
+    return df[cols]
 
-    out = pd.DataFrame()
-    out["date"] = df["date"]                      # already normalized to string
-    out["ceo"] = df[ceo_c].astype(str).str.strip()
-    out["company"] = df[company_c].astype(str).str.strip() if company_c else ""
 
-    pos_c = pick("positive", "pos", "pos_count", "pos_articles", "positive_articles")
-    neu_c = pick("neutral", "neu", "neutral_count", "neutral_articles")
-    neg_c = pick("negative", "neg", "neg_count", "neg_articles", "negative_articles")
+def aggregate_counts(aliases: pd.DataFrame, articles: pd.DataFrame, date_str: str) -> pd.DataFrame:
+    """
+    Returns a DataFrame with legacy columns:
+    date, ceo, company, positive, neutral, negative, total, neg_pct, theme, alias
+    """
+    # Start with aliases so we always have one row per CEO (even with no headlines).
+    base = aliases.copy()
 
-    out["positive"] = pd.to_numeric(df[pos_c], errors="coerce").fillna(0).astype(int) if pos_c else 0
-    out["neutral"]  = pd.to_numeric(df[neu_c], errors="coerce").fillna(0).astype(int) if neu_c else 0
-    out["negative"] = pd.to_numeric(df[neg_c], errors="coerce").fillna(0).astype(int) if neg_c else 0
-
-    total_c = pick("total", "count", "articles", "n")
-    if total_c:
-        out["total"] = pd.to_numeric(df[total_c], errors="coerce")
-        missing = out["total"].isna() | (out["total"] == 0)
-        out.loc[missing, "total"] = out["positive"] + out["neutral"] + out["negative"]
+    # Sentiment counts per CEO
+    if not articles.empty:
+        grp = (
+            articles.assign(sentiment=articles["sentiment"].str.lower())
+            .groupby("ceo", dropna=False)["sentiment"]
+            .value_counts()
+            .unstack(fill_value=0)
+            .rename(columns={"positive": "positive", "neutral": "neutral", "negative": "negative"})
+        )
+        # Ensure all three columns exist
+        for col in ["positive", "neutral", "negative"]:
+            if col not in grp.columns:
+                grp[col] = 0
+        grp = grp[["positive", "neutral", "negative"]]
+        base = base.merge(grp, how="left", left_on="ceo", right_index=True)
     else:
-        out["total"] = out["positive"] + out["neutral"] + out["negative"]
+        base["positive"] = 0
+        base["neutral"] = 0
+        base["negative"] = 0
 
-    negpct_c = pick("neg_pct", "negative_pct", "neg_percent", "negative_percent")
-    if negpct_c:
-        out["neg_pct"] = pd.to_numeric(df[negpct_c], errors="coerce")
-        needs = out["neg_pct"].isna()
-        out.loc[needs, "neg_pct"] = (out["negative"] / out["total"].where(out["total"] > 0, 1) * 100).round(1)
-    else:
-        out["neg_pct"] = (out["negative"] / out["total"].where(out["total"] > 0, 1) * 100).round(1)
+    base[["positive", "neutral", "negative"]] = base[["positive", "neutral", "negative"]].fillna(0).astype(int)
+    base["total"] = base["positive"] + base["neutral"] + base["negative"]
+    base["neg_pct"] = base.apply(
+        lambda r: round(100.0 * (r["negative"] / r["total"]), 1) if r["total"] > 0 else 0.0, axis=1
+    )
 
-    theme_c = pick("theme", "themes", "topic")
-    if theme_c:
-        out["theme"] = df[theme_c].astype(str)
-    else:
-        out["theme"] = df["theme"].astype(str) if "theme" in df.columns else ""
+    # Optional: theme column (unknown unless you compute one elsewhere)
+    base["theme"] = ""
 
-    out = out.sort_values(["date", "ceo"]).reset_index(drop=True)
+    # Reorder + add date
+    out = base[["ceo", "company", "positive", "neutral", "negative", "total", "neg_pct", "theme", "alias"]].copy()
+    out.insert(0, "date", date_str)
     return out
 
 
-def join_aliases(counts: pd.DataFrame, aliases: pd.DataFrame) -> pd.DataFrame:
-    """Left-join aliases so downstream tasks can reference the matching alias for each CEO."""
-    alias_map = aliases.rename(columns={"brand": "ceo"})
-    out = counts.merge(alias_map, on="ceo", how="left")
-    if "alias" not in out.columns:
-        out["alias"] = ""
-    return out
+def write_daily_file(daily_dir: Path, date_str: str, daily_rows: pd.DataFrame) -> Path:
+    """
+    Writes data_ceos/YYYY-MM-DD.csv
+    """
+    daily_dir.mkdir(parents=True, exist_ok=True)
+    path = daily_dir / f"{date_str}.csv"
+    daily_rows.to_csv(path, index=False)
+    return path
 
 
-# ----------------------------- Main ----------------------------- #
-
-def main():
-    ap = argparse.ArgumentParser(description="Normalize CEO daily news sentiment counts with robust date and alias handling.")
-    ap.add_argument("--counts", default="data_ceos/daily_counts.csv", help="Path to daily counts CSV")
-    ap.add_argument("--aliases", default="data/ceo_aliases.csv", help="Path to ceo aliases CSV")
-    ap.add_argument("--out", default=None, help="Output path (default: overwrite counts path)")
-    args = ap.parse_args()
-
-    counts_path = Path(args.counts)
-    aliases_path = Path(args.aliases)
-    out_path = Path(args.out) if args.out else counts_path
-
-    print("=== CEO Sentiment (normalized) ===")
-    print(f"Counts : {counts_path}")
-    print(f"Aliases: {aliases_path}")
-    print(f"Output : {out_path}")
-
-    # Load & normalize
-    counts_raw = read_csv(counts_path)
-    counts = normalize_date_column(counts_raw)     # ensures 'date' is string, blanks for unparsable
-    counts = normalize_counts_columns(counts)
-
-    # Load aliases and join
-    aliases = load_alias_table(aliases_path)
-    counts = join_aliases(counts, aliases)
-
-    # Write
+def upsert_master_index(out_path: Path, date_str: str, daily_rows: pd.DataFrame) -> Path:
+    """
+    Replaces rows for date_str in data_ceos/daily_counts.csv with daily_rows;
+    creates the file if missing.
+    """
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    counts.to_csv(out_path, index=False)
-    print(f"✔ Wrote {len(counts):,} rows → {out_path}")
-    print("Columns:", ", ".join(counts.columns))
+    if out_path.exists():
+        master = pd.read_csv(out_path)
+        master = master.rename(columns={c: c.lower() for c in master.columns})
+        # Normalize legacy headers if needed
+        expected = ["date", "ceo", "company", "positive", "neutral", "negative", "total", "neg_pct", "theme", "alias"]
+        for col in expected:
+            if col not in master.columns:
+                master[col] = [] if col in ["theme", "alias"] else 0
+        master = master[expected]
+        # Drop existing rows for this date and append fresh ones
+        master = master[master["date"].astype(str) != date_str]
+        master = pd.concat([master, daily_rows], ignore_index=True)
+    else:
+        master = daily_rows.copy()
 
-    # Safe date-range echo (coerce to datetime for min/max)
-    dt_view = pd.to_datetime(counts["date"], errors="coerce")
-    dmin, dmax = dt_view.min(), dt_view.max()
-    dmin_s = dmin.strftime("%Y-%m-%d") if pd.notna(dmin) else "—"
-    dmax_s = dmax.strftime("%Y-%m-%d") if pd.notna(dmax) else "—"
-    print("Dates  :", f"{dmin_s} → {dmax_s}")
+    # Sort for readability
+    master["date"] = master["date"].astype(str)
+    master = master.sort_values(["date", "ceo"]).reset_index(drop=True)
+    master.to_csv(out_path, index=False)
+    return out_path
+
+
+# ----------------------- CLI / Main ------------------------ #
+def parse_args(argv: List[str] | None = None) -> argparse.Namespace:
+    p = argparse.ArgumentParser(description="Build daily CEO sentiment counts (legacy outputs).")
+    p.add_argument("--date", default=iso_today_utc(), help="Target date (YYYY-MM-DD). Default = today UTC.")
+    p.add_argument("--aliases", default=DEFAULT_ALIASES, help="Path to ceo_aliases.csv")
+    p.add_argument("--articles-dir", default=DEFAULT_ARTICLES_DIR, help="Folder with daily articles CSVs")
+    p.add_argument("--daily-dir", default=DEFAULT_DAILY_DIR, help="Folder to write per-day CSVs")
+    p.add_argument("--out", default=DEFAULT_OUT, help="Path to write/append master index (daily_counts.csv)")
+    return p.parse_args(argv)
+
+
+def main(argv: List[str] | None = None) -> int:
+    args = parse_args(argv)
+
+    # Validate date
+    try:
+        datetime.strptime(args.date, "%Y-%m-%d")
+    except ValueError:
+        raise SystemExit(f"Invalid --date '{args.date}'. Expected YYYY-MM-DD.")
+
+    aliases = load_aliases(Path(args.aliases))
+    articles = load_articles(Path(args.articles_dir), args.date)
+    daily_rows = aggregate_counts(aliases, articles, args.date)
+
+    daily_path = write_daily_file(Path(args.daily_dir), args.date, daily_rows)
+    master_path = upsert_master_index(Path(args.out), args.date, daily_rows)
+
+    print(f"✔ Wrote per-day file:  {daily_path}")
+    print(f"✔ Updated master index: {master_path} (rows: {len(pd.read_csv(master_path)):,})")
+    return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(main() or 0)
+    raise SystemExit(main())
