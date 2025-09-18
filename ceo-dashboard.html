@@ -13,44 +13,38 @@
 
   <style>
     :root{
-  /* Brand palette (from your swatches) */
-  --tk-ink:      #1f2121;
-  --tk-navy-900: #082e37;
-  --tk-navy-800: #034151;
-  --tk-navy-600: #00809e;
-
-  --tk-cyan-400: #58dbed;
-  --tk-cyan-300: #92e8ef;
-
-  --tk-gray-300: #cedcdd;
-  --tk-gray-200: #ebf2f2;
-
-  --tk-red-500:  #ff8261;
-  --tk-red-300:  #ffb199;
-
+  /* Brand palette */
+  --tk-ink:#1f2121;
+  --tk-navy-900:#082e37;
+  --tk-navy-800:#034151;
+  --tk-navy-600:#00809e;
+  --tk-cyan-400:#58dbed;
+  --tk-cyan-300:#92e8ef;
+  --tk-gray-300:#cedcdd;
+  --tk-gray-200:#ebf2f2;
+  --tk-red-500:#ff8261;
+  --tk-red-300:#ffb199;
   --tk-green-600:#82c616;
   --tk-green-300:#b8e276;
-
   --tk-amber-500:#ffc32e;
   --tk-amber-400:#fdd834;
 
   /* App tokens */
-  --bg:         #0b0d12;          /* keep dark canvas */
-  --card:       #101725;          /* card surface */
-  --card-2:     #0e1524;          /* table rows, modal body */
-  --border:     #23314d;
-  --text:       #e7ecf4;
-  --muted:      #8c9bb0;
-
-  --brand:      var(--tk-navy-600);
-  --brand-2:    var(--tk-navy-800);
+  --bg:#0b0d12;
+  --card:#101725;
+  --card-2:#0e1524;
+  --border:#23314d;
+  --text:#e7ecf4;
+  --muted:#8c9bb0;
+  --brand:var(--tk-navy-600);
+  --brand-2:var(--tk-navy-800);
 
   /* Data colors */
-  --pos:        var(--tk-green-600);
-  --neu:        var(--tk-gray-300);
-  --neg:        var(--tk-red-500);
-  --ctrl:       var(--tk-green-600);
-  --negSerp:    var(--tk-red-500);
+  --pos:var(--tk-green-600);
+  --neu:var(--tk-gray-300);
+  --neg:var(--tk-red-500);
+  --ctrl:var(--tk-green-600);
+  --negSerp:var(--tk-red-500);
 }
 
 /* Base */
@@ -86,9 +80,9 @@ tbody tr td:last-child{border-right:1px solid #17223a;border-radius:0 10px 10px 
 
 /* Risk pills */
 .pill{padding:3px 8px;border-radius:999px;font-size:12px;border:1px solid transparent}
-.pill.low   {background:color-mix(in oklab, var(--tk-green-300) 20%, transparent); color:var(--tk-green-600); border-color:color-mix(in oklab, var(--tk-green-300) 50%, transparent);}
-.pill.med   {background:color-mix(in oklab, var(--tk-amber-400) 22%, transparent); color:var(--tk-amber-500); border-color:color-mix(in oklab, var(--tk-amber-400) 55%, transparent);}
-.pill.high  {background:color-mix(in oklab, var(--tk-red-300) 24%, transparent);  color:var(--tk-red-500);   border-color:color-mix(in oklab, var(--tk-red-300) 55%, transparent);}
+.pill.low{background:rgba(184,226,118,.25);color:var(--tk-green-600);border-color:rgba(184,226,118,.5)}
+.pill.med{background:rgba(253,216,52,.22);color:var(--tk-amber-500);border-color:rgba(253,216,52,.55)}
+.pill.high{background:rgba(255,177,153,.24);color:var(--tk-red-500);border-color:rgba(255,177,153,.55)}
 
 /* Modal */
 .modal{position:fixed;inset:0;background:rgb(0 0 0 / .65);display:none;align-items:center;justify-content:center;padding:24px;z-index:50}
@@ -99,6 +93,7 @@ tbody tr td:last-child{border-right:1px solid #17223a;border-radius:0 10px 10px 
 .modal a{color:var(--tk-cyan-300)}
 .modal a:hover{color:var(--tk-cyan-400)}
 .notice{display:none;font-size:12px;margin:4px 0;color:var(--tk-amber-500)}
+
 
   </style>
 </head>
