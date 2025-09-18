@@ -31,9 +31,7 @@ h1{font-size:24px;margin:0 0 12px}
 /* charts stacked vertically, full width */
 #chartsStack{display:flex;flex-direction:column;gap:12px;margin-bottom:16px;}
 .chartCard{background:var(--card);border:1px solid #0e3240;border-radius:12px;padding:12px 16px}
-/* make svg texts white for readability */
 .chartCard svg text{fill:var(--text)}
-/* optional (thin axis lines on dark) */
 .chartCard svg .domain, .chartCard svg .tick line{stroke:#37576a}
 
 /* form */
@@ -321,7 +319,7 @@ async function initDatesAndRender(){
   document.getElementById('filterInput').addEventListener('input', () => { currentPage = 1; renderAll(); });
 
   renderAll();
-  setupResize(); // <— responsive re-render
+  setupResize(); // responsive re-render
 }
 
 /* ===================== Charts helpers ===================== */
@@ -551,7 +549,7 @@ function renderChartsForSelection(){
   if (target) newsRows = newsRows.filter(r => r.ceo === target);
   drawNewsStackedBar(newsDiv, newsRows, dates);
 
-  // add small caption
+  // add caption
   const totals = newsRows.reduce((a,r)=>({pos:a.pos+(+r.positive||0), neu:a.neu+(+r.neutral||0), neg:a.neg+(+r.negative||0)}), {pos:0, neu:0, neg:0});
   newsDiv.insert('div',':first-child')
     .html(`<strong>News sentiment (percent)</strong><br/><span class="muted">Positive: ${totals.pos} | Neutral: ${totals.neu} | Negative: ${totals.neg}</span>`)
@@ -577,13 +575,11 @@ function setupResize(){
   let t;
   const debounced = () => { clearTimeout(t); t = setTimeout(()=>renderChartsForSelection(), 150); };
 
-  // Observe the charts container
   const el = document.getElementById('chartsStack');
   if (el && 'ResizeObserver' in window){
     const ro = new ResizeObserver(debounced);
     ro.observe(el);
   }
-  // Fallback: window resize
   window.addEventListener('resize', debounced);
 }
 
@@ -634,7 +630,6 @@ async function showSerp(row){
   let items = [];
   try{
     const rows = await fetchCsv(path);
-    // robust alias match: "CEO Company"
     const alias = normalizeKey(`${row.ceo} ${row.company}`);
     items = rows.filter(r => {
       const comp = normalizeKey(r.company || r.alias || '');
@@ -678,7 +673,7 @@ function showBoards(row){
   openModal(`Boards — ${row.ceo}`, `<ul>${list}</ul>`);
 }
 
-/* ===================== Sort hooks ===================== */
+/* ===================== Sorting hooks ===================== */
 document.querySelectorAll('#dataTable thead th').forEach((th, idx)=>{
   const keys = ['ceo','company','theme','neg_pct','negative_serp_pct','serp_control_pct','risk'];
   const key = keys[idx];
@@ -690,6 +685,23 @@ document.querySelectorAll('#dataTable thead th').forEach((th, idx)=>{
     renderAll();
   });
 });
+
+/* ===================== NEW: renderAll orchestrator ===================== */
+function renderAll(){
+  // Build rows for the selected date
+  const date = document.getElementById('dateSelect').value || window.currentDate;
+  if (!date) return;
+
+  const baseRows = buildRowsForDate(date);
+  const filtered = applyFilter(baseRows);
+  const sorted = sortByKey(filtered);
+
+  filteredRows = sorted; // keep ref for pagination
+  currentPage = Math.max(1, Math.min(currentPage, Math.ceil(sorted.length / PAGE_SIZE) || 1));
+
+  renderTable(sorted);
+  renderChartsForSelection();
+}
 
 /* ===================== Boot ===================== */
 initDatesAndRender();
