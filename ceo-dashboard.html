@@ -129,17 +129,15 @@ const ROSTER_CANDIDATES = [
 ];
 const BOARDS_CSV = 'data/ceo_boards.csv'; // ceo,domain,url
 
-// Try multiple paths and return the first CSV that loads
+// Try a list of candidates; return [] if none worked (not null)
 async function fetchCsvAny(candidates){
-  for (const url of candidates){
+  for(const url of candidates){
     try{
-      const r = await fetch(url, {cache:'no-store'});
-      if(!r.ok) continue;
-      const t = await r.text();
-      return new Promise((res,rej)=>Papa.parse(t,{header:true,skipEmptyLines:true,complete:r=>res(r.data),error:rej}));
-    }catch{}
+      const rows = await fetchCsv(url);
+      if (Array.isArray(rows) && rows.length >= 0) return rows;
+    }catch{/* try next */}
   }
-  return null;
+  return []; // important: always return an array
 }
 
 // Small helpers
@@ -188,10 +186,20 @@ let serpTrendChart = null;
 
 /* =================== Loaders =================== */
 async function fetchCsv(url){
-  const r = await fetch(url, {cache:'no-store'});
-  if(!r.ok) throw new Error('HTTP '+r.status);
-  const t = await r.text();
-  return new Promise((res,rej)=>Papa.parse(t,{header:true,skipEmptyLines:true,complete:r=>res(r.data),error:rej}));
+  try{
+    const r = await fetch(url, {cache:'no-store'});
+    if(!r.ok) throw new Error(`HTTP ${r.status} for ${url}`);
+    const t = await r.text();
+    return await new Promise((res, rej)=>{
+      Papa.parse(t, {header:true, skipEmptyLines:true,
+        complete: r => res(r.data || []),
+        error: e => rej(e)
+      });
+    });
+  }catch(err){
+    console.error('fetchCsv error:', url, err);
+    throw err;
+  }
 }
 
 async function loadRoster(){
@@ -444,116 +452,154 @@ function drawSerpTrend(){
 /* =================== Modals =================== */
 async function showHeadlines(ceo, date){
   const c = document.getElementById('modalContent');
-  const files = [
-    `data_ceos/articles/${date}-articles.csv`,
-    `data/articles/${date}-articles.csv`,
-    `data/articles/${date}.csv`,
-  ];
-  const rows = await fetchCsvAny(files);
-  if(!rows || !rows.length){ c.innerHTML = `<div class="muted">No article file found for ${date}.</div>`; return; }
-  const norm = r => ({
-    ceo: String(r.ceo||r.CEO||'').trim(),
-    title: String(r.title||r.headline||'').trim(),
-    url: String(r.url||r.link||'').trim(),
-    pub: String(r.source||r.publisher||r.site||'').trim(),
-    sent: String(r.sentiment||r.sentiment_label||'').toLowerCase().trim()
-  });
-  const filtered = rows.map(norm).filter(r=>r.ceo===ceo);
-  if(!filtered.length){ c.innerHTML = `<div class="muted">No headlines for ${ceo} on ${date}.</div>`; return; }
-  const items = filtered.map(r=>{
-    const kind = r.sent.startsWith('neg')?'neg':r.sent.startsWith('pos')?'pos':'neu';
-    const pub = r.pub ? `<span class="muted"> — ${r.pub}</span>` : '';
-    const link = r.url ? `<a href="${r.url}" target="_blank" rel="noopener">${r.title || '(untitled)'}</a>` : (r.title || '(untitled)');
-    return `<li style="margin:8px 0">${link}${badge(r.sent || 'neutral', kind)}${pub}</li>`;
-  });
-  c.innerHTML = `<ul style="padding-left:18px;margin:0">${items.join('')}</ul>`;
+  try{
+    const files = [
+      `data_ceos/articles/${date}-articles.csv`,
+      `data/articles/${date}-articles.csv`,
+      `data/articles/${date}.csv`,
+    ];
+    const rows = await fetchCsvAny(files);
+    if (!rows.length){
+      c.innerHTML = `<div class="muted">No article file found for ${date}.</div>`;
+      return;
+    }
+    const norm = r => ({
+      ceo: String(r.ceo||r.CEO||'').trim(),
+      title: String(r.title||r.headline||'').trim(),
+      url: String(r.url||r.link||'').trim(),
+      pub: String(r.source||r.publisher||r.site||'').trim(),
+      sent: String(r.sentiment||r.sentiment_label||'').toLowerCase().trim()
+    });
+    const filtered = rows.map(norm).filter(r => r.ceo === ceo);
+    if (!filtered.length){
+      c.innerHTML = `<div class="muted">No headlines for ${ceo} on ${date}.</div>`;
+      return;
+    }
+    const items = filtered.map(r=>{
+      const kind = r.sent.startsWith('neg') ? 'neg' : r.sent.startsWith('pos') ? 'pos' : 'neu';
+      const pub = r.pub ? `<span class="muted"> — ${r.pub}</span>` : '';
+      const link = r.url ? `<a href="${r.url}" target="_blank" rel="noopener">${r.title || '(untitled)'}</a>` : (r.title || '(untitled)');
+      return `<li style="margin:8px 0">${link}${badge(r.sent || 'neutral', kind)}${pub}</li>`;
+    });
+    c.innerHTML = `<ul style="padding-left:18px;margin:0">${items.join('')}</ul>`;
+  }catch(err){
+    console.error('showHeadlines error:', err);
+    c.innerHTML = `<div class="muted">Could not load headlines (${date}).</div>`;
+  }
 }
 async function showSerps(ceo, company, date){
   const c = document.getElementById('modalContent');
-  const available = Array.from(new Set(serpDaily.map(r => r.date))).filter(isISODate).sort();
-  const chosen = available.filter(d => d <= date).pop() || available[available.length - 1];
-  if(!chosen){ c.innerHTML = '<div class="muted">No processed SERP data available yet.</div>'; return; }
+  try{
+    // Find nearest available processed date <= requested
+    const available = Array.from(new Set(serpDaily.map(r => r.date))).filter(isISODate).sort();
+    const chosen = available.filter(d => d <= date).pop() || available[available.length - 1];
+    if (!chosen){
+      c.innerHTML = '<div class="muted">No processed SERP data available yet.</div>';
+      return;
+    }
+    const url = `data_ceos/serp_rows/${chosen}-ceo-serps-rows.csv`;
+    const rows = await fetchCsv(url);
 
-  const url = `data_ceos/serp_rows/${chosen}-ceo-serps-rows.csv`;
-  let rows = null;
-  try { rows = await fetchCsv(url); }
-  catch { c.innerHTML = `<div class="muted">Could not load processed SERPs for ${chosen}.</div>`; return; }
+    const norm = r => ({
+      ceo: String(r.ceo||'').trim(),
+      company: String(r.company||'').trim(),
+      title: String(r.title||'').trim(),
+      url: String(r.url||'').trim(),
+      pos: Number(r.position||'') || '',
+      sent: String(r.sentiment||'').toLowerCase().trim(),
+      ctrl: String(r.controlled||'').toString().toLowerCase().trim()
+    });
 
-  const norm = r => ({
-    ceo: String(r.ceo||'').trim(),
-    company: String(r.company||'').trim(),
-    title: String(r.title||'').trim(),
-    url: String(r.url||'').trim(),
-    pos: Number(r.position||'') || '',
-    sent: String(r.sentiment||'').toLowerCase().trim(),
-    ctrl: String(r.controlled||'').toString().toLowerCase().trim()
-  });
-  let filtered = rows.map(norm).filter(r => r.ceo === ceo);
-  if(company){ const exact = filtered.filter(r=>r.company===company); if(exact.length) filtered = exact; }
-  if(!filtered.length){ c.innerHTML = `<div class="muted">No SERP rows for “${ceo}${company?` ${company}`:''}” on ${chosen}.</div>`; return; }
+    let filtered = rows.map(norm).filter(r => r.ceo === ceo);
+    if (company){
+      const exact = filtered.filter(r => r.company === company);
+      if (exact.length) filtered = exact;
+    }
+    if (!filtered.length){
+      c.innerHTML = `<div class="muted">No SERP rows for “${ceo}${company?` ${company}`:''}” on ${chosen}.</div>`;
+      return;
+    }
 
-  const total = filtered.length;
-  const neg = filtered.filter(r=>r.sent.startsWith('neg')).length;
-  const ctrl = filtered.filter(r=>['1','true','yes','y','controlled'].includes(r.ctrl)).length;
+    const total = filtered.length;
+    const neg = filtered.filter(r=>r.sent.startsWith('neg')).length;
+    const ctrl = filtered.filter(r=>['1','true','yes','y','controlled'].includes(r.ctrl)).length;
 
-  const head = `
-    <thead><tr>
-      <th style="text-align:right;padding:6px 8px;width:60px">Pos</th>
-      <th style="text-align:left;padding:6px 8px">Title</th>
-      <th style="text-align:left;padding:6px 8px">URL</th>
-      <th style="text-align:center;padding:6px 8px">Sentiment</th>
-      <th style="text-align:center;padding:6px 8px">Control</th>
-    </tr></thead>`;
-  const rowsHtml = filtered
-    .sort((a,b)=>(a.pos||999)-(b.pos||999))
-    .slice(0,50)
-    .map(r=>{
-      const kind = r.sent.startsWith('neg')?'neg':r.sent.startsWith('pos')?'pos':'neu';
-      const ctrlTxt = ['1','true','yes','y','controlled'].includes(r.ctrl) ? 'Controlled' : 'Uncontrolled';
-      const t = r.title || '(no title)';
-      const link = r.url ? `<a href="${r.url}" target="_blank" rel="noopener">${t}</a>` : t;
-      return `<tr>
-        <td style="text-align:right;padding:6px 8px">${r.pos}</td>
-        <td style="padding:6px 8px">${link}</td>
-        <td style="padding:6px 8px"><span class="muted">${r.url||''}</span></td>
-        <td style="text-align:center;padding:6px 8px">${badge(r.sent || 'neutral', kind)}</td>
-        <td style="text-align:center;padding:6px 8px">${ctrlTxt}</td>
-      </tr>`;
-    }).join('');
-  const summary = `<div class="muted" style="margin:0 0 8px 0">${total} results — ${neg} negative — ${ctrl} controlled (showing ${chosen})</div>`;
-  c.innerHTML = summary + `<div style="overflow:auto;max-height:60vh;border:1px solid #23314d;border-radius:12px">
-    <table style="width:100%;border-collapse:collapse">${head}<tbody>${rowsHtml}</tbody></table>
-  </div>`;
+    const head = `
+      <thead><tr>
+        <th style="text-align:right;padding:6px 8px;width:60px">Pos</th>
+        <th style="text-align:left;padding:6px 8px">Title</th>
+        <th style="text-align:left;padding:6px 8px">URL</th>
+        <th style="text-align:center;padding:6px 8px">Sentiment</th>
+        <th style="text-align:center;padding:6px 8px">Control</th>
+      </tr></thead>`;
+    const rowsHtml = filtered
+      .sort((a,b)=>(a.pos||999)-(b.pos||999))
+      .slice(0,50)
+      .map(r=>{
+        const kind = r.sent.startsWith('neg')?'neg':r.sent.startsWith('pos')?'pos':'neu';
+        const ctrlTxt = ['1','true','yes','y','controlled'].includes(r.ctrl) ? 'Controlled' : 'Uncontrolled';
+        const t = r.title || '(no title)';
+        const link = r.url ? `<a href="${r.url}" target="_blank" rel="noopener">${t}</a>` : t;
+        return `<tr>
+          <td style="text-align:right;padding:6px 8px">${r.pos}</td>
+          <td style="padding:6px 8px">${link}</td>
+          <td style="padding:6px 8px"><span class="muted">${r.url||''}</span></td>
+          <td style="text-align:center;padding:6px 8px">${badge(r.sent || 'neutral', kind)}</td>
+          <td style="text-align:center;padding:6px 8px">${ctrlTxt}</td>
+        </tr>`;
+      }).join('');
+    const summary = `<div class="muted" style="margin:0 0 8px 0">${total} results — ${neg} negative — ${ctrl} controlled (showing ${chosen})</div>`;
+    c.innerHTML = summary + `<div style="overflow:auto;max-height:60vh;border:1px solid #23314d;border-radius:12px">
+      <table style="width:100%;border-collapse:collapse">${head}<tbody>${rowsHtml}</tbody></table>
+    </div>`;
+  }catch(err){
+    console.error('showSerps error:', err);
+    c.innerHTML = `<div class="muted">Could not load processed SERPs.</div>`;
+  }
 }
 async function openModal(kind, ceo, date){
-  document.getElementById('modalTitle').textContent =
-    (kind.charAt(0).toUpperCase()+kind.slice(1)) + (ceo ? ` — ${ceo}` : '');
   const box = document.getElementById('modalContent');
+  const title = (kind.charAt(0).toUpperCase()+kind.slice(1)) + (ceo ? ` — ${ceo}` : '');
+  document.getElementById('modalTitle').textContent = title;
   box.innerHTML = 'Loading…';
   document.getElementById('modal').style.display = 'flex';
 
- if (kind === 'boards'){
-  // Exact-match first; if empty, try a case-insensitive lookup
-  let boards = boardsByCeo.get(ceo) || [];
-  if (!boards.length) {
-    const key = Array.from(boardsByCeo.keys()).find(k => k.toLowerCase() === ceo.toLowerCase());
-    if (key) boards = boardsByCeo.get(key) || [];
-  }
+  try{
+    if (kind === 'boards'){
+      let boards = boardsByCeo.get(ceo) || [];
+      if (!boards.length) {
+        const key = Array.from(boardsByCeo.keys()).find(k => k.toLowerCase() === ceo.toLowerCase());
+        if (key) boards = boardsByCeo.get(key) || [];
+      }
+      if (!boards.length){ box.innerHTML = '<div class="muted">No boards found.</div>'; return; }
+      box.innerHTML = '<ul style="padding-left:18px;margin:0">' +
+        boards.map(b => {
+          const text = b.domain || (b.url ? new URL(b.url).hostname.replace(/^www\./,'') : 'Board');
+          const href = b.url || '#';
+          return `<li style="margin:6px 0"><a href="${href}" target="_blank" rel="noopener">${text}</a></li>`;
+        }).join('') +
+      '</ul>';
+      return;
+    }
 
-  if (!boards.length){
-    box.innerHTML = '<div class="muted">No boards found.</div>';
-    return;
-  }
+    if (kind === 'headlines'){
+      const d = date || currentDate;
+      await showHeadlines(ceo, d);
+      return;
+    }
 
-  box.innerHTML = '<ul style="padding-left:18px;margin:0">' +
-    boards.map(b => {
-      const text = b.domain || (b.url ? new URL(b.url).hostname.replace(/^www\./,'') : 'Board');
-      const href = b.url || '#';
-      return `<li style="margin:6px 0"><a href="${href}" target="_blank" rel="noopener">${text}</a></li>`;
-    }).join('') +
-  '</ul>';
-  return;
-}
+    if (kind === 'serp'){
+      let company = '';
+      const match = filteredRows.find(r => r.ceo === ceo);
+      if (match) company = match.company || '';
+      const d = date || currentDate;
+      await showSerps(ceo, company, d);
+      return;
+    }
+  }catch(err){
+    console.error('openModal error:', err);
+    box.innerHTML = `<div class="muted">Something went wrong loading this view.</div>`;
+  }
 }
 
 /* =================== Events / init =================== */
