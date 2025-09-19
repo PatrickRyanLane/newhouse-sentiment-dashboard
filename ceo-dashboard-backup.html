@@ -186,6 +186,13 @@ const isISODate = s => /^\d{4}-\d{2}-\d{2}$/.test(String(s||'').trim());
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 function fmtPct(v){ return (v==null) ? 'N/A' : (v*100).toFixed(1) + '%'; }
 
+// Normalizes names so lookups are reliable
+const canonName = s => String(s || '')
+  .toLowerCase()
+  .replace(/\s+/g, ' ')
+  .trim();
+
+
 /********************** CSV helpers **********************/
 async function fetchCsv(url){
   const r = await fetch(url, {cache:'no-store'});
@@ -222,20 +229,26 @@ async function loadRoster(){
 async function loadBoards(){
   boardsByCeo = new Map();
   try{
-    const rows = await fetchCsv(BOARDS_CSV);
+    const rows = await fetchCsv(BOARDS_CSV); // 'data_ceos/ceo_boards.csv'
     rows.forEach(r => {
-      const ceo = (r.ceo || r.CEO || '').trim();
+      const ceoRaw = (r.ceo || '').trim();
       const url = (r.url || '').trim();
       let domain = (r.domain || '').trim();
+
+      if (!ceoRaw || !url) return; // need both
       if (!domain && url){
-        try{ domain = new URL(url).hostname.replace(/^www\./,''); } catch {}
+        try { domain = new URL(url).hostname.replace(/^www\./,''); } catch {}
       }
-      if (!ceo || !url) return;
-      const arr = boardsByCeo.get(ceo) || [];
-      arr.push({domain, url});
-      boardsByCeo.set(ceo, arr);
+
+      const key = canonName(ceoRaw);
+      const arr = boardsByCeo.get(key) || [];
+      arr.push({ domain, url });
+      boardsByCeo.set(key, arr);
     });
-  }catch(e){ /* optional */ }
+  }catch(e){
+    console.error('Could not load boards CSV:', e);
+    boardsByCeo = new Map();
+  }
 }
 async function loadCounts(){
   const rows = await fetchCsvAny(COUNTS_CANDIDATES);
@@ -579,14 +592,24 @@ function openModal(title, html){
 
 /********************** Boards modal **********************/
 function showBoards(ceo){
-  const arr = boardsByCeo.get(ceo) || [];
-  if (!arr.length){
+  // exact, then canonical (case/space-insensitive), then fuzzy fallback
+  const key = canonName(ceo);
+  let boards = boardsByCeo.get(ceo) || boardsByCeo.get(key);
+
+  if (!boards){
+    // last-chance: find any key that equals ignoring case/space
+    const k = [...boardsByCeo.keys()].find(k => k === key);
+    boards = k ? boardsByCeo.get(k) : null;
+  }
+
+  if (!boards || !boards.length){
     openModal(`Boards — ${ceo}`, `<div class="muted">No boards found.</div>`);
     return;
   }
+
   const html = `<ul style="padding-left:20px;margin:0">
-    ${arr.map(b=>{
-      const text = esc(b.domain || (b.url? new URL(b.url).hostname.replace(/^www\./,'') : 'Board'));
+    ${boards.map(b=>{
+      const text = esc(b.domain || (b.url ? new URL(b.url).hostname.replace(/^www\./,'') : 'Board'));
       const href = esc(b.url || '#');
       return `<li style="margin:6px 0"><a class="link" href="${href}" target="_blank" rel="noopener">${text}</a></li>`;
     }).join('')}
