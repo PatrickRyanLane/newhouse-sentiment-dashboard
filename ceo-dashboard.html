@@ -1,611 +1,776 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>CEO Risk Dashboard</title>
 
-<!-- Chart.js + PapaParse -->
+<!-- Charts + CSV parser -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
 <style>
-:root{
-  --bg:#0b0d12; --card:#11172a; --muted:#9c96bb; --text:#e7ecf4; --accent:#58dbed;
-  --pill-neg:#ff7861; --pill-neu:#ffd54f; --pill-pos:#8be276;
-  --stroke:#17223a; --chip:#23314d; --chipBorder:#2c3b5a;
-}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font:14px/1.4 Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-.wrap{max-width:1200px;margin:0 auto;padding:20px}
-h1{font-size:28px;margin:6px 0 18px}
+  :root{
+    /* Terakeet palette (dark UI) */
+    --bg:#0b0d12;
+    --card:#111a25;
+    --muted:#9ae8ef;
+    --text:#e7ecf4;
+    --accent:#58dbed;   /* cyan */
+    --accent-2:#82c616; /* green */
+    --warn:#ffc32e;     /* yellow */
+    --bad:#ff8261;      /* coral */
+    --chip:#23314d;
+    --chip-text:#e7ecf4;
+    --chip-bad:#442327;
+    --chip-good:#213d2a;
+    --chip-warn:#3c361b;
+    --ring: rgba(88,219,237,.25);
+  }
 
-/* Controls */
-.controls{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:0 0 12px}
-.card{background:var(--card);border:1px solid var(--stroke);border-radius:12px;padding:12px 12px}
-select,input[type="text"]{background:#0c1226;border:1px solid #23314d;border-radius:10px;color:var(--text);padding:8px 10px}
-button{background:#18243b;border:1px solid #2a3b5e;color:var(--text);border-radius:10px;padding:8px 12px;cursor:pointer}
-button:hover{filter:brightness(1.08)}
+  *{ box-sizing:border-box }
+  html,body{ height:100% }
+  body{
+    margin:0;
+    font-family: Inter, ui-sans-serif, system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    color:var(--text);
+    background:var(--bg);
+  }
 
-/* Charts */
-.grid{display:grid;grid-template-rows:300px 240px;gap:12px;margin:12px 0}
-@media(min-width:980px){.grid{grid-template-rows:340px 260px}}
-.chart-card{background:var(--card);border:1px solid var(--stroke);border-radius:12px;padding:10px;position:relative}
-.chart-card h3{margin:2px 6px 8px;font-size:14px;color:var(--muted)}
+  h1{ font-size:28px; margin:24px 0 8px 0 }
+  .wrap{ max-width:1200px; margin:0 auto; padding:20px }
+  .controls{
+    display:grid;
+    grid-template-columns: 180px 1fr auto auto;
+    gap:12px;
+    align-items:center;
+    margin-bottom:14px;
+  }
+  .card{
+    background:var(--card);
+    border-radius:14px;
+    box-shadow: 0 4px 22px rgba(0,0,0,.25);
+    padding:14px;
+  }
+  select, input[type="text"]{
+    width:100%;
+    padding:10px 12px;
+    border-radius:10px;
+    border:1px solid #23314d;
+    background:#0f1621;
+    color:var(--text);
+    outline:none;
+  }
+  button{
+    padding:10px 14px;
+    border-radius:10px;
+    border:1px solid #23314d;
+    color:var(--text);
+    background:#0f1621;
+    cursor:pointer;
+  }
+  button:hover{ box-shadow:0 0 0 3px var(--ring) inset }
 
-/* Table */
-.table-card{background:var(--card);border:1px solid var(--stroke);border-radius:12px;padding:10px}
-.table-hint{margin:0 0 8px;color:var(--muted)}
-table{width:100%;border-collapse:separate;border-spacing:0 6px}
-thead th{font-size:12px;color:var(--muted);text-align:left;padding:6px 8px}
-tbody td{padding:10px 8px;background:#0c1226;border-top:1px solid #0f1831;border-bottom:1px solid #0f1831}
-tbody tr td:first-child{border-left:1px solid #0f1831;border-radius:10px 0 0 10px}
-tbody tr td:last-child{border-right:1px solid #0f1831;border-radius:0 10px 10px 0}
-.right{text-align:right}
-.center{text-align:center}
-.pill{font-size:12px;border-radius:999px;padding:3px 8px;border:1px solid var(--chipBorder);background:var(--chip);color:#cfe0ff}
-.pill.low{background:rgba(34,187,102,.1);color:#8be276}
-.pill.med{background:rgba(255,215,79,.08);color:#ffd54f}
-.pill.high{background:rgba(255,120,97,.12);color:#ff7861}
-.link{color:var(--accent);text-decoration:underline}
+  .grid-2{ display:grid; gap:14px; grid-template-columns:1fr }
+  @media (min-width:980px){
+    .grid-2{ grid-template-columns:1fr }
+  }
 
-/* Pagination */
-.pagination{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:8px}
+  .legend-inline{ margin-top:6px; font-size:12px; color:#d9e2ee }
 
-/* Modal */
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:24px}
-.modal.open{display:flex}
-.modal .box{max-width:900px;width:100%;max-height:85vh;overflow:auto;background:#0e152a;border:1px solid #1b2745;border-radius:16px}
-.modal header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #12203d}
-.modal header h3{margin:0;font-size:16px}
-.modal .content{padding:16px}
-.badges{display:flex;gap:8px;margin-top:8px}
-.badge{font-size:12px;padding:4px 8px;border-radius:999px;border:1px solid transparent}
-.badge.positive{background:rgba(34,187,102,.1);color:#8be276;border-color:rgba(139,226,118,.25)}
-.badge.neutral{background:rgba(255,215,0,.1);color:#ffd54f;border-color:rgba(255,213,79,.25)}
-.badge.negative{background:rgba(255,120,97,.12);color:#ff7861;border-color:rgba(255,120,97,.25)}
-.badge.controlled{background:rgba(34,187,102,.1);color:#8be276;border-color:rgba(139,226,118,.25)}
-.badge.uncontrolled{background:rgba(255,120,97,.1);color:#ff7861;border-color:rgba(255,120,97,.25)}
-.muted{color:var(--muted)}
-/* SERP card layout */
-.serp-cards{display:grid;gap:12px;margin-top:12px}
-.serp-card{background:var(--card);border:1px solid var(--stroke);border-radius:12px;padding:14px 16px}
-.serp-domain{font-size:12px;color:var(--muted);margin-bottom:4px}
-.serp-title a{color:var(--text);text-decoration:underline}
-.serp-snippet{color:var(--muted);margin-top:6px;line-height:1.35}
-.serp-metrics{margin:4px 0 0;color:var(--muted)}
-.serp-metrics b{color:var(--text)}
+  /* Table */
+  table{ width:100%; border-collapse:collapse; margin-top:10px }
+  thead th{
+    text-align:left; font-size:12px; color:#a6b4c6; letter-spacing:.02em; padding:8px 10px;
+    border-bottom:1px solid #172733;
+    user-select:none; cursor:default;
+  }
+  tbody td{ padding:10px; border-bottom:1px solid #13212d; vertical-align:middle }
+  tbody tr:hover{ background:#0f1621 }
+  .right{ text-align:right }
+  .center{ text-align:center }
+  .muted{ color:#a6b4c6 }
+
+  .pill{
+    display:inline-block; padding:4px 10px; border-radius:999px; font-size:12px; margin:0 4px 0 0;
+    background:var(--chip); color:var(--chip-text);
+  }
+  .pill.bad{ background:var(--chip-bad); color:#ffd2c7 }
+  .pill.good{ background:var(--chip-good); color:#c6f0d1 }
+  .pill.warn{ background:var(--chip-warn); color:#ffe9b4 }
+
+  .btn-mini{
+    padding:6px 10px; font-size:12px; border-radius:10px; background:#0f1621; color:var(--text);
+    border:1px solid #23314d;
+  }
+
+  /* Modal */
+  .modal{ position:fixed; inset:0; display:none; place-items:center; background:rgba(4,8,12,.65); z-index:40 }
+  .modal.open{ display:grid }
+  .modal .box{
+    width:min(900px, 92vw); max-height:82vh; overflow:auto;
+    background:var(--card); border:1px solid #23314d; border-radius:14px; padding:16px;
+  }
+  .modal header{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px }
+  .modal header h3{ margin:0; font-size:18px }
+  .modal .close{ padding:8px 12px; border-radius:999px; background:#0f1621; border:1px solid #23314d; color:#d7e4f0 }
+
+  .serp-card{
+    background:#0f1621; border:1px solid #1f2d3b; border-radius:12px; padding:12px; margin:10px 0;
+  }
+  .serp-card h4{ margin:0 0 4px 0; font-size:15px }
+  .serp-meta{ display:flex; gap:8px; flex-wrap:wrap; font-size:12px; color:#a6b4c6 }
+
+  .flex{ display:flex; gap:10px; align-items:center; flex-wrap:wrap }
+  .grow{ flex:1 }
+  .small{ font-size:12px; color:#a6b4c6 }
+
+  .charts{ display:grid; gap:14px; grid-template-columns:1fr }
+  @media (min-width:980px){
+    .charts{ grid-template-columns:1fr } /* stacked (bar over line) */
+  }
+
+  .kpis{ display:flex; gap:12px; flex-wrap:wrap; margin:6px 0 2px 0 }
+  .kpi{ background:#0f1621; border:1px solid #23314d; border-radius:10px; padding:6px 10px; font-size:12px }
 </style>
 </head>
-
 <body>
-<div class="wrap">
-  <h1>CEO Risk Dashboard</h1>
+  <div class="wrap">
+    <h1>CEO Risk Dashboard</h1>
 
-  <div class="controls card">
-    <div>
-      <div class="muted" style="font-size:12px;margin:0 0 4px">Date</div>
-      <select id="dateSelect"></select>
+    <div class="controls">
+      <div>
+        <div class="small">Date</div>
+        <select id="dateSelect"></select>
+      </div>
+      <div>
+        <div class="small">Filter (CEO or Company)</div>
+        <input id="filterInput" type="text" placeholder="Type to filter…" />
+      </div>
+      <button id="refreshBtn">Refresh Data</button>
+      <button id="clearBtn">Clear Selection</button>
     </div>
-    <div style="flex:1 1 420px">
-      <div class="muted" style="font-size:12px;margin:0 0 4px">Filter (CEO or Company)</div>
-      <input id="filterInput" type="text" placeholder="Type to filter…" />
+
+    <div class="charts">
+      <div class="card">
+        <div class="flex">
+          <div class="grow"><strong>News sentiment (percent of articles)</strong></div>
+          <div class="legend-inline">Legend is light for readability</div>
+        </div>
+        <canvas id="newsChart" height="140"></canvas>
+      </div>
+
+      <div class="card">
+        <div class="flex">
+          <div class="grow"><strong>SERP (Negative % • Control %)</strong></div>
+          <div id="serpKpis" class="kpis"></div>
+        </div>
+        <canvas id="serpChart" height="140"></canvas>
+      </div>
     </div>
-    <button id="refreshBtn">Refresh Data</button>
-    <button id="clearBtn">Clear Selection</button>
+
+    <div class="card" style="margin-top:14px">
+      <div class="small" style="margin-bottom:6px">
+        Select exactly one CEO using the checkbox to see brand-level charts. Selecting another will automatically unselect the previous one.
+      </div>
+
+      <table id="results">
+        <thead>
+          <tr>
+            <th class="center" style="width:46px">CEO</th>
+            <th>CEO</th>
+            <th>Company</th>
+            <th class="right" data-sort="news">Negative News % ▲▼</th>
+            <th class="right" data-sort="negserp">Negative SERP % ▲▼</th>
+            <th class="right" data-sort="ctrl">SERP Control % ▲▼</th>
+            <th data-sort="risk">Risk ▲▼</th>
+            <th class="center">Headlines</th>
+            <th class="center">SERP</th>
+            <th class="center">Boards</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <div class="flex" style="justify-content:flex-end; margin-top:10px">
+        <div id="pageInfo" class="small"></div>
+        <button class="btn-mini" id="prevBtn">Prev</button>
+        <button class="btn-mini" id="nextBtn">Next</button>
+      </div>
+    </div>
   </div>
 
-  <!-- Charts (unchanged) -->
-  <div class="grid">
-    <div class="chart-card">
-      <h3>News sentiment (percent of articles)</h3>
-      <canvas id="newsChart"></canvas>
-    </div>
-    <div class="chart-card">
-      <h3>SERP (Negative % • Control %)</h3>
-      <canvas id="serpChart"></canvas>
+  <!-- Headlines Modal -->
+  <div class="modal" id="headlinesModal">
+    <div class="box">
+      <header>
+        <h3 id="headlinesTitle">Headlines</h3>
+        <button class="close" data-close="#headlinesModal">Close</button>
+      </header>
+      <div id="headlinesBody" class="small muted">Loading…</div>
     </div>
   </div>
 
-  <!-- TABLE -->
-  <div class="table-card">
-    <p class="table-hint">Select exactly one CEO using the checkbox to see brand-level charts. Selecting another will automatically unselect the previous one.</p>
-    <table>
-      <thead>
-        <tr>
-          <th></th>
-          <th>CEO</th>
-          <th>Company</th>
-          <th data-key="neg_news" class="right">Negative News % ▲▼</th>
-          <th data-key="neg_serp" class="right">Negative SERP % ▲▼</th>
-          <th data-key="ctrl_pct" class="right">SERP Control % ▲▼</th>
-          <th data-key="risk" class="center">Risk ▲▼</th>
-          <th class="center">Headlines</th>
-          <th class="center">SERP</th>
-          <th class="center">Boards</th>
-        </tr>
-      </thead>
-      <tbody id="tbody"></tbody>
-    </table>
-
-    <div class="pagination">
-      <button id="prevBtn">Prev</button>
-      <div>Page <span id="pageNo">1</span> / <span id="pageTotal">1</span></div>
-      <button id="nextBtn">Next</button>
+  <!-- SERP Modal -->
+  <div class="modal" id="serpModal">
+    <div class="box">
+      <header>
+        <h3 id="serpTitle">SERP</h3>
+        <button class="close" data-close="#serpModal">Close</button>
+      </header>
+      <div id="serpMeta" class="small muted">Loading…</div>
+      <div id="serpList"></div>
     </div>
   </div>
-</div>
 
-<!-- Modal -->
-<div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-  <div class="box">
-    <header>
-      <h3 id="modalTitle">Title</h3>
-      <button id="modalClose">Close</button>
-    </header>
-    <div class="content" id="modalContent"></div>
+  <!-- Boards Modal -->
+  <div class="modal" id="boardsModal">
+    <div class="box">
+      <header>
+        <h3 id="boardsTitle">Boards</h3>
+        <button class="close" data-close="#boardsModal">Close</button>
+      </header>
+      <div id="boardsBody" class="small muted">Loading…</div>
+    </div>
   </div>
-</div>
 
 <script>
-/********************** Config **********************/
-const ROSTER_CANDIDATES = [
-  'data/serps/roster.csv',
-  'data/roster.csv',
-  'data/ceo_companies.csv'
-];
-const NEWS_DAILY = d => `data_ceos/${d}.csv`; // has neg_pct per CEO
-const SERP_PROCESSED = d => `data_ceos/processed_serps/${d}-ceo-serps-processed.csv`; // counts to % in code
-const SERP_ROWS_PATH = d => `data_ceos/serp_rows/${d}-ceo-serps-rows.csv`; // SERP modal
-
-/* Used only to build the date dropdown + charts (unchanged) */
-const COUNTS_CANDIDATES = [
-  'data/serps/daily_counts.csv',
-  'data/daily_counts.csv',
-  'data_ceos/daily_counts.csv'
-];
+/* ======================= Config & globals ======================= */
+const COUNTS_MASTER = 'data_ceos/daily_counts.csv'; // for dates + fallback
 const SERPS_DAILY_CSV = 'data/serps/ceo_serps_daily.csv';
+const SERP_ROWS_FMT = d => `data_ceos/serp_rows/${d}-ceo-serps-rows.csv`;
 const BOARDS_CSV = 'data/serps/ceo_boards.csv';
 
-/********************** Runtime **********************/
-let rosterMap = new Map();        // CEO -> Company
-let companyToCeo = new Map();     // Company -> CEO
-
-/* For charts (unchanged) */
-let allCountsRows = [];  // news counts all dates (aggregate)
-let serpsDaily = [];     // per-date SERP aggregates (aggregate)
-
-/* Per-day maps that drive the TABLE */
-let newsDailyMap = new Map();     // CEO -> {company, neg_pct}
-let serpProcMap = new Map();      // CEO -> {total, controlled, negative_serp, ctrl_pct, neg_serp_pct, company}
-
-let boardsByCeo = new Map();
-let filteredRows = [];
-let selectedCeo = null;
-let currentSort = { key:null, dir:1 };
-let currentPage = 1;
+let countsAll = [];               // master counts for all dates
+let boardsByCeo = new Map();      // CEO -> [{domain,url}]
+let serpDaily = [];               // SERP daily aggregates (optional)
+let selectedCeo = '';             // single-select for brand charts
+let currentDate = '';             // UI date
+let currentPage = 1;              // paging
 const PAGE_SIZE = 25;
 
-let newsChart, serpChart;
+// sorting
+let currentSort = { key: null, dir: 1 };
 
-/********************** Utils **********************/
+/* ======================= Small utils ======================= */
 const isISODate = s => /^\d{4}-\d{2}-\d{2}$/.test(String(s||'').trim());
-const pct = n => (n*100).toFixed(1) + '%';
-const esc = s => String(s ?? '').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-
-/********************** CSV helpers **********************/
-async function fetchCsv(url){
-  const r = await fetch(url, {cache:'no-store'});
-  if (!r.ok) throw new Error(`HTTP ${r.status} for ${url}`);
-  const t = await r.text();
-  return await new Promise((res, rej) => {
-    Papa.parse(t, {header:true, skipEmptyLines:true,
-      complete: out => res(out.data || []), error: e => rej(e)
-    });
-  });
+function pctStr(v){
+  if (v == null || Number.isNaN(v)) return 'N/A';
+  return `${(v*100).toFixed(1)}%`;
 }
-async function fetchCsvAny(cands){
-  for (const u of cands){
-    try{ const rows = await fetchCsv(u); if (Array.isArray(rows)) return rows; }catch(e){}
-  }
-  return [];
-}
-
-/********************** Loaders **********************/
-async function loadRoster(){
-  const rows = await fetchCsvAny(ROSTER_CANDIDATES);
-  rosterMap = new Map(); companyToCeo = new Map();
-  rows.forEach(r=>{
-    const ceo = (r.ceo||r.CEO||'').trim();
-    const company = (r.company||r.Company||'').trim();
-    if (ceo && company){ rosterMap.set(ceo, company); companyToCeo.set(company, ceo); }
-  });
-}
-async function loadBoards(){
-  boardsByCeo = new Map();
-  try{
-    const rows = await fetchCsv(BOARDS_CSV);
-    rows.forEach(r=>{
-      const ceo = (r.ceo||r.CEO||'').trim();
-      const url = (r.url||'').trim();
-      let domain = (r.domain||'').trim();
-      if (!domain && url){ try{ domain = new URL(url).hostname.replace(/^www\./,''); }catch{} }
-      if (!ceo || !url) return;
-      const arr = boardsByCeo.get(ceo) || [];
-      arr.push({domain, url});
-      boardsByCeo.set(ceo, arr);
-    });
-  }catch{}
-}
-
-/* Aggregate datasets for date dropdown + charts (unchanged) */
-async function loadCountsAgg(){
-  const rows = await fetchCsvAny(COUNTS_CANDIDATES);
-  allCountsRows = rows.map(r => ({
-    date:(r.date||'').trim(),
-    ceo:(r.ceo||'').trim(),
-    company:(r.company||'').trim(),
-    pos:+r.positive||+r.pos_count||0,
-    neu:+r.neutral||+r.neu_count||0,
-    neg:+r.negative||+r.neg_count||0
-  })).filter(r=>isISODate(r.date));
-}
-async function loadSerpDailyAgg(){
-  try{
-    const rows = await fetchCsv(SERPS_DAILY_CSV);
-    serpsDaily = rows.map(r=>({
-      date:(r.date||'').trim(),
-      ceo:(r.ceo||'').trim(),
-      company:(r.company||'').trim(),
-      total:+r.total||0,
-      neg_serp:+r.negative_serp||+r.neg_serp||0,
-      ctrl:+r.controlled||+r.control||0
-    })).filter(r=>isISODate(r.date));
-  }catch{ serpsDaily=[]; }
-}
-
-/* Per-day sources for TABLE */
-async function loadNewsDaily(date){
-  newsDailyMap = new Map();
-  try{
-    const rows = await fetchCsv(NEWS_DAILY(date));
-    rows.forEach(r=>{
-      const ceo = (r.ceo||'').trim();
-      const company = (r.company||'').trim();
-      let neg = r.neg_pct ?? r.neg || 0;
-      neg = +neg;
-      if (neg > 1.00001) neg = neg/100;           // tolerate 0–100 or 0–1
-      if (isFinite(neg)) newsDailyMap.set(ceo, {company, neg_pct: Math.max(0, Math.min(1, neg))});
-    });
-  }catch(e){
-    newsDailyMap = new Map();
-  }
-}
-async function loadSerpProcessed(date){
-  serpProcMap = new Map();
-  try{
-    const rows = await fetchCsv(SERP_PROCESSED(date));
-    rows.forEach(r=>{
-      const ceo = (r.ceo||'').trim();
-      const company = (r.company||'').trim();
-      const total = +r.total||0;
-      const controlled = +r.controlled||0;
-      const negative_serp = +r.negative_serp||0;
-      const ctrl_pct = total ? controlled/total : 0;
-      const neg_serp_pct = total ? negative_serp/total : 0;
-      serpProcMap.set(ceo, {company, total, controlled, negative_serp, ctrl_pct, neg_serp_pct});
-    });
-  }catch(e){
-    serpProcMap = new Map();
-  }
-}
-
-/********************** Risk **********************/
 function computeRisk(negPct, ctrlPct){
-  const n = negPct*100, c = ctrlPct*100;
-  if (n >= 40 || c < 25) return 'High';
-  if (n >= 25 || c < 50) return 'Medium';
+  if (negPct == null || ctrlPct == null) return '—';
+  if (negPct >= 0.30 || ctrlPct < 0.35) return 'High';
+  if (negPct >= 0.15 || ctrlPct < 0.55) return 'Medium';
   return 'Low';
 }
+function domainOf(u){
+  try { return new URL(u).hostname.replace(/^www\./,''); } catch(e){ return ''; }
+}
 
-/********************** Bootstrap **********************/
-async function init(){
-  await Promise.all([loadRoster(), loadCountsAgg(), loadSerpDailyAgg(), loadBoards()]);
-  // dates from aggregate sets (since we can't list directories via Pages)
-  const dateSet = new Set([
-    ...allCountsRows.map(r=>r.date),
-    ...serpsDaily.map(r=>r.date)
-  ].filter(isISODate));
-  const dates = [...dateSet].sort();
-  const sel = document.getElementById('dateSelect');
-  sel.innerHTML = dates.map(d=>`<option value="${d}">${d}</option>`).join('');
-  sel.value = dates[dates.length-1] || '';
-  sel.addEventListener('change', ()=>{ currentPage=1; selectedCeo=null; renderAll(); });
-
-  document.getElementById('filterInput').addEventListener('input', ()=>{ currentPage=1; renderAll(); });
-  document.getElementById('refreshBtn').onclick = async ()=>{ await init(); };
-  document.getElementById('clearBtn').onclick = ()=>{ selectedCeo=null; document.getElementById('filterInput').value=''; renderAll(); };
-  document.getElementById('prevBtn').onclick = ()=>{ if (currentPage>1){ currentPage--; renderTable(); } };
-  document.getElementById('nextBtn').onclick = ()=>{ const totalPages = Math.max(1, Math.ceil(filteredRows.length/PAGE_SIZE)); if (currentPage<totalPages){ currentPage++; renderTable(); } };
-
-  document.querySelectorAll('thead th[data-key]').forEach(th=>{
-    th.style.cursor='pointer';
-    th.addEventListener('click', ()=>{
-      const k = th.getAttribute('data-key');
-      if (currentSort.key === k) currentSort.dir *= -1; else { currentSort.key = k; currentSort.dir = 1; }
-      renderTable();
+/* ======================= CSV fetchers ======================= */
+async function fetchCsv(url){
+  const res = await fetch(url, { cache:'no-store' });
+  if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
+  const text = await res.text();
+  return new Promise((resolve,reject)=>{
+    Papa.parse(text, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (out)=> resolve(out.data || []),
+      error: (err)=> reject(err)
     });
   });
+}
+
+/* ======================= Loaders ======================= */
+async function loadCountsMaster(){
+  try{
+    const rows = await fetchCsv(COUNTS_MASTER);
+    countsAll = rows
+      .map(r=>({
+        date: String(r.date||'').trim(),
+        ceo: String(r.ceo||'').trim(),
+        company: String(r.company||'').trim(),
+        positive: +r.positive || 0,
+        neutral: +r.neutral || 0,
+        negative: +r.negative || 0,
+        total: +r.total || (+r.positive + +r.neutral + +r.negative) || 0,
+        neg_pct: (typeof r.neg_pct !== 'undefined')
+                  ? (+r.neg_pct>1 ? +r.neg_pct/100 : +r.neg_pct)
+                  : ( (+r.negative||0) / Math.max(1, (+r.positive||0)+(+r.neutral||0)+(+r.negative||0)) )
+      }))
+      .filter(r=>isISODate(r.date));
+  }catch(e){
+    console.error('Could not load article counts master:', e);
+    countsAll = [];
+  }
+}
+async function getCountsForDate(date){
+  // Preferred: per-day file
+  try{
+    const rows = await fetchCsv(`data_ceos/${date}.csv`);
+    return rows.map(r=>({
+      date: date,
+      ceo: String(r.ceo||'').trim(),
+      company: String(r.company||'').trim(),
+      positive: +r.positive||0,
+      neutral: +r.neutral||0,
+      negative: +r.negative||0,
+      total: +r.total || (+r.positive + +r.neutral + +r.negative) || 0,
+      neg_pct: (typeof r.neg_pct !== 'undefined')
+                 ? (+r.neg_pct>1 ? +r.neg_pct/100 : +r.neg_pct)
+                 : ( (+r.negative||0) / Math.max(1,(+r.positive||0)+(+r.neutral||0)+(+r.negative||0)) )
+    }));
+  }catch(e){
+    // Fallback: filter master
+    return countsAll.filter(r=>r.date===date);
+  }
+}
+async function loadBoards(){
+  try{
+    const rows = await fetchCsv(BOARDS_CSV);
+    boardsByCeo = new Map();
+    for(const r of rows){
+      const ceo = String(r.ceo||r.CEO||'').trim();
+      const url = String(r.url||r.URL||'').trim();
+      const domain = String(r.domain||domainOf(url)||'').trim();
+      if(!ceo) continue;
+      if(!boardsByCeo.has(ceo)) boardsByCeo.set(ceo, []);
+      boardsByCeo.get(ceo).push({ domain, url });
+    }
+  }catch(e){
+    console.warn('Boards CSV not available:', e);
+    boardsByCeo = new Map();
+  }
+}
+async function loadSerpDaily(){
+  try{
+    const rows = await fetchCsv(SERPS_DAILY_CSV);
+    serpDaily = rows.map(r=>{
+      const total = +r.total || 0;
+      const neg = (+r.neg_serp_pct ?? NaN);
+      const ctrl = (+r.ctrl_pct ?? NaN);
+      // if pct fields absent, compute from counts
+      const negPct = Number.isFinite(neg) ? (neg>1? neg/100: neg)
+                    : ( (+r.negative_serp||0) / Math.max(1,total) );
+      const ctrlPct = Number.isFinite(ctrl) ? (ctrl>1? ctrl/100: ctrl)
+                     : ( (+r.controlled||0) / Math.max(1,total) );
+      return {
+        date: String(r.date||'').trim(),
+        ceo: String(r.ceo||'').trim(),
+        company: String(r.company||'').trim(),
+        neg_serp_pct: negPct,
+        ctrl_pct: ctrlPct
+      };
+    }).filter(r=>isISODate(r.date));
+  }catch(e){
+    console.warn('SERP daily file optional – not found:', e);
+    serpDaily = [];
+  }
+}
+
+/* ======================= Date bootstrap ======================= */
+async function initDatesAndRender(){
+  const sel = document.getElementById('dateSelect');
+  sel.innerHTML = '<option>Loading…</option>';
+
+  await Promise.all([ loadCountsMaster(), loadBoards(), loadSerpDaily() ]);
+
+  // Build date list from counts (primary) + SERP (optional)
+  const dateSet = new Set([
+    ...countsAll.map(r=>r.date),
+    ...serpDaily.map(r=>r.date),
+  ].filter(isISODate));
+  const dates = Array.from(dateSet).sort();
+  if (!dates.length){
+    sel.innerHTML = '<option value="">No dates found</option>';
+    return;
+  }
+
+  const requested = (currentDate||'').trim();
+  const chosen = dates.includes(requested) ? requested : dates[dates.length-1];
+  currentDate = chosen;
+  sel.innerHTML = dates.map(d=>`<option value="${d}">${d}</option>`).join('');
+  sel.value = chosen;
+
+  if(!sel._wired){
+    sel.addEventListener('change', e=>{
+      currentDate = e.target.value;
+      currentPage = 1;
+      renderAll();
+    });
+    sel._wired = true;
+  }
+
+  document.getElementById('filterInput').addEventListener('input', ()=>{
+    currentPage = 1; renderAll();
+  });
+  document.getElementById('refreshBtn').onclick = ()=> initDatesAndRender();
+  document.getElementById('clearBtn').onclick = ()=>{
+    selectedCeo = '';
+    document.getElementById('filterInput').value = '';
+    currentPage = 1;
+    renderAll();
+  };
+
+  // table header sorting
+  document.querySelectorAll('thead th[data-sort]').forEach(th=>{
+    if(th._wired) return;
+    th.addEventListener('click', ()=>{
+      const key = th.getAttribute('data-sort');
+      currentSort.dir = (currentSort.key===key) ? -currentSort.dir : 1;
+      currentSort.key = key;
+      renderAll();
+    });
+    th._wired = true;
+  });
+
+  document.getElementById('prevBtn').onclick = ()=>{ currentPage=Math.max(1,currentPage-1); renderTableOnly(); };
+  document.getElementById('nextBtn').onclick = ()=>{ currentPage=currentPage+1; renderTableOnly(); };
 
   renderAll();
 }
 
-/********************** Build table rows for selected date **********************/
-async function buildRowsForDate(d){
-  // Load per-day sources
-  await Promise.all([loadNewsDaily(d), loadSerpProcessed(d)]);
-
-  // Use the news daily file as the base list (those are the CEOs with articles that day)
-  const rows = [];
-  newsDailyMap.forEach((nv, ceo)=>{
-    const companyNews = nv.company || rosterMap.get(ceo) || '';
-    const s = serpProcMap.get(ceo) || {ctrl_pct:0, neg_serp_pct:0, company: companyNews};
-    const neg_news = nv.neg_pct || 0;
-    const neg_serp = s.neg_serp_pct || 0;
-    const ctrl_pct = s.ctrl_pct || 0;
-    rows.push({
-      date:d, ceo, company: (companyNews || s.company || ''),
-      neg_news, neg_serp, ctrl_pct,
-      risk: computeRisk(neg_serp, ctrl_pct)
-    });
-  });
-
-  return rows;
+/* ======================= SERP overlay helpers ======================= */
+function serpAggFor(ceo, date){
+  const r = serpDaily.find(x=> x.ceo===ceo && x.date===date );
+  if(!r) return { neg_serp_pct: null, ctrl_pct: null };
+  return { neg_serp_pct: r.neg_serp_pct, ctrl_pct: r.ctrl_pct };
 }
 
-/********************** Rendering **********************/
+/* ======================= Rendering ======================= */
+let newsChart, serpChart;
+
 async function renderAll(){
-  const d = document.getElementById('dateSelect').value;
-  const filter = document.getElementById('filterInput').value.trim().toLowerCase();
+  const date = currentDate;
+  const filter = (document.getElementById('filterInput').value||'').trim().toLowerCase();
 
-  const rows = (await buildRowsForDate(d)).filter(r=>{
-    if (!filter) return true;
-    return r.ceo.toLowerCase().includes(filter) || r.company.toLowerCase().includes(filter);
-  });
+  const rows = (await getCountsForDate(date))
+    .filter(r=>{
+      if(!filter) return true;
+      return r.ceo.toLowerCase().includes(filter) || r.company.toLowerCase().includes(filter);
+    })
+    .map(r=>{
+      const {neg_serp_pct, ctrl_pct} = serpAggFor(r.ceo, date);
+      return {
+        ceo:r.ceo, company:r.company,
+        newsNeg:r.neg_pct, negSerp:neg_serp_pct, ctrl:ctrl_pct,
+        risk: computeRisk(neg_serp_pct, ctrl_pct)
+      };
+    });
 
-  filteredRows = rows;
-  currentPage = 1;
+  // Sort
+  applySort(rows);
 
-  renderTable();
-  renderCharts(); // charts unchanged (aggregate-series), selection still works
+  // Charts
+  drawNewsChart(date, rows);
+  drawSerpChart(date);
+
+  // Table
+  renderTableRows(rows);
+  updatePagerUI(rows.length);
 }
 
-function renderTable(){
-  const tbody = document.getElementById('tbody');
-  let rows = [...filteredRows];
+function applySort(rows){
+  const k = currentSort.key;
+  if(!k) return;
+  const dir = currentSort.dir;
+  rows.sort((a,b)=>{
+    const get = (obj)=>{
+      if(k==='news') return obj.newsNeg ?? -1;
+      if(k==='negserp') return (obj.negSerp==null?-1:obj.negSerp);
+      if(k==='ctrl') return (obj.ctrl==null?-1:obj.ctrl);
+      if(k==='risk'){
+        const order={ 'High':3,'Medium':2,'Low':1,'—':0 };
+        return order[obj.risk] ?? 0;
+      }
+      return 0;
+    };
+    return (get(a)-get(b))*dir || a.ceo.localeCompare(b.ceo);
+  });
+}
 
-  // sorting
-  if (currentSort.key){
-    rows.sort((a,b)=>{
-      const ka = a[currentSort.key], kb = b[currentSort.key];
-      if (typeof ka === 'string') return currentSort.dir * ka.localeCompare(kb);
-      return currentSort.dir * (ka - kb);
-    });
-  }
-
+function paginateRows(rows){
+  const total = rows.length;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  currentPage = Math.min(currentPage, totalPages);
   const start = (currentPage-1)*PAGE_SIZE;
   const pageRows = rows.slice(start, start+PAGE_SIZE);
-
-  tbody.innerHTML = pageRows.map(r=>{
-    const checked = (selectedCeo && selectedCeo===r.ceo) ? 'checked' : '';
-    return `<tr>
-      <td class="center"><input type="checkbox" data-ceo="${esc(r.ceo)}" class="brandCheck" ${checked} /></td>
-      <td>${esc(r.ceo)}</td>
-      <td>${esc(r.company)}</td>
-      <td class="right">${pct(r.neg_news)}</td>
-      <td class="right">${pct(r.neg_serp)}</td>
-      <td class="right">${pct(r.ctrl_pct)}</td>
-      <td class="center">${r.risk==='High'?'<span class="pill high">High</span>':r.risk==='Medium'?'<span class="pill med">Medium</span>':'<span class="pill low">Low</span>'}</td>
-      <td class="center"><button class="headBtn" data-ceo="${esc(r.ceo)}">View</button></td>
-      <td class="center"><button class="serpBtn" data-ceo="${esc(r.ceo)}" data-company="${esc(r.company)}">View</button></td>
-      <td class="center"><button class="boardsBtn" data-ceo="${esc(r.ceo)}">View</button></td>
-    </tr>`;
-  }).join('');
-
-  // events
-  tbody.querySelectorAll('.brandCheck').forEach(cb=>{
-    cb.addEventListener('change', (e)=>{
-      const ceo = e.target.getAttribute('data-ceo');
-      if (e.target.checked){ selectedCeo = ceo; tbody.querySelectorAll('.brandCheck').forEach(x=>{ if (x!==e.target) x.checked=false; }); }
-      else selectedCeo = null;
-      renderCharts();
-    });
-  });
-  tbody.querySelectorAll('.serpBtn').forEach(btn=>{
-    btn.onclick = ()=>{
-      const ceo = btn.getAttribute('data-ceo');
-      const company = btn.getAttribute('data-company');
-      showSerp({ceo, company});
-    };
-  });
-  tbody.querySelectorAll('.headBtn').forEach(btn=>{
-    btn.onclick = ()=>{
-      const ceo = btn.getAttribute('data-ceo');
-      showHeadlines({ceo});
-    };
-  });
-  tbody.querySelectorAll('.boardsBtn').forEach(btn=>{
-    btn.onclick = ()=>{
-      const ceo = btn.getAttribute('data-ceo');
-      showBoards(ceo);
-    };
-  });
-
-  document.getElementById('pageNo').textContent = String(currentPage);
-  document.getElementById('pageTotal').textContent = String(Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE)));
+  return { pageRows, totalPages };
 }
 
-/********************** Charts (unchanged) **********************/
-function getDateSeries(){
-  const byDate = new Map();
-  allCountsRows.forEach(r=>{
-    const key = r.date;
-    if (!byDate.has(key)) byDate.set(key,{pos:0,neu:0,neg:0});
-    if (!selectedCeo || r.ceo===selectedCeo){
-      const b = byDate.get(key);
-      b.pos += +r.pos||0; b.neu += +r.neu||0; b.neg += +r.neg||0;
-    }
-  });
+function renderTableRows(allRows){
+  const { pageRows, totalPages } = paginateRows(allRows);
+  const tb = document.querySelector('#results tbody');
+  tb.innerHTML = '';
+  const date = currentDate;
 
-  const serpByDate = new Map();
-  serpsDaily.forEach(r=>{
-    const key = r.date;
-    if (!serpByDate.has(key)) serpByDate.set(key,{total:0,neg:0,ctrl:0});
-    if (!selectedCeo || r.ceo===selectedCeo){
-      const b = serpByDate.get(key);
-      b.total += +r.total||0; b.neg += +r.neg_serp||0; b.ctrl += +r.ctrl||0;
-    }
-  });
+  for(const r of pageRows){
+    const tr = document.createElement('tr');
 
-  const dates = [...new Set([...byDate.keys(), ...serpByDate.keys()])].filter(isISODate).sort();
-  const newsPos=[], newsNeu=[], newsNeg=[], serpNegPct=[], serpCtrlPct=[];
-  dates.forEach(d=>{
-    const n = byDate.get(d)||{pos:0,neu:0,neg:0};
-    const t = n.pos+n.neu+n.neg || 0;
-    newsPos.push(t? n.pos/t*100 : 0);
-    newsNeu.push(t? n.neu/t*100 : 0);
-    newsNeg.push(t? n.neg/t*100 : 0);
+    // checkbox
+    const tdSel = document.createElement('td');
+    tdSel.className='center';
+    const cb = document.createElement('input');
+    cb.type='checkbox';
+    cb.checked = (selectedCeo===r.ceo);
+    cb.onclick = ()=>{
+      selectedCeo = cb.checked ? r.ceo : '';
+      // uncheck others
+      document.querySelectorAll('#results tbody input[type=checkbox]').forEach(n=>{ if(n!==cb) n.checked=false; });
+      drawNewsChart(date); drawSerpChart(date);
+    };
+    tdSel.appendChild(cb);
 
-    const s = serpByDate.get(d)||{total:0,neg:0,ctrl:0};
-    serpNegPct.push(s.total? s.neg/s.total*100 : 0);
-    serpCtrlPct.push(s.total? s.ctrl/s.total*100 : 0);
-  });
-  return {dates, newsPos, newsNeu, newsNeg, serpNegPct, serpCtrlPct};
+    const tdCeo = document.createElement('td'); tdCeo.textContent = r.ceo;
+    const tdCo = document.createElement('td'); tdCo.textContent = r.company;
+
+    const tdNews = document.createElement('td'); tdNews.className='right';
+    tdNews.textContent = pctStr(r.newsNeg);
+
+    const tdNeg = document.createElement('td'); tdNeg.className='right';
+    tdNeg.textContent = (r.negSerp==null ? 'N/A' : pctStr(r.negSerp));
+
+    const tdCtrl = document.createElement('td'); tdCtrl.className='right';
+    tdCtrl.textContent = (r.ctrl==null ? 'N/A' : pctStr(r.ctrl));
+
+    const tdRisk = document.createElement('td');
+    const pill = document.createElement('span');
+    pill.className = 'pill ' + (r.risk==='High'?'bad': r.risk==='Medium'?'warn':'good');
+    pill.textContent = r.risk;
+    tdRisk.appendChild(pill);
+
+    const tdHead = document.createElement('td'); tdHead.className='center';
+    tdHead.appendChild(actionBtn('View', ()=> openHeadlines(r.ceo, date)));
+
+    const tdSerp = document.createElement('td'); tdSerp.className='center';
+    tdSerp.appendChild(actionBtn('View', ()=> openSerpModal(r.ceo, date)));
+
+    const tdBoards = document.createElement('td'); tdBoards.className='center';
+    tdBoards.appendChild(actionBtn('View', ()=> openBoards(r.ceo)));
+
+    tr.append(tdSel, tdCeo, tdCo, tdNews, tdNeg, tdCtrl, tdRisk, tdHead, tdSerp, tdBoards);
+    tb.appendChild(tr);
+  }
+
+  updatePagerUI(totalPages);
 }
-function renderCharts(){
-  const {dates, newsPos, newsNeu, newsNeg, serpNegPct, serpCtrlPct} = getDateSeries();
-  const opts = {
-    responsive:true, maintainAspectRatio:false,
-    scales:{ x:{ticks:{color:'#ebf2f2'}}, y:{ticks:{color:'#ebf2f2'}, grid:{color:'rgba(255,255,255,.06)'}}},
-    plugins:{ legend:{labels:{color:'#ebf2f2'}} }
+
+function renderTableOnly(){ renderAll(); } // simple for now
+
+function updatePagerUI(totalPages){
+  const info = document.getElementById('pageInfo');
+  info.textContent = `Page ${currentPage} / ${totalPages}`;
+}
+
+/* ======================= Buttons ======================= */
+function actionBtn(label, onClick){
+  const b = document.createElement('button');
+  b.className='btn-mini';
+  b.textContent = label;
+  b.onclick = onClick;
+  return b;
+}
+
+/* ======================= Charts ======================= */
+function destroyChart(chart){ if(chart){ chart.destroy(); } }
+
+async function drawNewsChart(date){
+  destroyChart(newsChart);
+  // Use selected CEO if any; otherwise index totals for the day
+  const rows = await getCountsForDate(date);
+  let pos=0,neu=0,neg=0,tot=0;
+
+  if(selectedCeo){
+    const r = rows.find(x=>x.ceo===selectedCeo);
+    if(r){ pos=r.positive; neu=r.neutral; neg=r.negative; tot=r.total; }
+  }else{
+    for(const r of rows){ pos+=r.positive; neu+=r.neutral; neg+=r.negative; tot+=r.total; }
+  }
+  const P = tot? pos/tot:0, N = tot? neg/tot:0, Z = tot? neu/tot:0;
+
+  const ctx = document.getElementById('newsChart').getContext('2d');
+  newsChart = new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:[date],
+      datasets:[
+        { label:'Positive %', data:[(P*100).toFixed(1)], backgroundColor:'#82c616' },
+        { label:'Neutral %',  data:[(Z*100).toFixed(1)], backgroundColor:'#ffc32e' },
+        { label:'Negative %',data:[(N*100).toFixed(1)], backgroundColor:'#ff8261' },
+      ]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{
+        legend:{ labels:{ color:'#e7ecf4' } },
+        tooltip:{ callbacks:{ label:(ctx)=> ctx.dataset.label+': '+Number(ctx.raw).toFixed(1)+'%' } }
+      },
+      scales:{
+        x:{ ticks:{ color:'#cfd7e3' }, grid:{ color:'#1b2835' } },
+        y:{ ticks:{ color:'#cfd7e3', callback:(v)=> v+'%' }, beginAtZero:true, max:100, grid:{ color:'#1b2835' } }
+      }
+    }
+  });
+}
+
+function drawSerpChart(date){
+  destroyChart(serpChart);
+  const ctx = document.getElementById('serpChart').getContext('2d');
+
+  // Build a small series across dates (7 recent if possible)
+  const allDates = Array.from(new Set(serpDaily.map(r=>r.date))).sort();
+  if(!allDates.length){
+    // No SERP data at all
+    ctx.canvas.getContext('2d').clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
+    document.getElementById('serpKpis').innerHTML =
+      `<div class="kpi">No SERP data for this date.</div>`;
+    return;
+  }
+  // window around the selected date
+  const idx = Math.max(0, allDates.indexOf(date));
+  const start = Math.max(0, idx-6);
+  const seriesDates = allDates.slice(start, idx+1);
+
+  const byDate = d=>{
+    const rows = serpDaily.filter(r=> r.date===d && (!selectedCeo || r.ceo===selectedCeo));
+    if(!rows.length) return { neg: null, ctrl: null };
+    const avg = (k)=> rows.reduce((s,x)=> s+(x[k]??0),0)/rows.length;
+    return { neg: avg('neg_serp_pct'), ctrl: avg('ctrl_pct') };
   };
-  const nh = document.getElementById('newsChart').getContext('2d');
-  if (newsChart) newsChart.destroy();
-  newsChart = new Chart(nh,{ type:'bar',
-    data:{ labels:dates, datasets:[
-      {label:'Positive %', data:newsPos, backgroundColor:'rgba(139,226,118,.8)', stack:'s'},
-      {label:'Neutral %',  data:newsNeu, backgroundColor:'rgba(255,213,79,.85)', stack:'s'},
-      {label:'Negative %', data:newsNeg, backgroundColor:'rgba(255,120,97,.9)', stack:'s'}
-    ]},
-    options:{...opts, scales:{...opts.scales, y:{...opts.scales.y, suggestedMin:0, suggestedMax:100}}}
-  });
-  const sh = document.getElementById('serpChart').getContext('2d');
-  if (serpChart) serpChart.destroy();
-  serpChart = new Chart(sh,{ type:'line',
-    data:{ labels:dates, datasets:[
-      {label:'Negative SERP %', data:serpNegPct, tension:.25, borderColor:'rgba(255,120,97,1)', backgroundColor:'rgba(255,120,97,.2)', fill:false},
-      {label:'Control %', data:serpCtrlPct, tension:.25, borderColor:'rgba(139,226,118,1)', backgroundColor:'rgba(139,226,118,.15)', fill:false}
-    ]},
-    options:{...opts, scales:{...opts.scales, y:{...opts.scales.y, suggestedMin:0, suggestedMax:100}}}
+
+  const neg = seriesDates.map(d=> (byDate(d).neg==null? null : (byDate(d).neg*100).toFixed(1)) );
+  const ctrl = seriesDates.map(d=> (byDate(d).ctrl==null? null : (byDate(d).ctrl*100).toFixed(1)) );
+
+  // KPIs for the selected date
+  const today = byDate(date);
+  document.getElementById('serpKpis').innerHTML =
+    `<div class="kpi">Negative: ${today.neg==null?'N/A':(today.neg*100).toFixed(1)+'%'}</div>
+     <div class="kpi">Control: ${today.ctrl==null?'N/A':(today.ctrl*100).toFixed(1)+'%'}</div>
+     <div class="kpi">Risk: ${computeRisk(today.neg, today.ctrl)}</div>`;
+
+  serpChart = new Chart(ctx,{
+    type:'line',
+    data:{
+      labels: seriesDates,
+      datasets:[
+        { label:'Negative %', data:neg, borderColor:'#ff8261', backgroundColor:'rgba(255,130,97,.25)', tension:.2, spanGaps:true },
+        { label:'Control %',  data:ctrl, borderColor:'#58dbed', backgroundColor:'rgba(88,219,237,.25)', tension:.2, spanGaps:true }
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ labels:{ color:'#e7ecf4' } } },
+      scales:{
+        x:{ ticks:{ color:'#cfd7e3' }, grid:{ color:'#1b2835' } },
+        y:{ ticks:{ color:'#cfd7e3', callback:(v)=> v+'%' }, beginAtZero:true, max:100, grid:{ color:'#1b2835' } }
+      }
+    }
   });
 }
 
-/********************** Modal plumbing (unchanged) **********************/
-const modal = document.getElementById('modal');
-const modalTitle = document.getElementById('modalTitle');
-const modalContent = document.getElementById('modalContent');
-document.getElementById('modalClose').onclick = ()=> modal.classList.remove('open');
-modal.addEventListener('click', e=>{ if (e.target===modal) modal.classList.remove('open'); });
-function openModal(title, html){ modalTitle.textContent = title; modalContent.innerHTML = html; modal.classList.add('open'); }
+/* ======================= Modals ======================= */
+function openModal(id){ document.querySelector(id).classList.add('open'); }
+function closeModal(id){ document.querySelector(id).classList.remove('open'); }
+document.querySelectorAll('.close[data-close]').forEach(btn=>{
+  btn.addEventListener('click', ()=> closeModal(btn.getAttribute('data-close')) );
+});
+document.querySelectorAll('.modal').forEach(m=>{
+  m.addEventListener('click', (e)=>{ if(e.target===m) m.classList.remove('open') });
+});
 
-/********************** Boards modal **********************/
-function showBoards(ceo){
-  const arr = boardsByCeo.get(ceo) || [];
-  if (!arr.length){ openModal(`Boards — ${ceo}`, `<div class="muted">No boards found.</div>`); return; }
-  const html = `<ul style="padding-left:20px;margin:0">${arr.map(b=>{
-    const text = esc(b.domain || (b.url? new URL(b.url).hostname.replace(/^www\./,'') : 'Board'));
-    const href = esc(b.url || '#');
-    return `<li style="margin:6px 0"><a class="link" href="${href}" target="_blank" rel="noopener">${text}</a></li>`;
-  }).join('')}</ul>`;
-  openModal(`Boards — ${ceo}`, html);
+/* Headlines (placeholder – wire when your articles file is ready) */
+async function openHeadlines(ceo, date){
+  document.getElementById('headlinesTitle').textContent = `Headlines — ${ceo}`;
+  document.getElementById('headlinesBody').textContent = `No headlines wired yet for ${date}.`;
+  openModal('#headlinesModal');
 }
 
-/********************** Headlines modal (simple) **********************/
-async function showHeadlines({ceo}){
-  const d = document.getElementById('dateSelect').value;
-  const file = `data_ceos/articles/${d}-articles.csv`;
-  let rows = [];
-  try{ rows = await fetchCsv(file); }catch{}
-  const list = rows.filter(r => String(r.ceo||'').trim()===ceo);
-  if (!list.length){ openModal(`Headlines — ${ceo}`, `<div class="muted">No headlines for ${esc(ceo)} on ${d}.</div>`); return; }
-  const html = `<ul style="padding-left:18px;margin:0">
-    ${list.map(r=>{
-      const url = esc(r.url||'#'); const title = esc(r.title||'(no title)');
-      const s = String(r.sentiment||'neutral').toLowerCase();
-      const cls = s==='negative'?'negative':s==='positive'?'positive':'neutral';
-      return `<li style="margin:10px 0"><a class="link" href="${url}" target="_blank" rel="noopener">${title}</a>
-        <span class="badge ${cls}" style="margin-left:8px">${s}</span></li>`;
-    }).join('')}
-  </ul>`;
-  openModal(`Headlines — ${ceo}`, html);
-}
+/* SERP Modal (card layout) */
+async function openSerpModal(ceo, date){
+  document.getElementById('serpTitle').textContent = `SERP — ${ceo}`;
+  document.getElementById('serpMeta').textContent = 'Loading…';
+  document.getElementById('serpList').innerHTML = '';
 
-/********************** SERP modal (unchanged) **********************/
-async function showSerp(row){
-  const d = document.getElementById('dateSelect').value;
-  const path = SERP_ROWS_PATH(d);
-  let rows = [];
-  try { rows = await fetchCsv(path); }
-  catch { openModal(`SERP — ${esc(row.ceo)}`, `<div class="muted">Could not load SERP file for ${d}.</div>`); return; }
-  if (!rows.length){ openModal(`SERP — ${esc(row.ceo)}`, `<div class="muted">No SERP data found for ${d}.</div>`); return; }
+  let rows=[];
+  try{
+    rows = await fetchCsv(SERP_ROWS_FMT(date));
+  }catch(e){
+    document.getElementById('serpMeta').textContent = `No SERP file for ${date}.`;
+    openModal('#serpModal'); return;
+  }
+  const mine = rows.filter(r=> String(r.ceo||'').trim()===ceo);
+  if(!mine.length){
+    document.getElementById('serpMeta').textContent = `No SERPs found for ${ceo} on ${date}.`;
+    openModal('#serpModal'); return;
+  }
 
-  const canon = s => String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
-  const wantCEO = canon(row.ceo), wantCo = canon(row.company);
-  const matches = rows.filter(r=>{
-    const rCEO = canon(r.ceo), rCo = canon(r.company);
-    return (r.ceo===row.ceo && r.company===row.company) || (rCEO===wantCEO && rCo===wantCo);
-  });
+  // Compute KPIs from rows
+  let total = mine.length;
+  let neg = mine.filter(r=> String(r.sentiment||'').toLowerCase()==='negative').length;
+  let ctrl = mine.filter(r=> String(r.controlled||'').toLowerCase()==='controlled').length;
+  const negPct = total? neg/total: null;
+  const ctrlPct = total? ctrl/total: null;
 
-  if (!matches.length){ openModal(`SERP — ${esc(row.ceo)}`, `<div class="muted">No SERPs for ${esc(row.ceo)} on ${d}.</div>`); return; }
+  document.getElementById('serpMeta').innerHTML =
+    `<div class="kpis">
+       <div class="kpi">Date: ${date}</div>
+       <div class="kpi">Negative SERP: ${negPct==null?'N/A':(negPct*100).toFixed(1)+'%'}</div>
+       <div class="kpi">Control: ${ctrlPct==null?'N/A':(ctrlPct*100).toFixed(1)+'%'}</div>
+       <div class="kpi">Risk: ${computeRisk(negPct, ctrlPct)}</div>
+     </div>`;
 
-  const total = matches.length;
-  const negCount = matches.filter(r => String(r.sentiment||'').toLowerCase()==='negative').length;
-  const ctrlCount = matches.filter(r => (/^controlled|true|1$/i).test(String(r.controlled||''))).length;
-  const negPct = total? (negCount/total) : 0;
-  const ctrlPct = total? (ctrlCount/total) : 0;
-  const risk = computeRisk(negPct, ctrlPct);
+  const list = document.getElementById('serpList');
+  mine.sort((a,b)=> (+a.position||999) - (+b.position||999) );
+  for(const r of mine){
+    const card = document.createElement('div');
+    card.className='serp-card';
 
-  matches.sort((a,b)=>(+a.position||9999) - (+b.position||9999));
-  const cards = matches.map(r=>{
     const url = String(r.url||'').trim();
-    let domain = ''; try{ domain = new URL(url).hostname.replace(/^www\./,''); }catch{}
-    const title = esc(r.title || domain || '(no title)');
-    const snippet = esc(r.snippet || '');
-    const s = String(r.sentiment||'neutral').toLowerCase();
-    const ctrl = (/^controlled|true|1$/i).test(String(r.controlled||'')) ? 'controlled' : 'uncontrolled';
-    const link = url ? `<a class="link" href="${esc(url)}" target="_blank" rel="noopener">${title}</a>` : `<span class="muted">${title}</span>`;
-    return `<div class="serp-card">
-      ${domain? `<div class="serp-domain">${esc(domain)}</div>` : ''}
-      <div class="serp-title">${link}</div>
-      ${snippet? `<div class="serp-snippet">${snippet}</div>` : ''}
-      <div class="badges">
-        <span class="badge ${s}">${s}</span>
-        <span class="badge ${ctrl}">${ctrl}</span>
-      </div>
-    </div>`;
-  }).join('');
+    const title = String(r.title||'(no title)').trim() || '(no title)';
+    const snippet = String(r.snippet||'').trim();
+    const sentiment = String(r.sentiment||'').toLowerCase();
+    const controlled = String(r.controlled||'').toLowerCase();
+    const dom = domainOf(url);
 
-  const metrics = `<div class="serp-metrics">
-    <b>Negative SERP:</b> ${(negPct*100).toFixed(1)}% &nbsp;|&nbsp;
-    <b>Control:</b> ${(ctrlPct*100).toFixed(1)}% &nbsp;|&nbsp;
-    <b>Risk:</b> ${esc(risk)}
-  </div>`;
+    card.innerHTML =
+      `<div class="serp-meta"><span>${dom||'—'}</span></div>
+       <h4><a href="${url||'#'}" target="_blank" rel="noopener">${title}</a></h4>
+       <div class="small" style="margin:4px 0 8px 0">${snippet||''}</div>
+       <div class="serp-meta">
+         <span class="pill ${sentiment==='negative'?'bad': sentiment==='positive'?'good':'warn'}">${sentiment||'neutral'}</span>
+         <span class="pill ${controlled==='controlled'?'good':'bad'}">${controlled==='controlled'?'controlled':'uncontrolled'}</span>
+       </div>`;
+    list.appendChild(card);
+  }
 
-  openModal(`SERP — ${esc(row.ceo)}`, `${metrics}<div class="serp-cards">${cards}</div>`);
+  openModal('#serpModal');
 }
 
-/********************** Init **********************/
-init();
+/* Boards modal */
+function openBoards(ceo){
+  document.getElementById('boardsTitle').textContent = `Boards — ${ceo}`;
+  const body = document.getElementById('boardsBody');
+  body.innerHTML = '';
+  const arr = boardsByCeo.get(ceo)||[];
+  if(!arr.length){ body.textContent = 'No boards found.'; openModal('#boardsModal'); return; }
+  const ul = document.createElement('ul');
+  ul.style.paddingLeft='18px';
+  for(const b of arr){
+    const li = document.createElement('li');
+    const a = document.createElement('a');
+    a.href = b.url||'#'; a.textContent = b.domain||b.url||'link';
+    a.target='_blank'; a.rel='noopener';
+    li.appendChild(a); ul.appendChild(li);
+  }
+  body.appendChild(ul);
+  openModal('#boardsModal');
+}
+
+/* ======================= Kickoff ======================= */
+initDatesAndRender();
 </script>
 </body>
 </html>
