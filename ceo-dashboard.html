@@ -29,10 +29,31 @@ button{background:#18243b;border:1px solid #2a3b5e;color:var(--text);border-radi
 button:hover{filter:brightness(1.08)}
 
 /* Grid for charts */
-.grid{display:grid;grid-template-rows:300px 240px;gap:12px;margin:12px 0}
-@media(min-width:980px){.grid{grid-template-rows:340px 260px}}
-.chart-card{background:var(--card);border:1px solid var(--stroke);border-radius:12px;padding:10px;position:relative}
-.chart-card h3{margin:2px 6px 8px;font-size:14px;color:var(--muted)}
+/* Spacing */
+.controls{ margin:0 0 16px }             /* a touch more space under controls */
+.grid{                                    /* taller rows + bigger gaps */
+  display:grid;
+  grid-template-rows:minmax(300px,36vh) minmax(240px,32vh);
+  gap:16px;
+  margin:16px 0;
+}
+@media (min-width:980px){
+  .grid{
+    grid-template-rows:minmax(320px,38vh) minmax(260px,34vh);
+    gap:18px;
+  }
+}
+
+/* Chart cards: add padding-bottom so long tick labels never clip */
+.chart-card{ background:var(--card); border:1px solid var(--stroke);
+  border-radius:12px; padding:12px 12px 26px; position:relative }
+
+/* The magic: let Chart.js fill the card and respond to resizes */
+.chart-card canvas{
+  width:100% !important;
+  height:100% !important;
+  display:block;              /* removes baseline gap */
+}
 
 /* Table */
 .table-card{background:var(--card);border:1px solid var(--stroke);border-radius:12px;padding:10px}
@@ -371,6 +392,15 @@ async function init(){
   });
 
   renderAll();
+
+// Keep charts perfectly in sync with their cards
+const newsCanvas = document.getElementById('newsChart');
+const serpCanvas = document.getElementById('serpChart');
+const ro = new ResizeObserver(() => {
+  if (newsChart) newsChart.resize();
+  if (serpChart) serpChart.resize();
+});
+[newsCanvas.parentElement, serpCanvas.parentElement].forEach(el => ro.observe(el));  
 }
 
 /********************** Data → view rows **********************/
@@ -535,16 +565,24 @@ function renderCharts(){
   const {dates, newsPos, newsNeu, newsNeg, serpNegPct, serpCtrlPct} = getDateSeries();
 
   const commonOpts = {
-    responsive:true,
-    maintainAspectRatio:false,
-    scales:{
-      x:{ticks:{color:'#ebf2f2'}},
-      y:{ticks:{color:'#ebf2f2'}, grid:{color:'rgba(255,255,255,.06)'}}
+  responsive: true,
+  maintainAspectRatio: false,
+  layout: { padding: { top: 6, right: 8, bottom: 28, left: 8 } }, // <- extra bottom for dates
+  scales: {
+    x: {
+      ticks: { color: '#ebf2f2', maxRotation: 45, minRotation: 45, autoSkip: true },
+      grid: { color: 'rgba(255,255,255,.06)' }
     },
-    plugins:{
-      legend:{labels:{color:'#ebf2f2'}}
+    y: {
+      beginAtZero: true,
+      suggestedMax: 100,
+      ticks: { color: '#ebf2f2' },
+      grid: { color: 'rgba(255,255,255,.06)' }
     }
-  };
+  },
+  plugins: { legend: { labels: { color: '#ebf2f2' } } }
+};
+
 
   // News stacked bar %
   const nh = document.getElementById('newsChart').getContext('2d');
