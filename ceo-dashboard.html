@@ -243,15 +243,17 @@ async function loadBoards(){
 }
 async function loadCounts(){
   const rows = await fetchCsvAny(COUNTS_CANDIDATES);
-  allCountsRows = rows.map(r => ({
-    date: (r.date||'').trim(),
-    ceo: (r.ceo||'').trim(),
-    company: (r.company||'').trim(),
-    theme: (r.theme||r.Theme||'').trim(),
-    pos: +r.positive || +r.pos_count || 0,
-    neu: +r.neutral || +r.neu_count || 0,
-    neg: +r.negative || +r.neg_count || 0
-  })).filter(r => isISODate(r.date));
+  allCountsRows = rows
+    .map(r => ({
+      date: String(r.date || '').trim(),
+      ceo: String(r.ceo || '').trim(),
+      company: String(r.company || '').trim(),
+      theme: String(r.theme || '').trim(),
+      pos: +r.positive || 0,
+      neu: +r.neutral || 0,
+      neg: +r.negative || 0
+    }))
+    .filter(r => isISODate(r.date) && r.ceo);   // require a CEO name
 }
 async function loadSerpDaily(){
   try{
