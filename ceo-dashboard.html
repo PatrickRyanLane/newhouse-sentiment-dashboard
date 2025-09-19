@@ -624,53 +624,70 @@ function normalizeKey(s){
     .replace(/\s+/g,' ');
 }
 
+// === BEGIN: showSerp replacement ===
 async function showSerp(row){
   const d = document.getElementById('dateSelect').value;
   const path = `data_ceos/processed_serps/${d}-ceo-serps-processed.csv`;
 
-  // Try to fetch the file
-  let fetched = false, rows = [];
-  try { rows = await fetchCsv(path); fetched = true; } catch(e) {}
-
-  if (!fetched){
-    // True file load failure (wrong path/date/missing file)
-    openModal(`Serp — ${row.ceo}`, `<div class="muted">Could not load SERP file for ${d}.</div>`);
-    return;
+  // Load file
+  let rows = [];
+  try { rows = await fetchCsv(path); }
+  catch { openModal(`Serp — ${row.ceo}`, `<div class="muted">Could not load SERP file for ${d}.</div>`); return; }
+  if (!rows.length){
+    openModal(`Serp — ${row.ceo}`, `<div class="muted">SERP file is empty for ${d}.</div>`); return;
   }
 
-  // Canonicalize strings for robust matching (ignore case/punctuation/extra spaces)
+  // Canon helpers
   const canon = s => String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+  const tokens = s => canon(s).split(' ').filter(Boolean);
   const wantCEO   = canon(row.ceo);
   const wantCo    = canon(row.company);
   const wantAlias = canon(`${row.ceo} ${row.company}`);
+  const ceoWords  = new Set(tokens(row.ceo));
+  const coWords   = new Set(tokens(row.company));
 
-  // Accept multiple possible column names from processed_serps
+  // Generic field getter with aliases
   const get = (r, ...names) => {
     for (const n of names) if (r[n] != null) return r[n];
     return '';
   };
 
-  // Match strategy:
-  // 1) exact alias match (e.g., "Rob Katz Vail Resorts")
-  // 2) record contains both CEO name AND company name
-  // 3) fallback to ceo-only if present as a dedicated column
-  const matches = rows.filter(r => {
-    const f = [
-      get(r,'company','Company','alias','Alias'),
-      get(r,'search_term','query'),
-      `${get(r,'ceo','CEO')} ${get(r,'company','Company')}`,
-      get(r,'ceo','CEO'),
-    ].map(canon);
+  // Build a text blob of relevant fields for matching
+  const blob = r => [
+    get(r,'company','Company','alias','Alias','search_term','query'),
+    get(r,'ceo','CEO'),
+    `${get(r,'ceo','CEO')} ${get(r,'company','Company')}`
+  ].map(canon).join(' | ');
 
-    const hasExactAlias = f.some(v => v && v === wantAlias);
-    const hasBothParts  = f.some(v => v && v.includes(wantCEO) && v.includes(wantCo));
-    const ceoOnly       = f.some(v => v && v === wantCEO); // last resort
+  // Score each row (higher = better match)
+  function scoreRow(r){
+    const b = blob(r);
+    let s = 0;
+    if (b.includes(wantAlias)) s += 5;
+    if (b.includes(wantCEO) && b.includes(wantCo)) s += 4;
 
-    return hasExactAlias || hasBothParts || ceoOnly;
-  });
+    // partial token bonuses
+    const bw = new Set(tokens(b));
+    let hits = 0; ceoWords.forEach(w => { if (bw.has(w)) hits++; });
+    let hitsCo = 0; coWords.forEach(w => { if (bw.has(w)) hitsCo++; });
+    s += Math.min(hits, 2);
+    s += Math.min(hitsCo, 2);
+    return s;
+  }
 
-  if (!matches.length){
-    // File loaded, but no rows matched this CEO/company
+  // Keep rows that look like the target; broaden if too few
+  let scored = rows.map(r => ({ r, sc: scoreRow(r) })).filter(x => x.sc > 0);
+  if (scored.length < 5) {
+    scored = rows.map(r => {
+      const b = blob(r);
+      let s = 0;
+      if (b.includes(wantAlias)) s += 5;
+      if (b.includes(wantCEO))   s += 2;
+      if (b.includes(wantCo))    s += 2;
+      return { r, sc: s };
+    }).filter(x => x.sc > 0);
+  }
+  if (!scored.length){
     openModal(
       `Serp — ${row.ceo}`,
       `<div class="muted">No SERP rows matched “${row.ceo} ${row.company}” in <code>${d}-ceo-serps-processed.csv</code>.</div>`
@@ -678,41 +695,65 @@ async function showSerp(row){
     return;
   }
 
-  // Normalize a few fields (sentiment/control may have different header names)
-  const normSent = r => String(get(r,'sentiment','Sentiment','sentiment_label')).toLowerCase() || 'neutral';
-  const normCtrl = r => {
-    const raw = String(get(r,'control_status','Control_Status','control','is_controlled')).toLowerCase();
-    // treat anything that looks like "control" or truthy as controlled
-    if (/control/.test(raw) || raw === 'yes' || raw === 'true' || raw === '1') return 'Controlled';
+  // Normalize display fields
+  const num    = v => +v || 0;
+  const titleOf = r =>
+      (get(r,'title','Title','headline','Headline','result_title','page_title','result','Result','text','snippet') || '').toString();
+  const urlOf   = r => (get(r,'link','url','URL') || '#').toString();
+  const sentOf  = r => (get(r,'sentiment','Sentiment','sentiment_label') || 'neutral').toString().toLowerCase();
+  const ctrlOf  = r => {
+    const raw = (get(r,'control_status','Control_Status','control','is_controlled') || '').toString().toLowerCase();
+    if (/control/.test(raw) || raw==='yes' || raw==='true' || raw==='1') return 'Controlled';
     return 'Uncontrolled';
   };
-  const num = v => +v || 0;
+  const posOf   = r => num(get(r,'position','rank','Rank'));
 
-  const sorted = matches.sort((a,b) => num(get(a,'position','rank')) - num(get(b,'position','rank')));
+  // Sort by score, then by position
+  scored.sort((a,b) => (b.sc - a.sc) || (posOf(a.r) - posOf(b.r)));
 
-  const top = sorted.slice(0,50).map((r,i) => {
-    const pos = num(get(r,'position','rank')) || (i+1);
-    const url = String(get(r,'link','url','URL'));
-    const title = String(get(r,'title','Title')) || '(no title)';
-    const sent = normSent(r);
-    const ctrlLabel = normCtrl(r);
+  // Render top N
+  const top = scored.slice(0,50).map((x,i) => {
+    const r = x.r;
+    const pos = posOf(r) || (i+1);
+    const url = urlOf(r);
+    let title = titleOf(r).trim();
+
+    // Fallback title from URL
+    if (!title) {
+      try {
+        const u = new URL(url);
+        const pathPart = u.pathname.split('/').filter(Boolean).slice(-1)[0] || u.hostname;
+        title = (pathPart || '(no title)').replace(/[-_]/g,' ');
+      } catch { title = '(no title)'; }
+    }
+
+    // Domain/source for context
+    let domain = '';
+    try { domain = new URL(url).hostname.replace(/^www\./,''); } catch {}
+    const source = domain ? ` — <span class="muted">${domain}</span>` : '';
+
+    const sent = sentOf(r);
     const sChip = sent==='negative' ? 'high' : (sent==='neutral' ? 'med' : 'low');
+    const ctrl = ctrlOf(r);
+
     return `<tr>
       <td class="right">${pos}</td>
-      <td><a class="link" href="${url}" target="_blank" rel="noopener">${title}</a></td>
+      <td><a class="link" href="${url}" target="_blank" rel="noopener">${title || '(no title)'}</a>${source}</td>
       <td><span class="pill ${sChip}">${sent}</span></td>
-      <td>${ctrlLabel}</td>
+      <td>${ctrl}</td>
     </tr>`;
   }).join('');
 
   openModal(
     `Serp — ${row.ceo}`,
-    `<div class="muted">${sorted.length} results — showing ${Math.min(50, sorted.length)} (date ${d})</div>
+    `<div class="muted">${scored.length} results — showing ${Math.min(50, scored.length)} (date ${d})</div>
      <table class="table"><thead><tr>
        <th class="right">#</th><th>Result</th><th>Sentiment</th><th>Control</th>
      </tr></thead><tbody>${top}</tbody></table>`
   );
 }
+// === END: showSerp replacement ===
+
 
 function showBoards(row){
   const boards = boardsByCeo.get(row.ceo) || [];
