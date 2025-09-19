@@ -68,6 +68,7 @@ tbody tr td:last-child{border-right:1px solid #0f1831;border-radius:0 10px 10px 
 .badge.controlled{background:rgba(34,187,102,.1);color:#8be276;border-color:rgba(139,226,118,.25)}
 .badge.uncontrolled{background:rgba(255,120,97,.1);color:#ff7861;border-color:rgba(255,120,97,.25)}
 .muted{color:var(--muted)}
+
 /* SERP card layout */
 .serp-cards{display:grid;gap:12px;margin-top:12px}
 .serp-card{background:var(--card);border:1px solid var(--stroke);border-radius:12px;padding:14px 16px}
@@ -160,15 +161,19 @@ const ROSTER_CANDIDATES = [
 ];
 const SERPS_DAILY_CSV = 'data/serps/ceo_serps_daily.csv';
 const BOARDS_CSV = 'data/serps/ceo_boards.csv';
-const SERP_ROWS_PATH = d => `data_ceos/serp_rows/${d}-ceo-serps-rows.csv`; // new
+const SERP_ROWS_PATH = d => `data_ceos/serp_rows/${d}-ceo-serps-rows.csv`;
+
+// NEW: authoritative per-date sources for the table
+const ARTICLES_DAILY_PATH = d => `data_ceos/${d}.csv`;
+const SERP_PROCESSED_PATH = d => `data_ceos/processed_serps/${d}-ceo-serps-processed.csv`;
 
 /********************** Runtime **********************/
 let rosterMap = new Map();        // CEO -> Company
 let companyToCeo = new Map();     // Company -> CEO
-let allCountsRows = [];           // news counts all dates
-let serpsDaily = [];              // per-date SERP aggregates
+let allCountsRows = [];           // news counts (for charts)
+let serpsDaily = [];              // serp aggregates (for charts)
 let boardsByCeo = new Map();      // CEO -> [domain,url]
-let filteredRows = [];            // current filtered dataset for table
+let filteredRows = [];            // table rows for current date/filter
 let selectedCeo = null;           // to drive brand-level charts
 let currentSort = { key:null, dir:1 };
 let currentPage = 1;
@@ -176,10 +181,14 @@ const PAGE_SIZE = 25;
 
 let newsChart, serpChart;
 
+// NEW caches for per-date table sources
+const _articlesCache = new Map();   // date -> Map(ceo -> {company, theme, neg_pct})
+const _serpAggCache  = new Map();   // date -> Map(ceo -> {total, neg_serp, controlled})
+
 /********************** Utils **********************/
 const isISODate = s => /^\d{4}-\d{2}-\d{2}$/.test(String(s||'').trim());
-const pct = (n) => (n*100).toFixed(1) + '%';
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+function fmtPct(v){ return (v==null) ? 'N/A' : (v*100).toFixed(1) + '%'; }
 
 /********************** CSV helpers **********************/
 async function fetchCsv(url){
@@ -200,7 +209,7 @@ async function fetchCsvAny(candidates){
   return [];
 }
 
-/********************** Loaders **********************/
+/********************** Loaders for charts/boards/roster **********************/
 async function loadRoster(){
   const rows = await fetchCsvAny(ROSTER_CANDIDATES);
   rosterMap = new Map();
@@ -234,7 +243,6 @@ async function loadBoards(){
 }
 async function loadCounts(){
   const rows = await fetchCsvAny(COUNTS_CANDIDATES);
-  // normalize
   allCountsRows = rows.map(r => ({
     date: (r.date||'').trim(),
     ceo: (r.ceo||'').trim(),
@@ -261,16 +269,70 @@ async function loadSerpDaily(){
 
 /********************** Risk **********************/
 function computeRisk(negPct, ctrlPct){
-  const n = negPct*100, c = ctrlPct*100;
+  const n = (negPct ?? 0)*100, c = (ctrlPct ?? 0)*100;
+  if (negPct==null || ctrlPct==null) return 'N/A';
   if (n >= 40 || c < 25) return 'High';
   if (n >= 25 || c < 50) return 'Medium';
   return 'Low';
 }
 
+/********************** NEW: per-date table sources **********************/
+function toPct01(x){
+  if (x == null || x === '') return null;
+  const n = +String(x).replace('%','').trim();
+  if (!isFinite(n)) return null;
+  return n > 1 ? n/100 : n;
+}
+
+// data_ceos/<DATE>.csv  ->  Map(ceo -> {company, theme, neg_pct})
+async function getArticlesForDate(d){
+  if (_articlesCache.has(d)) return _articlesCache.get(d);
+  let map = new Map();
+  try{
+    const rows = await fetchCsv(ARTICLES_DAILY_PATH(d));
+    rows.forEach(r=>{
+      const ceo = String(r.ceo||'').trim();
+      if (!ceo) return;
+      const company = String(r.company||'').trim();
+      const theme   = String(r.theme||'').trim();
+
+      let neg = toPct01(r.neg_pct);
+      if (neg == null){
+        const negCount = +r.negative || 0;
+        const tot = (+r.total) || ((+r.positive||0)+(+r.neutral||0)+negCount) || 0;
+        neg = tot ? (negCount / tot) : 0;
+      }
+      map.set(ceo, { company, theme, neg_pct: neg });
+    });
+  }catch(e){ /* missing is allowed */ }
+  _articlesCache.set(d, map);
+  return map;
+}
+
+// data_ceos/processed_serps/<DATE>-ceo-serps-processed.csv -> Map(ceo -> {total, neg_serp, controlled})
+async function getSerpAggForDate(d){
+  if (_serpAggCache.has(d)) return _serpAggCache.get(d);
+  let map = new Map();
+  try{
+    const rows = await fetchCsv(SERP_PROCESSED_PATH(d));
+    rows.forEach(r=>{
+      const ceo = String(r.ceo||'').trim();
+      if (!ceo) return;
+      map.set(ceo, {
+        total:      +r.total || 0,
+        neg_serp:   +r.negative_serp || 0,
+        controlled: +r.controlled || 0
+      });
+    });
+  }catch(e){ /* allowed */ }
+  _serpAggCache.set(d, map);
+  return map;
+}
+
 /********************** UI bootstrap **********************/
 async function init(){
   await Promise.all([loadRoster(), loadCounts(), loadSerpDaily(), loadBoards()]);
-  // date options from both datasets
+  // date options from the chart sources (existing behavior)
   const dateSet = new Set([
     ...allCountsRows.map(r => r.date),
     ...serpsDaily.map(r => r.date)
@@ -278,7 +340,6 @@ async function init(){
   const dates = [...dateSet].sort();
   const sel = document.getElementById('dateSelect');
   sel.innerHTML = dates.map(d => `<option value="${d}">${d}</option>`).join('');
-  // choose latest available
   sel.value = dates[dates.length-1] || '';
   sel.addEventListener('change', ()=>{ currentPage=1; selectedCeo=null; renderAll(); });
 
@@ -302,40 +363,50 @@ async function init(){
 }
 
 /********************** Data → view rows **********************/
-function buildRowsForDate(d){
-  // For the selected date, join news + serp by CEO
-  const news = allCountsRows.filter(r => r.date===d);
-  const serp = serpsDaily.filter(r => r.date===d);
-  const serpKey = new Map(serp.map(r => [r.ceo+'\n'+r.company, r]));
+async function buildRowsForDate(d){
+  const articles = await getArticlesForDate(d);  // Map(ceo -> {company, theme, neg_pct})
+  const serpAgg  = await getSerpAggForDate(d);   // Map(ceo -> {total, neg_serp, controlled})
 
-  const rows = news.map(n=>{
-    const k = n.ceo+'\n'+n.company;
-    const s = serpKey.get(k) || {total:0,neg_serp:0,ctrl:0};
-    const neg_news_pct = (n.pos+n.neu+n.neg) ? (n.neg/(n.pos+n.neu+n.neg)) : 0;
-    const neg_serp_pct = s.total ? (s.neg_serp/s.total) : 0;
-    const ctrl_pct = s.total ? (s.ctrl/s.total) : 0;
-    return {
-      date:d, ceo:n.ceo, company:n.company, theme:n.theme,
-      neg_news:neg_news_pct, neg_serp:neg_serp_pct, ctrl_pct,
-      risk: computeRisk(neg_serp_pct, ctrl_pct)
-    };
-  });
-  return rows;
+  const out = [];
+  for (const [ceo, a] of articles.entries()){
+    const s = serpAgg.get(ceo);  // may be undefined
+
+    let negSerpPct = null, ctrlPct = null;
+    if (s && s.total > 0){
+      negSerpPct = s.neg_serp   / s.total;   // 0..1
+      ctrlPct    = s.controlled / s.total;   // 0..1
+    }
+    const risk = computeRisk(negSerpPct, ctrlPct);
+
+    out.push({
+      date: d,
+      ceo,
+      company: a.company || '',
+      theme: a.theme || 'None',
+      neg_news: a.neg_pct ?? 0,   // 0..1
+      neg_serp: negSerpPct,       // 0..1 or null
+      ctrl_pct: ctrlPct,          // 0..1 or null
+      risk
+    });
+  }
+  return out;
 }
 
 /********************** Rendering **********************/
-function renderAll(){
+async function renderAll(){
   const d = document.getElementById('dateSelect').value;
   const filter = document.getElementById('filterInput').value.trim().toLowerCase();
-  const rows = buildRowsForDate(d).filter(r=>{
+
+  const rows = (await buildRowsForDate(d)).filter(r=>{
     if (!filter) return true;
     return r.ceo.toLowerCase().includes(filter) || r.company.toLowerCase().includes(filter);
   });
+
   filteredRows = rows;
   currentPage = 1;
 
   renderTable();
-  renderCharts();
+  renderCharts(); // charts keep using existing aggregated sources
 }
 
 function renderTable(){
@@ -347,7 +418,7 @@ function renderTable(){
     rows.sort((a,b)=>{
       const ka = a[currentSort.key], kb = b[currentSort.key];
       if (typeof ka === 'string') return currentSort.dir * ka.localeCompare(kb);
-      return currentSort.dir * (ka - kb);
+      return currentSort.dir * ((ka ?? -1) - (kb ?? -1));
     });
   }
 
@@ -359,10 +430,18 @@ function renderTable(){
       <td><input type="checkbox" data-ceo="${esc(r.ceo)}" class="brandCheck" ${checked} /> ${esc(r.ceo)}</td>
       <td>${esc(r.company)}</td>
       <td>${esc(r.theme||'None')}</td>
-      <td class="right">${pct(r.neg_news)}</td>
-      <td class="right">${pct(r.neg_serp)}</td>
-      <td class="right">${pct(r.ctrl_pct)}</td>
-      <td class="center">${r.risk==='High'?'<span class="pill high">High</span>':r.risk==='Medium'?'<span class="pill med">Medium</span>':'<span class="pill low">Low</span>'}</td>
+      <td class="right">${fmtPct(r.neg_news)}</td>
+      <td class="right">${fmtPct(r.neg_serp)}</td>
+      <td class="right">${fmtPct(r.ctrl_pct)}</td>
+      <td class="center">${
+        (r.risk==='High'||r.risk==='Medium'||r.risk==='Low')
+          ? (r.risk==='High'
+              ? '<span class="pill high">High</span>'
+              : r.risk==='Medium'
+                ? '<span class="pill med">Medium</span>'
+                : '<span class="pill low">Low</span>')
+          : '<span class="muted">N/A</span>'
+      }</td>
       <td class="center"><button class="headBtn" data-ceo="${esc(r.ceo)}">View</button></td>
       <td class="center"><button class="serpBtn" data-ceo="${esc(r.ceo)}" data-company="${esc(r.company)}">View</button></td>
       <td class="center"><button class="boardsBtn" data-ceo="${esc(r.ceo)}">View</button></td>
@@ -402,7 +481,7 @@ function renderTable(){
   document.getElementById('pageTotal').textContent = String(Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE)));
 }
 
-/********************** Charts **********************/
+/********************** Charts (unchanged behavior) **********************/
 function getDateSeries(){
   // Build series for all dates, optionally for a single CEO
   const byDate = new Map();
@@ -517,7 +596,7 @@ function showBoards(ceo){
   openModal(`Boards — ${ceo}`, html);
 }
 
-/********************** Headlines modal (lightweight, optional) **********************/
+/********************** Headlines modal (optional) **********************/
 async function showHeadlines({ceo}){
   const d = document.getElementById('dateSelect').value;
   const file = `data_ceos/articles/${d}-articles.csv`; // adjust if your path differs
