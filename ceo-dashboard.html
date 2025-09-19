@@ -655,30 +655,56 @@ function showBoards(ceo){
   openModal(`Boards — ${ceo}`, html);
 }
 
-/********************** Headlines modal (optional) **********************/
-async function showHeadlines({ceo}){
+/********************** Headlines modal (styled like SERP cards) **********************/
+async function showHeadlines({ ceo }) {
   const d = document.getElementById('dateSelect').value;
-  const file = `data_ceos/articles/${d}-articles.csv`; // adjust if your path differs
+  const file = `data_ceos/articles/${d}-articles.csv`;
+
   let rows = [];
-  try{ rows = await fetchCsv(file); }catch(e){}
-  const list = rows.filter(r => String(r.ceo||'').trim()===ceo);
-  if (!list.length){
-    openModal(`Headlines — ${ceo}`, `<div class="muted">No headlines for ${esc(ceo)} on ${d}.</div>`);
+  try {
+    rows = await fetchCsv(file);
+  } catch (e) {
+    openModal(`Headlines — ${esc(ceo)}`,
+      `<div class="muted">Could not load headlines for ${d}.</div>`);
     return;
   }
-  const html = `<ul style="padding-left:18px;margin:0">
-    ${list.map(r=>{
-      const url = esc(r.url||'#'); const title = esc(r.title||'(no title)');
-      const s = String(r.sentiment||'neutral').toLowerCase();
-      const cls = s==='negative'?'negative':s==='positive'?'positive':'neutral';
-      return `<li style="margin:10px 0">
-        <a class="link" href="${url}" target="_blank" rel="noopener">${title}</a>
-        <span class="badge ${cls}" style="margin-left:8px">${s}</span>
-      </li>`;
-    }).join('')}
-  </ul>`;
-  openModal(`Headlines — ${ceo}`, html);
+
+  // Match on CEO (trim to be safe)
+  const list = rows.filter(r => String(r.ceo || '').trim() === ceo);
+
+  if (!list.length) {
+    openModal(`Headlines — ${esc(ceo)}`,
+      `<div class="muted">No headlines for ${esc(ceo)} on ${d}.</div>`);
+    return;
+  }
+
+  // Build cards using the same layout classes as the SERP modal
+  const cards = list.map(r => {
+    const url = String(r.url || '').trim();
+    let domain = '';
+    try { domain = new URL(url).hostname.replace(/^www\./, ''); } catch {}
+    const title = esc(r.title || domain || '(no title)');
+    const link = url
+      ? `<a class="link" href="${esc(url)}" target="_blank" rel="noopener">${title}</a>`
+      : `<span class="muted">${title}</span>`;
+
+    const sRaw = String(r.sentiment || '').toLowerCase();
+    const s = sRaw === 'positive' ? 'positive' : (sRaw === 'negative' ? 'negative' : 'neutral');
+
+    return `
+      <div class="serp-card">
+        ${domain ? `<div class="serp-domain">${esc(domain)}</div>` : ''}
+        <div class="serp-title">${link}</div>
+        <div class="badges" style="margin-top:8px">
+          <span class="badge ${s}">${s}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  openModal(`Headlines — ${esc(ceo)}`, `<div class="serp-cards">${cards}</div>`);
 }
+
 
 /********************** SERP modal (reads data_ceos/serp_rows) **********************/
 async function showSerp(row){
