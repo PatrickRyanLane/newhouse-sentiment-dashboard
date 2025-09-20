@@ -136,7 +136,6 @@ tbody tr td:last-child{border-right:1px solid #0f1831;border-radius:0 10px 10px 
         <tr>
           <th>CEO</th>
           <th>Company</th>
-          <th>Theme</th>
           <th data-key="neg_news" class="right">Negative News % ▲▼</th>
           <th data-key="neg_serp" class="right">Negative SERP % ▲▼</th>
           <th data-key="ctrl_pct" class="right">SERP Control % ▲▼</th>
@@ -205,7 +204,9 @@ const _serpAggCache  = new Map();   // date -> Map(ceo -> {total, neg_serp, cont
 /********************** Utils **********************/
 const isISODate = s => /^\d{4}-\d{2}-\d{2}$/.test(String(s||'').trim());
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-function fmtPct(v){ return (v==null) ? 'N/A' : (v*100).toFixed(1) + '%'; }
+function fmtPct(v){ 
+  return (v==null) ? 'N/A' : Math.round(v*100) + '%'; 
+}
 
 // Normalizes names so lookups are reliable
 const canonName = s => String(s || '')
@@ -470,7 +471,6 @@ function renderTable(){
     return `<tr>
       <td><input type="checkbox" data-ceo="${esc(r.ceo)}" class="brandCheck" ${checked} /> ${esc(r.ceo)}</td>
       <td>${esc(r.company)}</td>
-      <td>${esc(r.theme||'None')}</td>
       <td class="right">${fmtPct(r.neg_news)}</td>
       <td class="right">${fmtPct(r.neg_serp)}</td>
       <td class="right">${fmtPct(r.ctrl_pct)}</td>
@@ -566,41 +566,52 @@ function renderCharts(){
 
   const who = selectedCeo ? selectedCeo : "Index Average";
 
-  const commonOpts = {
+// helper for whole percent
+const fmtPctInt = v => `${Math.round(v)}%`;
+
+const commonOpts = {
   responsive: true,
   maintainAspectRatio: false,
-  layout: {                     // ← NEW: reserve space inside the canvas
-    padding: { top: 4, right: 8, bottom: 28, left: 8 }
-  },
   scales: {
     x: {
-      ticks: { 
-        color: '#ebf2f2',
-        maxRotation: 35,        // ← NEW: keep dates angled
-        minRotation: 35,
-        autoSkip: true,
-        autoSkipPadding: 8
-      },
-      grid: { color: 'rgba(255,255,255,.05)' }
+      ticks: { color: '#ebf2f2' },
+      grid:  { color: 'rgba(255,255,255,.05)' }
     },
     y: {
-      ticks: { color: '#ebf2f2' },
+      // Show whole % on axis
+      ticks: {
+        color: '#ebf2f2',
+        callback: (v) => fmtPctInt(v)
+      },
       grid: { color: 'rgba(255,255,255,.06)' },
       suggestedMin: 0,
       suggestedMax: 100
     }
   },
   plugins: {
-    legend: { labels: { color: '#ebf2f2' }, padding: 8 },
+    legend: { labels: { color: '#ebf2f2' } },
     title: {
       display: true,
       text: who,
       color: '#ebf2f2',
       font: { weight: 'bold', size: 14 },
-      padding: { top: 6, bottom: 6 }
+      padding: { top: 10, bottom: 6 }
+    },
+    // Whole % in tooltip on hover
+    tooltip: {
+      callbacks: {
+        label: (ctx) => {
+          const label = ctx.dataset?.label ? `${ctx.dataset.label}: ` : '';
+          const val = (ctx.parsed && typeof ctx.parsed.y === 'number')
+            ? ctx.parsed.y
+            : (typeof ctx.parsed === 'number' ? ctx.parsed : 0);
+          return `${label}${fmtPctInt(val)}`;
+        }
+      }
     }
   }
 };
+
 
 
   // --- News stacked bar chart ---
