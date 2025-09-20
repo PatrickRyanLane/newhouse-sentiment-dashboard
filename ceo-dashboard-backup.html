@@ -136,7 +136,6 @@ tbody tr td:last-child{border-right:1px solid #0f1831;border-radius:0 10px 10px 
         <tr>
           <th>CEO</th>
           <th>Company</th>
-          <th>Theme</th>
           <th data-key="neg_news" class="right">Negative News % ▲▼</th>
           <th data-key="neg_serp" class="right">Negative SERP % ▲▼</th>
           <th data-key="ctrl_pct" class="right">SERP Control % ▲▼</th>
@@ -470,7 +469,6 @@ function renderTable(){
     return `<tr>
       <td><input type="checkbox" data-ceo="${esc(r.ceo)}" class="brandCheck" ${checked} /> ${esc(r.ceo)}</td>
       <td>${esc(r.company)}</td>
-      <td>${esc(r.theme||'None')}</td>
       <td class="right">${fmtPct(r.neg_news)}</td>
       <td class="right">${fmtPct(r.neg_serp)}</td>
       <td class="right">${fmtPct(r.ctrl_pct)}</td>
