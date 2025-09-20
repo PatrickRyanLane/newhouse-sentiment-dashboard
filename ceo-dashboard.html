@@ -77,9 +77,9 @@ tbody tr td:last-child{border-right:1px solid #0f1831;border-radius:0 10px 10px 
 .right{text-align:right}
 .center{text-align:center}
 .pill{font-size:12px;border-radius:999px;padding:3px 8px;border:1px solid var(--chipBorder);background:var(--chip);color:#cfe0ff}
-.pill.low{background:rgba(34,187,102,.1);color:#8be276}
-.pill.med{background:rgba(255,215,79,.08);color:#ffd54f}
-.pill.high{background:rgba(255,120,97,.12);color:#ff7861}
+.pill.low  { background:rgba(130,198,24,.15); color:#82c618; }   /* green */
+.pill.med  { background:rgba(207,219,221,.25); color:#cfdbdd; } /* grey/neutral */
+.pill.high { background:rgba(255,130,97,.15); color:#ff8261; }  /* red/orange */
 .link{color:var(--accent);text-decoration:underline}
 
 /* Pagination */
@@ -94,11 +94,31 @@ tbody tr td:last-child{border-right:1px solid #0f1831;border-radius:0 10px 10px 
 .modal .content{padding:16px}
 .badges{display:flex;gap:8px;margin-top:8px}
 .badge{font-size:12px;padding:4px 8px;border-radius:999px;border:1px solid transparent}
-.badge.positive{background:rgba(34,187,102,.1);color:#8be276;border-color:rgba(139,226,118,.25)}
-.badge.neutral{background:rgba(255,215,0,.1);color:#ffd54f;border-color:rgba(255,213,79,.25)}
-.badge.negative{background:rgba(255,120,97,.12);color:#ff7861;border-color:rgba(255,120,97,.25)}
-.badge.controlled{background:rgba(34,187,102,.1);color:#8be276;border-color:rgba(139,226,118,.25)}
-.badge.uncontrolled{background:rgba(255,120,97,.1);color:#ff7861;border-color:rgba(255,120,97,.25)}
+.badge.positive{
+  background:rgba(130,198,24,.15);
+  color:#82c618;
+  border-color:rgba(130,198,24,.35);
+}
+.badge.neutral{
+  background:rgba(207,219,221,.25);
+  color:#cfdbdd;
+  border-color:rgba(207,219,221,.45);
+}
+.badge.negative{
+  background:rgba(255,130,97,.15);
+  color:#ff8261;
+  border-color:rgba(255,130,97,.35);
+}
+.badge.controlled{
+  background:rgba(88,219,237,.15);
+  color:#58dbed;
+  border-color:rgba(88,219,237,.35);
+}
+.badge.uncontrolled{
+  background:rgba(255,130,97,.15);
+  color:#ff8261;
+  border-color:rgba(255,130,97,.35);
+}
 .muted{color:var(--muted)}
 
 /* SERP card layout */
