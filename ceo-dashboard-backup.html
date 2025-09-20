@@ -204,7 +204,9 @@ const _serpAggCache  = new Map();   // date -> Map(ceo -> {total, neg_serp, cont
 /********************** Utils **********************/
 const isISODate = s => /^\d{4}-\d{2}-\d{2}$/.test(String(s||'').trim());
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-function fmtPct(v){ return (v==null) ? 'N/A' : (v*100).toFixed(1) + '%'; }
+function fmtPct(v){ 
+  return (v==null) ? 'N/A' : Math.round(v*100) + '%'; 
+}
 
 // Normalizes names so lookups are reliable
 const canonName = s => String(s || '')
