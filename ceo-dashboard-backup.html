@@ -572,7 +572,6 @@ function getDateSeries(){
   return {dates, newsPos, newsNeu, newsNeg, serpNegPct, serpCtrlPct};
 }
 
-<script>
 function renderCharts(){
   const {dates, newsPos, newsNeu, newsNeg, serpNegPct, serpCtrlPct} = getDateSeries();
   const who = selectedCeo ? selectedCeo : "Index Average";
