@@ -46,7 +46,7 @@ button:hover{filter:brightness(1.08)}
 
 /* Chart cards: add padding-bottom so long tick labels never clip */
 .chart-card{ background:var(--card); border:1px solid var(--stroke);
-  border-radius:12px; padding:12px 12px 26px; position:relative }
+  border-radius:12px; padding:12px 12px 48px; position:relative }
 
 /* The magic: let Chart.js fill the card and respond to resizes */
 .chart-card canvas{
@@ -567,31 +567,41 @@ function renderCharts(){
   const who = selectedCeo ? selectedCeo : "Index Average";
 
   const commonOpts = {
-    responsive: true,
-    maintainAspectRatio: false,
-    scales: {
-      x: {
-        ticks: { color: '#ebf2f2' },
-        grid: { color: 'rgba(255,255,255,.05)' }
-      },
-      y: {
-        ticks: { color: '#ebf2f2' },
-        grid: { color: 'rgba(255,255,255,.06)' },
-        suggestedMin: 0,
-        suggestedMax: 100
-      }
-    },
-    plugins: {
-      legend: { labels: { color: '#ebf2f2' } },
-      title: {
-        display: true,
-        text: who,
+  responsive: true,
+  maintainAspectRatio: false,
+  layout: {                     // ← NEW: reserve space inside the canvas
+    padding: { top: 4, right: 8, bottom: 28, left: 8 }
+  },
+  scales: {
+    x: {
+      ticks: { 
         color: '#ebf2f2',
-        font: { weight: 'bold', size: 14 },
-        padding: { top: 8, bottom: 8 }
-      }
+        maxRotation: 35,        // ← NEW: keep dates angled
+        minRotation: 35,
+        autoSkip: true,
+        autoSkipPadding: 8
+      },
+      grid: { color: 'rgba(255,255,255,.05)' }
+    },
+    y: {
+      ticks: { color: '#ebf2f2' },
+      grid: { color: 'rgba(255,255,255,.06)' },
+      suggestedMin: 0,
+      suggestedMax: 100
     }
-  };
+  },
+  plugins: {
+    legend: { labels: { color: '#ebf2f2' }, padding: 8 },
+    title: {
+      display: true,
+      text: who,
+      color: '#ebf2f2',
+      font: { weight: 'bold', size: 14 },
+      padding: { top: 6, bottom: 6 }
+    }
+  }
+};
+
 
   // --- News stacked bar chart ---
   const nh = document.getElementById('newsChart').getContext('2d');
