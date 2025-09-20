@@ -564,67 +564,24 @@ function getDateSeries(){
 function renderCharts(){
   const {dates, newsPos, newsNeu, newsNeg, serpNegPct, serpCtrlPct} = getDateSeries();
 
-  // Subtitle: CEO name when selected, otherwise Index Average
-  const who = selectedCeo ? selectedCeo : 'Index Average';
-
   const commonOpts = {
-    responsive:true,
-    maintainAspectRatio:false,
-    scales:{
-      x:{ticks:{color:'#ebf2f2'}},
-      y:{ticks:{color:'#ebf2f2'}, grid:{color:'rgba(255,255,255,.06)'}}
+  responsive: true,
+  maintainAspectRatio: false,
+  layout: { padding: { top: 6, right: 8, bottom: 28, left: 8 } }, // <- extra bottom for dates
+  scales: {
+    x: {
+      ticks: { color: '#ebf2f2', maxRotation: 45, minRotation: 45, autoSkip: true },
+      grid: { color: 'rgba(255,255,255,.06)' }
     },
-    plugins:{
-      legend:{labels:{color:'#ebf2f2'}},
-      // NEW: show who the chart represents
-      subtitle:{
-        display:true,
-        text: who,
-        color:'#ebf2f2',
-        font:{size:13, weight:'600'},
-        padding:{top:0, bottom:8}
-      }
+    y: {
+      beginAtZero: true,
+      suggestedMax: 100,
+      ticks: { color: '#ebf2f2' },
+      grid: { color: 'rgba(255,255,255,.06)' }
     }
-  };
-
-  // News stacked bar %
-  const nh = document.getElementById('newsChart').getContext('2d');
-  if (newsChart) newsChart.destroy();
-  newsChart = new Chart(nh, {
-    type:'bar',
-    data:{
-      labels:dates,
-      datasets:[
-        {label:'Positive %', data:newsPos, backgroundColor:'rgba(139,226,118,.8)', stack:'s'},
-        {label:'Neutral %',  data:newsNeu, backgroundColor:'rgba(255,213,79,.85)', stack:'s'},
-        {label:'Negative %', data:newsNeg, backgroundColor:'rgba(255,120,97,.9)', stack:'s'}
-      ]
-    },
-    options:{
-      ...commonOpts,
-      scales:{...commonOpts.scales, y:{...commonOpts.scales.y, suggestedMin:0, suggestedMax:100}}
-    }
-  });
-
-  // SERP line chart
-  const sh = document.getElementById('serpChart').getContext('2d');
-  if (serpChart) serpChart.destroy();
-  serpChart = new Chart(sh, {
-    type:'line',
-    data:{
-      labels:dates,
-      datasets:[
-        {label:'Negative SERP %', data:serpNegPct, tension:.25, borderColor:'rgba(255,120,97,1)', backgroundColor:'rgba(255,120,97,.2)', fill:false},
-        {label:'Control %', data:serpCtrlPct, tension:.25, borderColor:'rgba(139,226,118,1)', backgroundColor:'rgba(139,226,118,.15)', fill:false}
-      ]
-    },
-    options:{
-      ...commonOpts,
-      scales:{...commonOpts.scales, y:{...commonOpts.scales.y, suggestedMin:0, suggestedMax:100}}
-    }
-  });
-}
-
+  },
+  plugins: { legend: { labels: { color: '#ebf2f2' } } }
+};
 
 
   // News stacked bar %
