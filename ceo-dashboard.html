@@ -10,12 +10,23 @@
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
 <style>
-:root{
-  /* Terakeet-ish palette */
-  --bg:#0b0d12; --card:#11172a; --muted:#9c96bb; --text:#e7ecf4; --accent:#58dbed;
-  --pill-neg:#ff7861; --pill-neu:#ffd54f; --pill-pos:#8be276;
-  --stroke:#17223a; --chip:#23314d; --chipBorder:#2c3b5a;
+:root {
+  /* New palette */
+  --bg: #044152;
+  --card: #092e37;
+  --muted: #a2ebf3;          /* lighter accent text */
+  --text: #ebf2f2;           /* main text color */
+  --accent: #58dbed;         /* links, highlights */
+
+  --pill-neg: #ff8261;
+  --pill-neu: #cfdbdd;
+  --pill-pos: #82c618;
+
+  --stroke: #0e2230;          /* border stroke */
+  --chip: #12343e;
+  --chipBorder: #174550;
 }
+
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font:14px/1.4 Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
 .wrap{max-width:1200px;margin:0 auto;padding:20px}
@@ -563,58 +574,53 @@ function getDateSeries(){
 
 function renderCharts(){
   const {dates, newsPos, newsNeu, newsNeg, serpNegPct, serpCtrlPct} = getDateSeries();
-
   const who = selectedCeo ? selectedCeo : "Index Average";
 
-// helper for whole percent
-const fmtPctInt = v => `${Math.round(v)}%`;
+  // helper: show whole percents
+  const fmtPctInt = v => `${Math.round(v)}%`;
 
-const commonOpts = {
-  responsive: true,
-  maintainAspectRatio: false,
-  scales: {
-    x: {
-      ticks: { color: '#ebf2f2' },
-      grid:  { color: 'rgba(255,255,255,.05)' }
-    },
-    y: {
-      // Show whole % on axis
-      ticks: {
-        color: '#ebf2f2',
-        callback: (v) => fmtPctInt(v)
+  const commonOpts = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      x: {
+        ticks: { color: '#ebf2f2' },
+        grid:  { color: 'rgba(255,255,255,.05)' }
       },
-      grid: { color: 'rgba(255,255,255,.06)' },
-      suggestedMin: 0,
-      suggestedMax: 100
-    }
-  },
-  plugins: {
-    legend: { labels: { color: '#ebf2f2' } },
-    title: {
-      display: true,
-      text: who,
-      color: '#ebf2f2',
-      font: { weight: 'bold', size: 14 },
-      padding: { top: 10, bottom: 6 }
+      y: {
+        ticks: {
+          color: '#ebf2f2',
+          callback: v => fmtPctInt(v)
+        },
+        grid: { color: 'rgba(255,255,255,.06)' },
+        suggestedMin: 0,
+        suggestedMax: 100
+      }
     },
-    // Whole % in tooltip on hover
-    tooltip: {
-      callbacks: {
-        label: (ctx) => {
-          const label = ctx.dataset?.label ? `${ctx.dataset.label}: ` : '';
-          const val = (ctx.parsed && typeof ctx.parsed.y === 'number')
-            ? ctx.parsed.y
-            : (typeof ctx.parsed === 'number' ? ctx.parsed : 0);
-          return `${label}${fmtPctInt(val)}`;
+    plugins: {
+      legend: { labels: { color: '#ebf2f2' } },
+      title: {
+        display: true,
+        text: who,
+        color: '#ebf2f2',
+        font: { weight: 'bold', size: 14 },
+        padding: { top: 10, bottom: 6 }
+      },
+      tooltip: {
+        callbacks: {
+          label: (ctx) => {
+            const label = ctx.dataset?.label ? `${ctx.dataset.label}: ` : '';
+            const val = (ctx.parsed && typeof ctx.parsed.y === 'number')
+              ? ctx.parsed.y
+              : (typeof ctx.parsed === 'number' ? ctx.parsed : 0);
+            return `${label}${fmtPctInt(val)}`;
+          }
         }
       }
     }
-  }
-};
+  };
 
-
-
-  // --- News stacked bar chart ---
+  // ---- NEWS STACKED BAR ----
   const nh = document.getElementById('newsChart').getContext('2d');
   if (newsChart) newsChart.destroy();
   newsChart = new Chart(nh, {
@@ -622,15 +628,15 @@ const commonOpts = {
     data: {
       labels: dates,
       datasets: [
-        { label: 'Positive %', data: newsPos, backgroundColor: 'rgba(139,226,118,.8)', stack: 's' },
-        { label: 'Neutral %',  data: newsNeu, backgroundColor: 'rgba(255,213,79,.85)', stack: 's' },
-        { label: 'Negative %', data: newsNeg, backgroundColor: 'rgba(255,120,97,.9)', stack: 's' }
+        { label: 'Positive %', data: newsPos, backgroundColor: '#82c618', stack: 's' },
+        { label: 'Neutral %',  data: newsNeu, backgroundColor: '#cfdbdd', stack: 's' },
+        { label: 'Negative %', data: newsNeg, backgroundColor: '#ff8261', stack: 's' }
       ]
     },
     options: { ...commonOpts }
   });
 
-  // --- SERP line chart ---
+  // ---- SERP LINE ----
   const sh = document.getElementById('serpChart').getContext('2d');
   if (serpChart) serpChart.destroy();
   serpChart = new Chart(sh, {
@@ -638,8 +644,8 @@ const commonOpts = {
     data: {
       labels: dates,
       datasets: [
-        { label: 'Negative SERP %', data: serpNegPct, tension: .25, borderColor: 'rgba(255,120,97,1)', backgroundColor: 'rgba(255,120,97,.2)', fill: false },
-        { label: 'Control %', data: serpCtrlPct, tension: .25, borderColor: 'rgba(139,226,118,1)', backgroundColor: 'rgba(139,226,118,.15)', fill: false }
+        { label: 'Negative SERP %', data: serpNegPct, tension: .25, borderColor: '#ff8261', backgroundColor: 'rgba(255,130,97,.2)', fill: false },
+        { label: 'Control %',       data: serpCtrlPct, tension: .25, borderColor: '#58dbed', backgroundColor: 'rgba(88,219,237,.15)', fill: false }
       ]
     },
     options: { ...commonOpts }
