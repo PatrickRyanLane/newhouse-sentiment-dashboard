@@ -625,40 +625,6 @@ function renderCharts(){
   });
 }
 
-
-
-  // News stacked bar %
-  const nh = document.getElementById('newsChart').getContext('2d');
-  if (newsChart) newsChart.destroy();
-  newsChart = new Chart(nh, {
-    type:'bar',
-    data:{
-      labels:dates,
-      datasets:[
-        {label:'Positive %', data:newsPos, backgroundColor:'rgba(139,226,118,.8)', stack:'s'},
-        {label:'Neutral %',  data:newsNeu, backgroundColor:'rgba(255,213,79,.85)', stack:'s'},
-        {label:'Negative %', data:newsNeg, backgroundColor:'rgba(255,120,97,.9)', stack:'s'}
-      ]
-    },
-    options:{...commonOpts, scales:{...commonOpts.scales, y:{...commonOpts.scales.y, suggestedMin:0, suggestedMax:100}}}
-  });
-
-  // SERP line chart
-  const sh = document.getElementById('serpChart').getContext('2d');
-  if (serpChart) serpChart.destroy();
-  serpChart = new Chart(sh, {
-    type:'line',
-    data:{
-      labels:dates,
-      datasets:[
-        {label:'Negative SERP %', data:serpNegPct, tension:.25, borderColor:'rgba(255,120,97,1)', backgroundColor:'rgba(255,120,97,.2)', fill:false},
-        {label:'Control %', data:serpCtrlPct, tension:.25, borderColor:'rgba(139,226,118,1)', backgroundColor:'rgba(139,226,118,.15)', fill:false}
-      ]
-    },
-    options:{...commonOpts, scales:{...commonOpts.scales, y:{...commonOpts.scales.y, suggestedMin:0, suggestedMax:100}}}
-  });
-}
-
 /********************** Modals **********************/
 const modal = document.getElementById('modal');
 const modalTitle = document.getElementById('modalTitle');
