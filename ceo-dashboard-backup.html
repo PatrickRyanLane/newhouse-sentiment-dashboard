@@ -572,58 +572,86 @@ function getDateSeries(){
   return {dates, newsPos, newsNeu, newsNeg, serpNegPct, serpCtrlPct};
 }
 
+<script>
 function renderCharts(){
   const {dates, newsPos, newsNeu, newsNeg, serpNegPct, serpCtrlPct} = getDateSeries();
-
   const who = selectedCeo ? selectedCeo : "Index Average";
 
-// helper for whole percent
-const fmtPctInt = v => `${Math.round(v)}%`;
+  // helper: show whole percents
+  const fmtPctInt = v => `${Math.round(v)}%`;
 
-const commonOpts = {
-  responsive: true,
-  maintainAspectRatio: false,
-  scales: {
-    x: {
-      ticks: { color: '#ebf2f2' },
-      grid:  { color: 'rgba(255,255,255,.05)' }
-    },
-    y: {
-      // Show whole % on axis
-      ticks: {
-        color: '#ebf2f2',
-        callback: (v) => fmtPctInt(v)
+  const commonOpts = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      x: {
+        ticks: { color: '#ebf2f2' },
+        grid:  { color: 'rgba(255,255,255,.05)' }
       },
-      grid: { color: 'rgba(255,255,255,.06)' },
-      suggestedMin: 0,
-      suggestedMax: 100
-    }
-  },
-  plugins: {
-    legend: { labels: { color: '#ebf2f2' } },
-    title: {
-      display: true,
-      text: who,
-      color: '#ebf2f2',
-      font: { weight: 'bold', size: 14 },
-      padding: { top: 10, bottom: 6 }
+      y: {
+        ticks: {
+          color: '#ebf2f2',
+          callback: v => fmtPctInt(v)
+        },
+        grid: { color: 'rgba(255,255,255,.06)' },
+        suggestedMin: 0,
+        suggestedMax: 100
+      }
     },
-    // Whole % in tooltip on hover
-    tooltip: {
-      callbacks: {
-        label: (ctx) => {
-          const label = ctx.dataset?.label ? `${ctx.dataset.label}: ` : '';
-          const val = (ctx.parsed && typeof ctx.parsed.y === 'number')
-            ? ctx.parsed.y
-            : (typeof ctx.parsed === 'number' ? ctx.parsed : 0);
-          return `${label}${fmtPctInt(val)}`;
+    plugins: {
+      legend: { labels: { color: '#ebf2f2' } },
+      title: {
+        display: true,
+        text: who,
+        color: '#ebf2f2',
+        font: { weight: 'bold', size: 14 },
+        padding: { top: 10, bottom: 6 }
+      },
+      tooltip: {
+        callbacks: {
+          label: (ctx) => {
+            const label = ctx.dataset?.label ? `${ctx.dataset.label}: ` : '';
+            const val = (ctx.parsed && typeof ctx.parsed.y === 'number')
+              ? ctx.parsed.y
+              : (typeof ctx.parsed === 'number' ? ctx.parsed : 0);
+            return `${label}${fmtPctInt(val)}`;
+          }
         }
       }
     }
-  }
-};
+  };
 
+  // ---- NEWS STACKED BAR ----
+  const nh = document.getElementById('newsChart').getContext('2d');
+  if (newsChart) newsChart.destroy();
+  newsChart = new Chart(nh, {
+    type: 'bar',
+    data: {
+      labels: dates,
+      datasets: [
+        { label: 'Positive %', data: newsPos, backgroundColor: '#82c618', stack: 's' },
+        { label: 'Neutral %',  data: newsNeu, backgroundColor: '#cfdbdd', stack: 's' },
+        { label: 'Negative %', data: newsNeg, backgroundColor: '#ff8261', stack: 's' }
+      ]
+    },
+    options: { ...commonOpts }
+  });
 
+  // ---- SERP LINE ----
+  const sh = document.getElementById('serpChart').getContext('2d');
+  if (serpChart) serpChart.destroy();
+  serpChart = new Chart(sh, {
+    type: 'line',
+    data: {
+      labels: dates,
+      datasets: [
+        { label: 'Negative SERP %', data: serpNegPct, tension: .25, borderColor: '#ff8261', backgroundColor: 'rgba(255,130,97,.2)', fill: false },
+        { label: 'Control %',       data: serpCtrlPct, tension: .25, borderColor: '#58dbed', backgroundColor: 'rgba(88,219,237,.15)', fill: false }
+      ]
+    },
+    options: { ...commonOpts }
+  });
+}
 
   // --- News stacked bar chart ---
 newsChart = new Chart(nh, {
