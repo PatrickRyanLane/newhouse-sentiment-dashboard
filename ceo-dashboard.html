@@ -44,13 +44,13 @@ button:hover{filter:brightness(1.08)}
 .controls{ margin:0 0 16px }             /* a touch more space under controls */
 .grid{                                    /* taller rows + bigger gaps */
   display:grid;
-  grid-template-rows:minmax(350px,36vh) minmax(240px,32vh);
+  grid-template-rows:minmax(375px,36vh) minmax(240px,32vh);
   gap:16px;
   margin:16px 0;
 }
 @media (min-width:980px){
   .grid{
-    grid-template-rows:minmax(370px,38vh) minmax(260px,34vh);
+    grid-template-rows:minmax(400px,38vh) minmax(260px,34vh);
     gap:18px;
   }
 }
@@ -600,45 +600,50 @@ function renderCharts(){
   const fmtPctInt = v => `${Math.round(v)}%`;
 
   const commonOpts = {
-    responsive: true,
-    maintainAspectRatio: false,
-    scales: {
-      x: {
-        ticks: { color: '#ebf2f2' },
-        grid:  { color: 'rgba(255,255,255,.05)' }
-      },
-      y: {
-        ticks: {
-          color: '#ebf2f2',
-          callback: v => fmtPctInt(v)
-        },
-        grid: { color: 'rgba(255,255,255,.06)' },
-        suggestedMin: 0,
-        suggestedMax: 100
-      }
+  responsive: true,
+  maintainAspectRatio: false,
+  layout: {
+    padding: {
+      bottom: 24   // add breathing room under the x-axis labels
+    }
+  },
+  scales: {
+    x: {
+      ticks: { color: '#ebf2f2' },
+      grid:  { color: 'rgba(255,255,255,.05)' }
     },
-    plugins: {
-      legend: { labels: { color: '#ebf2f2' } },
-      title: {
-        display: true,
-        text: who,
+    y: {
+      ticks: {
         color: '#ebf2f2',
-        font: { weight: 'bold', size: 14 },
-        padding: { top: 10, bottom: 6 }
+        callback: (v) => fmtPctInt(v)
       },
-      tooltip: {
-        callbacks: {
-          label: (ctx) => {
-            const label = ctx.dataset?.label ? `${ctx.dataset.label}: ` : '';
-            const val = (ctx.parsed && typeof ctx.parsed.y === 'number')
-              ? ctx.parsed.y
-              : (typeof ctx.parsed === 'number' ? ctx.parsed : 0);
-            return `${label}${fmtPctInt(val)}`;
-          }
+      grid: { color: 'rgba(255,255,255,.06)' },
+      suggestedMin: 0,
+      suggestedMax: 100
+    }
+  },
+  plugins: {
+    legend: { labels: { color: '#ebf2f2' } },
+    title: {
+      display: true,
+      text: who,
+      color: '#ebf2f2',
+      font: { weight: 'bold', size: 14 },
+      padding: { top: 10, bottom: 6 }
+    },
+    tooltip: {
+      callbacks: {
+        label: (ctx) => {
+          const label = ctx.dataset?.label ? `${ctx.dataset.label}: ` : '';
+          const val = (ctx.parsed && typeof ctx.parsed.y === 'number')
+            ? ctx.parsed.y
+            : (typeof ctx.parsed === 'number' ? ctx.parsed : 0);
+          return `${label}${fmtPctInt(val)}`;
         }
       }
     }
-  };
+  }
+};
 
   // ---- NEWS STACKED BAR ----
   const nh = document.getElementById('newsChart').getContext('2d');
