@@ -616,14 +616,15 @@ function renderCharts(){
       grid:  { color: 'rgba(255,255,255,.05)' }
     },
     y: {
-      ticks: {
-        color: '#ebf2f2',
-        callback: (v) => fmtPctInt(v)
-      },
-      grid: { color: 'rgba(255,255,255,.06)' },
-      suggestedMin: 0,
-      suggestedMax: 100
-    }
+  ticks: {
+    color: '#ebf2f2',
+    stepSize: 20,             // ← force increments of 20
+    callback: (v) => fmtPctInt(v)
+  },
+  grid: { color: 'rgba(255,255,255,.06)' },
+  suggestedMin: 0,
+  suggestedMax: 100
+}
   },
   plugins: {
     legend: { labels: { color: '#ebf2f2' } },
