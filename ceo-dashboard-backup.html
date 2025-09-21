@@ -85,6 +85,44 @@ tbody tr td:last-child{border-right:1px solid #0f1831;border-radius:0 10px 10px 
 .pill.med  { background:rgba(207,219,221,.25); color:#cfdbdd; } /* grey/neutral */
 .pill.high { background:rgba(255,130,97,.15); color:#ff8261; }  /* red/orange */
 .link{color:var(--accent);text-decoration:underline}
+/* ===== Mobile horizontal scroll (Option A) ===== */
+.table-scroll{
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch; /* momentum scroll on iOS */
+}
+
+/* Optional: nicer thin scrollbar on mobile */
+.table-scroll::-webkit-scrollbar{height:8px}
+.table-scroll::-webkit-scrollbar-track{background:rgba(255,255,255,.05);border-radius:8px}
+.table-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:8px}
+
+/* Keep the table wide enough to require horizontal scroll on small screens */
+@media (max-width: 960px){
+  .table-card{ padding:8px }                               /* a bit tighter padding */
+  .table-hint{ font-size:12px }
+  thead th, tbody td{ padding:8px 10px }                   /* smaller cell padding */
+  table{ min-width: 980px }                                 /* force scroll width */
+
+  /* Slightly smaller pills/buttons for space */
+  .pill{ font-size:11px; padding:3px 8px }
+  .pagination{ gap:6px; flex-wrap:wrap }
+}
+
+/* Make the first column sticky so the CEO remains visible while scrolling */
+tbody td:first-child,
+thead th:first-child{
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: #1f2121;                  /* matches your “Black” panel color */
+  /* keep existing borders/radii from your theme */
+}
+
+/* Optional: faint divider to the right of sticky column */
+thead th:first-child,
+tbody td:first-child{
+  box-shadow: 2px 0 0 0 rgba(255,255,255,.06);
+}
 
 /* Pagination */
 .pagination{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:8px}
@@ -165,7 +203,8 @@ tbody tr td:last-child{border-right:1px solid #0f1831;border-radius:0 10px 10px 
   </div>
 
   <div class="table-card">
-    <p class="table-hint">Select exactly one CEO using the checkbox to see brand-level charts. Selecting another will automatically unselect the previous one.</p>
+  <p class="table-hint">Select exactly one CEO using the checkbox to see brand-level charts. Selecting another will automatically unselect the previous one.</p>
+  <div class="table-scroll">
     <table>
       <thead>
         <tr>
@@ -182,14 +221,15 @@ tbody tr td:last-child{border-right:1px solid #0f1831;border-radius:0 10px 10px 
       </thead>
       <tbody id="tbody"></tbody>
     </table>
+  </div>
 
-    <div class="pagination">
-      <button id="prevBtn">Prev</button>
-      <div>Page <span id="pageNo">1</span> / <span id="pageTotal">1</span></div>
-      <button id="nextBtn">Next</button>
-    </div>
+  <div class="pagination">
+    <button id="prevBtn">Prev</button>
+    <div>Page <span id="pageNo">1</span> / <span id="pageTotal">1</span></div>
+    <button id="nextBtn">Next</button>
   </div>
 </div>
+
 
 <!-- Modal -->
 <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
