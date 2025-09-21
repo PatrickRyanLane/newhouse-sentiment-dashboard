@@ -42,17 +42,19 @@ button:hover{filter:brightness(1.08)}
 /* Grid for charts */
 /* Spacing */
 .controls{ margin:0 0 16px }             /* a touch more space under controls */
-.grid {
-  display: grid;
-  grid-template-rows: minmax(350px, 36vh) minmax(300px, 40vh); /* bump bottom chart */
-  gap: 16px;
-  margin: 16px 0;
+.grid{
+  display:grid;
+  /* Both rows scale the same with viewport height, but never shrink below a comfy minimum */
+  grid-template-rows: minmax(340px, 40vh) minmax(340px, 40vh);
+  gap:16px;
+  margin:16px 0;
 }
 
-@media (min-width:980px) {
-  .grid {
-    grid-template-rows: minmax(370px, 38vh) minmax(320px, 42vh); /* more height for bottom chart */
-    gap: 18px;
+@media (min-width:980px){
+  .grid{
+    /* Slightly taller on wider screens, still equal heights */
+    grid-template-rows: minmax(360px, 42vh) minmax(360px, 42vh);
+    gap:18px;
   }
 }
 
