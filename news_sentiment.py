@@ -27,6 +27,7 @@ from zoneinfo import ZoneInfo
 from urllib.parse import urlparse, parse_qsl, unquote, urlencode
 
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+from email_utils import check_and_send_alerts
 
 # ------------- Config -----------------
 HL   = "en-US"          # Google News interface language
@@ -406,6 +407,7 @@ def purge_old_data(retention_days: int = RETENTION_DAYS) -> None:
             })
     print(f"Purged daily_counts rows older than {cutoff}. Kept rows: {len(kept)}")
 
+
 def main():
     # Which date are we writing under?
     run_date = os.environ.get("NEWS_DATE") or now_eastern_date_str()
@@ -428,6 +430,19 @@ def main():
 
     # Upsert into daily_counts.csv
     update_daily_counts_csv(counts if counts else [])
+
+    # --- Add alerting ---
+    KIT_API_KEY = os.environ.get("KIT_API_KEY")
+    KIT_TAG_ID = os.environ.get("KIT_TAG_ID")
+    if KIT_API_KEY and KIT_TAG_ID and counts:
+        check_and_send_alerts(
+            counts,
+            run_date,
+            KIT_API_KEY,
+            KIT_TAG_ID,
+            entity_type="Brand",
+        )
+    # --------------------
 
     # Purge old data
     purge_old_data(RETENTION_DAYS)
