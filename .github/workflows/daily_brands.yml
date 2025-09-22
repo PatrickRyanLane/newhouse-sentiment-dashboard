@@ -1,9 +1,25 @@
 name: Daily Brands Pipeline
 
 on:
+  # Manual run with optional date, e.g. 2025-09-22
   workflow_dispatch:
+    inputs:
+      date:
+        description: "Run date in UTC (YYYY-MM-DD). Leave blank for today."
+        required: false
+        type: string
+  # Scheduled run — adjust as you like
   schedule:
-    - cron: "10 9 * * *"   # 09:10 UTC daily (change as needed)
+    - cron: "10 9 * * *"   # 09:10 UTC daily
+
+# allow the workflow to push commits back to the repo
+permissions:
+  contents: write
+
+# prevent two data-writing jobs from colliding
+concurrency:
+  group: data-writes
+  cancel-in-progress: false
 
 jobs:
   run:
@@ -12,11 +28,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # needed so we can pull/rebase before pushing
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+          cache: "pip"
 
       - name: Install dependencies
         run: |
@@ -27,21 +46,52 @@ jobs:
         env:
           RUN_DATE: ${{ github.event.inputs.date || '' }}
         run: |
-          echo "Running news_articles_brands.py for ${RUN_DATE:-$(date -u +%F)}"
-          python scripts/news_articles_brands.py --date "${RUN_DATE:-$(date -u +%F)}"
+          set -euo pipefail
+          DATE_TO_RUN="${RUN_DATE:-$(date -u +%F)}"
+          echo "Running news_articles_brands.py for ${DATE_TO_RUN}"
+          python scripts/news_articles_brands.py --date "${DATE_TO_RUN}"
 
       - name: Aggregate brand news sentiment
         run: |
+          set -euo pipefail
           python scripts/news_sentiment_brands.py
 
       - name: Process brand SERPs
         run: |
+          set -euo pipefail
           python scripts/process_serps_brands.py
 
+      # --- Safe commit & push: rebase onto latest main, retry once if needed ---
       - name: Commit outputs
+        shell: bash
+        env:
+          RUN_DATE: ${{ github.event.inputs.date || '' }}
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          set -euo pipefail
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Ensure we're on main and up-to-date
+          git fetch origin main
+          git checkout main
+          git pull --rebase origin main
+
+          # Stage any generated/updated files
           git add -A
-          git commit -m "brand pipeline: update data ($(date -u +%F))" || echo "No changes to commit"
-          git push
+
+          # Nothing changed? Exit cleanly.
+          if git diff --cached --quiet; then
+            echo "No data changes to commit."
+            exit 0
+          fi
+
+          DATE_TO_USE="${RUN_DATE:-$(date -u +%F)}"
+          git commit -m "brand pipeline: update data (${DATE_TO_USE})"
+
+          # Push; if rejected (race), rebase once and try again
+          if ! git push origin HEAD:main; then
+            echo "Push rejected; pulling latest and retrying once..."
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
