@@ -261,19 +261,16 @@ tbody td:first-child{
 
 <script>
 /********************** Config **********************/
-const COUNTS_CANDIDATES = ['data_ceos/daily_counts.csv'];
-const ROSTER_CANDIDATES = [
-  'data/serps/roster.csv',
-  'data/roster.csv',
-  'data/ceo_companies.csv'
-];
-const SERPS_DAILY_CSV = 'data/serps/ceo_serps_daily.csv';
-const BOARDS_CSV = 'data_ceos/ceo_boards.csv';
-const SERP_ROWS_PATH = d => `data_ceos/serp_rows/${d}-ceo-serps-rows.csv`;
 
-// NEW: authoritative per-date sources for the table
-const ARTICLES_DAILY_PATH = d => `data_ceos/${d}.csv`;
-const SERP_PROCESSED_PATH = d => `data_ceos/processed_serps/${d}-ceo-serps-processed.csv`;
+  // ===== Brand data sources =====
+const COUNTS_CANDIDATES   = ['data/processed_articles/daily_counts.csv'];
+const SERPS_DAILY_CSV     = 'data/serps/brand_serps_daily.csv';
+
+const ARTICLES_DAILY_PATH = d => `data/processed_articles/${d}.csv`;                 // table
+const HEADLINES_PATH      = d => `data/articles/${d}-articles.csv`;                   // modal
+const SERP_PROCESSED_PATH = d => `data/processed_serps/${d}-brand-serps-processed.csv`;
+const SERP_ROWS_PATH      = d => `data/serp_rows/${d}-brand-serps-rows.csv`;
+
 
 /********************** Runtime **********************/
 let rosterMap = new Map();        // CEO -> Company
