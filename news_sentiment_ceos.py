@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Daily CEO News Sentiment — counts normalizer (restored legacy outputs).
+Daily CEO News Sentiment — counts normalizer (restored legacy outputs). 
 
 WHAT THIS DOES
 --------------
