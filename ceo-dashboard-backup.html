@@ -128,9 +128,26 @@ tbody td:first-child{
 .pagination{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:8px}
 
 /* Modal */
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:24px}
-.modal.open{display:flex}
-.modal .box{max-width:900px;width:100%;max-height:85vh;overflow:auto;background:#0e152a;border:1px solid #1b2745;border-radius:16px}
+/* Modal (update these rules) */
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.55);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  z-index:10000;          /* <-- ensure overlay is above sticky cells */
+}
+.modal.open{ display:flex; }
+
+.modal .box{
+  max-width:900px; width:100%;
+  max-height:85vh; overflow:auto;
+  background:#0e152a; border:1px solid #1b2745; border-radius:16px;
+  position:relative;
+  z-index:10001;          /* <-- box above overlay */
+}
 .modal header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #12203d}
 .modal header h3{margin:0;font-size:16px}
 .modal .content{padding:16px}
