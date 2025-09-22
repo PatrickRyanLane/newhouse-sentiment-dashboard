@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Daily Google News RSS -> sentiment counts per brand (with alias support),
-plus a short daily "theme" for each brand based on NEGATIVE headlines only.
+plus a short daily "theme" for each brand based on NEGATIVE headlines only. 
 
 Outputs (repo-relative):
 - data/articles/YYYY-MM-DD.csv  (item-level rows)
