@@ -15,16 +15,23 @@ os.makedirs("data/serp_rows", exist_ok=True)
 os.makedirs("data/processed_serps", exist_ok=True)
 os.makedirs("data/serps", exist_ok=True)
 
-# Optional: map brand -> owned domains. If absent, we do a heuristic: domain contains sanitized brand (e.g. "nike").
-BRAND_DOMAINS = "brand_domains.csv"  # columns: brand,domain  (optional)
-brand_to_domains = defaultdict(set)
-if os.path.exists(BRAND_DOMAINS):
-    with open(BRAND_DOMAINS, newline="", encoding="utf-8") as f:
-        for r in csv.DictReader(f):
-            b = (r.get("brand") or r.get("company") or "").strip()
-            d = (r.get("domain") or "").strip().lower()
-            if b and d:
-                brand_to_domains[b].add(d)
+import csv
+from urllib.parse import urlparse
+
+def load_company_domains(path="data/roster.csv"):
+    company_domains = {}
+    with open(path, newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            company = row.get("Company", "").strip()
+            website = row.get("Website", "").strip()
+            if company and website:
+                try:
+                    domain = urlparse(website).hostname.replace("www.", "")
+                    company_domains[company.lower()] = domain
+                except Exception:
+                    continue
+    return company_domains
 
 def hostname(url):
     try:
