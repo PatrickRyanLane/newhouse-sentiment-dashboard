@@ -21,10 +21,10 @@ jobs:
           pip install requests beautifulsoup4 vaderSentiment
 
       - name: Fetch brand headlines
-        run: python news_articles_brands.py
+        run: python scripts/news_articles_brands.py
 
       - name: Aggregate brand news sentiment
-        run: python news_sentiment_brands.py
+        run: python scripts/news_sentiment_brands.py
 
       - name: Commit & push
         run: |
