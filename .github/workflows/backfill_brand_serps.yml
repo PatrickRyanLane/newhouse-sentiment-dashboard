@@ -56,7 +56,7 @@ jobs:
           done
 
       # Safe commit & push (same pattern you use in daily brands workflow)
-      - name: Commit outputs
+            - name: Commit outputs
         shell: bash
         env:
           START_IN: ${{ github.event.inputs.start }}
@@ -64,29 +64,30 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Git identity
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          # Rebase-safe push flow
+          # Ensure we're rebased on main even if the backfill step created local changes
           git fetch origin main
           git checkout main
-          git pull --rebase origin main
+          git pull --rebase --autostash origin main
 
+          # Stage & commit changes produced by the backfill loop
           git add -A
           if git diff --cached --quiet; then
             echo "No data changes to commit."
             exit 0
           fi
 
-          # Build commit message labels (use safe defaults)
           START_DATE="${START_IN:-manual}"
           DATE_LABEL="${END_IN:-$(date -u +%F)}"
-
           git commit -m "brand SERPs: backfill ${START_DATE}..${DATE_LABEL}"
+
+          # Push; if remote moved meanwhile, rebase once with autostash and retry
           if ! git push origin HEAD:main; then
             echo "Push rejected; rebasing once…"
-            git pull --rebase origin main
+            git pull --rebase --autostash origin main
             git push origin HEAD:main
           fi
+
 
