@@ -416,7 +416,6 @@ Graphic Packaging
 Gray Television
 Graybar Electric
 Green Plains Inc
-Greenbrier
 Greif
 Griffon Corporation
 Grocery Outlet Holding
@@ -866,6 +865,7 @@ Texas Roadhouse
 Textron
 The Andersons Inc
 The Coca-Cola Company
+The Greenbrier Companies
 The Hartford
 The Mosaic Company
 Thermo Fisher Scientific
