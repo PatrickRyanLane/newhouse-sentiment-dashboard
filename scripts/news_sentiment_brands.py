@@ -8,6 +8,9 @@ OUT_DIR      = Path("data/processed_articles")
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 DAILY_INDEX  = OUT_DIR / "daily_counts.csv"
 
+# Columns we will ALWAYS write for the daily index
+INDEX_FIELDS = ["date","company","positive","neutral","negative","total","neg_pct"]
+
 def iter_dates(from_str: str, to_str: str):
     d0 = date.fromisoformat(from_str)
     d1 = date.fromisoformat(to_str)
@@ -26,7 +29,7 @@ def read_articles(dstr: str):
         return []
     rows = []
     with f.open(newline="", encoding="utf-8") as fh:
-        r = csv.DictReader(fh)
+        r = csv.DictReader(f)
         for row in r:
             # expected new columns: company,title,url,source,date,sentiment
             rows.append({
@@ -40,7 +43,7 @@ def aggregate(rows):
     agg = {}
     for r in rows:
         company = r["company"]
-        if not company: 
+        if not company:
             continue
         s = r["sentiment"]
         bucket = agg.setdefault(company, {"positive":0,"neutral":0,"negative":0,"total":0})
@@ -51,16 +54,26 @@ def aggregate(rows):
     return agg
 
 def write_daily(dstr: str, agg: dict):
+    """
+    Per-day file. We include neg_pct so downstream readers can use it directly
+    (still fine if they recompute from counts).
+    """
     out = OUT_DIR / f"{dstr}.csv"
     with out.open("w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh)
-        w.writerow(["date","company","positive","neutral","negative","total"])
+        w.writerow(["date","company","positive","neutral","negative","total","neg_pct"])
         for company, c in sorted(agg.items()):
-            w.writerow([dstr, company, c["positive"], c["neutral"], c["negative"], c["total"]])
+            total = c["total"]
+            neg_pct = (c["negative"] / total) if total else 0.0
+            w.writerow([dstr, company, c["positive"], c["neutral"], c["negative"], total, f"{neg_pct:.6f}"])
     print(f"[OK] Wrote {out}")
 
 def upsert_daily_index(dstr: str, agg: dict):
-    # load existing index
+    """
+    Append/replace rows for a given date in the rolling index.
+    We ALWAYS write with INDEX_FIELDS (includes neg_pct) to avoid fieldname mismatches.
+    """
+    # load any existing rows (we'll ignore extra keys when we rebuild)
     rows = []
     if DAILY_INDEX.exists():
         with DAILY_INDEX.open(newline="", encoding="utf-8") as fh:
@@ -69,22 +82,27 @@ def upsert_daily_index(dstr: str, agg: dict):
     # drop any rows for dstr, then append fresh
     rows = [r for r in rows if r.get("date") != dstr]
     for company, c in agg.items():
+        total = c["total"]
+        neg_pct = (c["negative"] / total) if total else 0.0
         rows.append({
             "date": dstr,
             "company": company,
             "positive": str(c["positive"]),
             "neutral": str(c["neutral"]),
             "negative": str(c["negative"]),
-            "total":    str(c["total"]),
+            "total":    str(total),
+            "neg_pct":  f"{neg_pct:.6f}",
         })
 
     # sort by date, then company
     rows.sort(key=lambda r: (r["date"], r["company"]))
 
     with DAILY_INDEX.open("w", newline="", encoding="utf-8") as fh:
-        w = csv.DictWriter(fh, fieldnames=["date","company","positive","neutral","negative","total"])
+        w = csv.DictWriter(fh, fieldnames=INDEX_FIELDS)
         w.writeheader()
-        w.writerows(rows)
+        # only keep the columns we declare (drops any strays)
+        cleaned = [{k: r.get(k, "") for k in INDEX_FIELDS} for r in rows]
+        w.writerows(cleaned)
     print(f"[OK] Updated {DAILY_INDEX}")
 
 def process_one(dstr: str):
@@ -103,7 +121,6 @@ def main():
     ap.add_argument("--to",   dest="to_date",   help="end YYYY-MM-DD (inclusive)")
     args = ap.parse_args()
 
-    dates = []
     if args.date:
         dates = [args.date]
     elif args.from_date and args.to_date:
