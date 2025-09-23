@@ -39,19 +39,20 @@ button:hover{filter:brightness(1.08)}
 .chart-card{background:var(--card);border:1px solid var(--stroke);border-radius:12px;padding:12px 12px 48px;position:relative}
 .chart-card canvas{width:100% !important;height:100% !important;display:block}
 
-/* NEW: chart pagination controls (top-right) */
+/* Chart pagination controls (top-right) */
 .chart-actions{
-  position:absolute; top:10px; right:12px;
+  position:absolute;
+  top:10px; right:12px;
   display:flex; align-items:center; gap:10px;
 }
 .chart-actions .dates-range{ font-size:12px; }
 .chart-actions .dates-pager{ display:flex; gap:6px; }
 .chart-actions .dates-pager button{
-  background:var(--black); border:1px solid #2a3b5e; color:var(--text);
+  background:#1f2121; border:1px solid #2a3b5e; color:var(--text);
   border-radius:8px; padding:4px 8px; cursor:pointer;
 }
 .chart-actions .dates-pager button[disabled]{ opacity:.45; cursor:not-allowed; }
-
+  
 /* Table */
 .table-card{background:var(--card);border:1px solid var(--stroke);border-radius:12px;padding:10px}
 .table-hint{margin:0 0 8px;color:var(--muted)}
@@ -136,7 +137,7 @@ thead th:first-child, tbody td:first-child{
   <div class="grid">
     <div class="chart-card">
       <h3>News sentiment (percent of articles)</h3>
-      <!-- NEW: range + pager (synced) -->
+      <!-- range + pager (synced) -->
       <div class="chart-actions">
         <span class="dates-range muted" aria-live="polite"></span>
         <div class="dates-pager">
@@ -146,9 +147,10 @@ thead th:first-child, tbody td:first-child{
       </div>
       <canvas id="newsChart"></canvas>
     </div>
+
     <div class="chart-card">
       <h3>SERP (Negative % • Control %)</h3>
-      <!-- NEW: range + pager (synced) -->
+      <!-- range + pager (synced) -->
       <div class="chart-actions">
         <span class="dates-range muted" aria-live="polite"></span>
         <div class="dates-pager">
@@ -222,16 +224,16 @@ let newsChart, serpChart;
 const _articlesCache = new Map(); // date -> Map(company -> {neg_pct})
 const _serpAggCache  = new Map(); // date -> Map(company -> {total, neg_serp, controlled})
 
-/* ===== NEW: synced chart pagination state ===== */
-const DATE_WINDOW_SIZE = 30;  // show 30 dates at a time
-let dateWindowStart = null;   // index of first date in window (shared)
+/* ===== Synced chart pagination state (same as CEO) ===== */
+const DATE_WINDOW_SIZE = 30;      // show 30 dates at a time
+let dateWindowStart = null;       // index of first date in window (global/shared)
 
 /********************** Utils **********************/
 const isISODate = s => /^\d{4}-\d{2}-\d{2}$/.test(String(s||'').trim());
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const fmtPct = (v) => (v==null) ? 'N/A' : Math.round(v*100)+'%';
 
-/* ===== NEW: pager helpers ===== */
+/* ===== Pager helpers (same as CEO) ===== */
 function clampDateStart(total){
   if (total <= DATE_WINDOW_SIZE) return 0;
   const maxStart = total - DATE_WINDOW_SIZE;
@@ -242,11 +244,11 @@ function sliceWindow(arr, start, size){ return arr.slice(start, start + size); }
 function updateDateRangeUI(allDates){
   const start = clampDateStart(allDates.length);
   const end = Math.min(allDates.length, start + DATE_WINDOW_SIZE);
-  const label = allDates.length ? `${allDates[start]} — ${allDates[end-1]}` : '';
+  const label = allDates.length ? `${allDates[start]} — ${allDates[end - 1]}` : '';
   document.querySelectorAll('.dates-range').forEach(el => el.textContent = label);
 
   const atStart = start === 0;
-  const atEnd = (start + DATE_WINDOW_SIZE) >= allDates.length;
+  const atEnd   = (start + DATE_WINDOW_SIZE) >= allDates.length;
   document.querySelectorAll('.dates-prev').forEach(b => b.disabled = atStart);
   document.querySelectorAll('.dates-next').forEach(b => b.disabled = atEnd);
 }
@@ -484,7 +486,7 @@ function renderTable(){
   document.getElementById('pageTotal').textContent = String(Math.max(1, Math.ceil(filteredRows.length/PAGE_SIZE)));
 }
 
-/********************** Charts (windowed + synced) **********************/
+/********************** Charts **********************/
 function getDateSeries(){
   const byDate = new Map();
   allCountsRows.forEach(r=>{
@@ -523,40 +525,67 @@ function getDateSeries(){
 }
 
 function renderCharts(){
-  const {dates,newsPos,newsNeu,newsNeg,serpNegPct,serpCtrlPct}=getDateSeries();
+  const {dates, newsPos, newsNeu, newsNeg, serpNegPct, serpCtrlPct} = getDateSeries();
+
+  // Initialize default window to the last 30 points (once per load)
+  if (dateWindowStart === null){
+    dateWindowStart = Math.max(0, dates.length - DATE_WINDOW_SIZE);
+  }
+  const start = clampDateStart(dates.length);
+  const d  = sliceWindow(dates,       start, DATE_WINDOW_SIZE);
+  const nP = sliceWindow(newsPos,     start, DATE_WINDOW_SIZE);
+  const nN = sliceWindow(newsNeu,     start, DATE_WINDOW_SIZE);
+  const nG = sliceWindow(newsNeg,     start, DATE_WINDOW_SIZE);
+  const sN = sliceWindow(serpNegPct,  start, DATE_WINDOW_SIZE);
+  const sC = sliceWindow(serpCtrlPct, start, DATE_WINDOW_SIZE);
+
+  // Update UI + hook pager (both charts share the same handlers/state)
+  updateDateRangeUI(dates);
+  hookDatePager(dates);
+
   const who = selectedCompany ? selectedCompany : 'Index Average';
   const pct = v => `${Math.round(v)}%`;
 
-  const commonOpts={
+  const commonOpts = {
     responsive:true, maintainAspectRatio:false,
     layout:{ padding:{ bottom:24 } },
     scales:{
       x:{ ticks:{color:'#ebf2f2'}, grid:{color:'rgba(255,255,255,.05)'} },
-      y:{ ticks:{color:'#ebf2f2',stepSize:20,callback:v=>pct(v)}, grid:{color:'rgba(255,255,255,.06)'}, suggestedMin:0, suggestedMax:100 }
+      y:{ ticks:{color:'#ebf2f2', stepSize:20, callback:v=>pct(v)},
+          grid:{color:'rgba(255,255,255,.06)'}, suggestedMin:0, suggestedMax:100 }
     },
     plugins:{
       legend:{labels:{color:'#ebf2f2'}},
-      title:{display:true,text:who,color:'#ebf2f2',font:{weight:'bold',size:14},padding:{top:10,bottom:6}},
+      title:{display:true, text:who, color:'#ebf2f2', font:{weight:'bold', size:14},
+             padding:{top:10,bottom:6}},
       tooltip:{callbacks:{label:(ctx)=>`${ctx.dataset?.label?ctx.dataset.label+': ':''}${pct(typeof ctx.parsed.y==='number'?ctx.parsed.y:ctx.parsed)}`}}
     }
   };
 
   // News stacked bar
-  const nh=document.getElementById('newsChart').getContext('2d');
+  const nh = document.getElementById('newsChart').getContext('2d');
   if (newsChart) newsChart.destroy();
-  newsChart=new Chart(nh,{type:'bar',data:{labels:dates,datasets:[
-    {label:'Positive %',data:newsPos,backgroundColor:'#82c618',stack:'s'},
-    {label:'Neutral %', data:newsNeu,backgroundColor:'#cfdbdd',stack:'s'},
-    {label:'Negative %',data:newsNeg,backgroundColor:'#ff8261',stack:'s'}
-  ]},options:{...commonOpts}});
+  newsChart = new Chart(nh, {
+    type:'bar',
+    data:{ labels:d, datasets:[
+      {label:'Positive %',data:nP, backgroundColor:'#82c618', stack:'s'},
+      {label:'Neutral %', data:nN, backgroundColor:'#cfdbdd', stack:'s'},
+      {label:'Negative %',data:nG, backgroundColor:'#ff8261', stack:'s'}
+    ]},
+    options:{...commonOpts}
+  });
 
   // SERP line
-  const sh=document.getElementById('serpChart').getContext('2d');
+  const sh = document.getElementById('serpChart').getContext('2d');
   if (serpChart) serpChart.destroy();
-  serpChart=new Chart(sh,{type:'line',data:{labels:dates,datasets:[
-    {label:'Negative SERP %',data:serpNegPct,tension:.25,borderColor:'#ff8261',backgroundColor:'rgba(255,130,97,.2)',fill:false},
-    {label:'Control %',data:serpCtrlPct,tension:.25,borderColor:'#58dbed',backgroundColor:'rgba(88,219,237,.15)',fill:false}
-  ]},options:{...commonOpts}});
+  serpChart = new Chart(sh, {
+    type:'line',
+    data:{ labels:d, datasets:[
+      {label:'Negative SERP %', data:sN, tension:.2, borderWidth:2, fill:false},
+      {label:'Control %',      data:sC, tension:.2, borderWidth:2, fill:false}
+    ]},
+    options:{...commonOpts}
+  });
 }
 
 /********************** Modals **********************/
