@@ -43,4 +43,53 @@ jobs:
       - name: Backfill brand SERPs
         shell: bash
         env:
-          START: ${{ github.e
+          START: ${{ github.event.inputs.start }}
+          ENDIN: ${{ github.event.inputs.end }}
+        run: |
+          set -euo pipefail
+          START_DATE="${START}"
+          END_DATE="${ENDIN:-$(date -u +%F)}"
+
+          echo "Backfilling BRAND SERPs from ${START_DATE} to ${END_DATE}"
+          d="${START_DATE}"
+          while [ "$(date -u -d "$d" +%s)" -le "$(date -u -d "$END_DATE" +%s)" ]; do
+            echo "→ $d"
+            python scripts/process_serps_brands.py --date "$d"
+            d="$(date -u -d "$d +1 day" +%F)"
+          done
+
+      - name: Commit outputs
+        shell: bash
+        env:
+          START_IN: ${{ github.event.inputs.start }}
+          END_IN:   ${{ github.event.inputs.end }}
+        run: |
+          set -euo pipefail
+
+          # Git identity + trust this checkout
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+          # Rebase-safe pull even with local changes created by the backfill step
+          git fetch origin main
+          git checkout main
+          git pull --rebase --autostash origin main
+
+          # Stage & commit
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No data changes to commit."
+            exit 0
+          fi
+
+          START_DATE="${START_IN:-manual}"
+          DATE_LABEL="${END_IN:-$(date -u +%F)}"
+          git commit -m "brand SERPs: backfill ${START_DATE}..${DATE_LABEL}"
+
+          # Push; if remote moved in the meantime, rebase once and retry
+          if ! git push origin HEAD:main; then
+            echo "Push rejected; rebasing once…"
+            git pull --rebase --autostash origin main
+            git push origin HEAD:main
+          fi
