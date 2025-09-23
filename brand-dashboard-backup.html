@@ -576,13 +576,13 @@ function renderCharts(){
   });
 
   // SERP line
-  const sh = document.getElementById('serpChart').getContext('2d');
-  if (serpChart) serpChart.destroy();
-  serpChart = new Chart(sh, {
-    type: 'line',
-    data: {
-      labels: d,
-      datasets: [
+const sh = document.getElementById('serpChart').getContext('2d');
+if (serpChart) serpChart.destroy();
+serpChart = new Chart(sh, {
+  type: 'line',
+  data: {
+    labels: d,
+    datasets: [
       {
         label: 'Negative SERP %',
         data: sN,
@@ -607,6 +607,7 @@ function renderCharts(){
   },
   options: { ...commonOpts }
 });
+
 
 
 /********************** Modals **********************/
