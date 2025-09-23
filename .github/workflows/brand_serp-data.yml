@@ -20,14 +20,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install requests vaderSentiment
 
-      # Backfill from first available date up to today.
-      # If you prefer "today only", replace the line below with:
-      #   python scripts/process_serps.py --date $(date -I)
-      - name: Build daily SERP index (backfill from first day you have)
-        shell: bash
-        run: |
-          python scripts/process_serps.py --backfill 2025-09-15 $(date -I)
-
       - name: Process brand SERPs
         run: python scripts/process_serps_brands.py
 
