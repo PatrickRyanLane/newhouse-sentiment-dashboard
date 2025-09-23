@@ -29,7 +29,11 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git pull --rebase
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+          # Pull first, auto-stashing any generated files
+          git pull --rebase --autostash
+
           git add -A
           git commit -m "backfill processed brand articles ($(date -u +%F))" || echo "No changes"
           git push
