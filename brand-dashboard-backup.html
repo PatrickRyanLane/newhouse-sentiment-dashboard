@@ -576,39 +576,17 @@ function renderCharts(){
   });
 
   // SERP line
-const sh = document.getElementById('serpChart').getContext('2d');
-if (serpChart) serpChart.destroy();
-serpChart = new Chart(sh, {
-  type: 'line',
-  data: {
-    labels: d,
-    datasets: [
-      {
-        label: 'Negative SERP %',
-        data: sN,
-        tension: 0.2,
-        borderWidth: 2,
-        fill: false,
-        borderColor: '#ff8261',
-        pointBackgroundColor: '#ff8261',
-        pointBorderColor: '#ff8261'
-      },
-      {
-        label: 'Control %',
-        data: sC,
-        tension: 0.2,
-        borderWidth: 2,
-        fill: false,
-        borderColor: '#6ad3e6',
-        pointBackgroundColor: '#6ad3e6',
-        pointBorderColor: '#6ad3e6'
-      }
-    ]
-  },
-  options: { ...commonOpts }
-});
-
-
+  const sh = document.getElementById('serpChart').getContext('2d');
+  if (serpChart) serpChart.destroy();
+  serpChart = new Chart(sh, {
+    type:'line',
+    data:{ labels:d, datasets:[
+      {label:'Negative SERP %', data:sN, tension:.2, borderWidth:2, fill:false},
+      {label:'Control %',      data:sC, tension:.2, borderWidth:2, fill:false}
+    ]},
+    options:{...commonOpts}
+  });
+}
 
 /********************** Modals **********************/
 const modal=document.getElementById('modal');
