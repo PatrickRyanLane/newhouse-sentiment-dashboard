@@ -48,6 +48,11 @@ OUT_ROLLUP = "data/serps/brand_serps_daily.csv"
 # Domains explicitly UNCONTROLLED
 UNCONTROLLED_DOMAINS = {"youtube.com", "youtu.be", "tiktok.com"}
 
+# Domains explicitly CONTROLLED (brand-owned social profiles)
+CONTROLLED_SOCIAL_DOMAINS = {
+    "facebook.com", "linkedin.com", "instagram.com", "twitter.com", "x.com"
+}
+
 # If controlled, force sentiment to positive (matches your CEO rule change)
 FORCE_POSITIVE_IF_CONTROLLED = True
 
@@ -122,6 +127,7 @@ def classify_control(company: str, url: str, company_domains: Dict[str, str]) ->
     """
     Rules:
       - UNCONTROLLED_DOMAINS are always uncontrolled.
+      - CONTROLLED_SOCIAL_DOMAINS are controlled.
       - If the URL's domain ends with the brand's canonical domain from roster -> controlled.
     """
     domain = extract_domain(url)
@@ -133,11 +139,18 @@ def classify_control(company: str, url: str, company_domains: Dict[str, str]) ->
         if domain.endswith(bad):
             return False
 
+    # Controlled social domains (handles subdomains like m.facebook.com)
+    for good in CONTROLLED_SOCIAL_DOMAINS:
+        if domain == good or domain.endswith("." + good):
+            return True
+
+    # Brand primary domain from roster.csv
     brand_domain = company_domains.get(company.lower())
     if brand_domain and (domain == brand_domain or domain.endswith("." + brand_domain)):
         return True
 
     return False
+
 
 def vader_label(analyzer: SentimentIntensityAnalyzer, text: str) -> Tuple[float, str]:
     """
