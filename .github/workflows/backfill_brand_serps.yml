@@ -15,11 +15,13 @@ jobs:
   backfill:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # allow pushing updated CSVs
+      contents: write
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # needed for rebase operations
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -30,63 +32,15 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then
-            pip install -r requirements.txt
+            python -m pip install -r requirements.txt
           else
-            python -m pip install --upgrade pip
-            pip install pandas requests vaderSentiment
+            # minimal deps for brand script
+            python -m pip install pandas requests vaderSentiment
           fi
 
       - name: Backfill brand SERPs
         shell: bash
         env:
-          START: ${{ github.event.inputs.start }}
-          ENDIN: ${{ github.event.inputs.end }}
-        run: |
-          set -euo pipefail
-          START_DATE="${START}"
-          END_DATE="${ENDIN:-$(date -u +%F)}"
-
-          echo "Backfilling BRAND SERPs from ${START_DATE} to ${END_DATE}"
-          d="${START_DATE}"
-          while [ "$(date -u -d "$d" +%s)" -le "$(date -u -d "$END_DATE" +%s)" ]; do
-            echo "→ $d"
-            python scripts/process_serps_brands.py --date "$d"
-            d="$(date -u -d "$d +1 day" +%F)"
-          done
-
-      # Safe commit & push (same pattern you use in daily brands workflow)
-      - name: Commit outputs
-        shell: bash
-        env:
-          START_IN: ${{ github.event.inputs.start }}
-          END_IN:   ${{ github.event.inputs.end }}
-        run: |
-          set -euo pipefail
-
-          git config user.name  "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          # Ensure we're rebased on main even if the backfill step created local changes
-          git fetch origin main
-          git checkout main
-          git pull --rebase --autostash origin main
-
-          # Stage & commit changes produced by the backfill loop
-          git add -A
-          if git diff --cached --quiet; then
-            echo "No data changes to commit."
-            exit 0
-          fi
-
-          START_DATE="${START_IN:-manual}"
-          DATE_LABEL="${END_IN:-$(date -u +%F)}"
-          git commit -m "brand SERPs: backfill ${START_DATE}..${DATE_LABEL}"
-
-          # Push; if remote moved meanwhile, rebase once with autostash and retry
-          if ! git push origin HEAD:main; then
-            echo "Push rejected; rebasing once…"
-            git pull --rebase --autostash origin main
-            git push origin HEAD:main
-          fi
-
+          START: ${{ github.e
