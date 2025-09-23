@@ -1,60 +1,118 @@
 #!/usr/bin/env python3
-import csv, os, sys
-from datetime import datetime, timezone
+import argparse, csv, sys
+from pathlib import Path
+from datetime import date, timedelta
 
-DATE = (datetime.now(timezone.utc)).strftime("%Y-%m-%d")
-ART_IN  = f"data/articles/{DATE}-articles.csv"
-DAY_OUT = f"data/processed_articles/{DATE}.csv"
-IDX_OUT = "data/processed_articles/daily_counts.csv"
+ARTICLES_DIR = Path("data/articles")
+OUT_DIR      = Path("data/processed_articles")
+OUT_DIR.mkdir(parents=True, exist_ok=True)
+DAILY_INDEX  = OUT_DIR / "daily_counts.csv"
 
-def main():
-    os.makedirs("data/processed_articles", exist_ok=True)
-    if not os.path.exists(ART_IN):
-        print(f"[INFO] No headline file for {DATE} at {ART_IN}; nothing to aggregate.")
-        return
+def iter_dates(from_str: str, to_str: str):
+    d0 = date.fromisoformat(from_str)
+    d1 = date.fromisoformat(to_str)
+    if d1 < d0:
+        raise SystemExit(f"--to ({to_str}) is before --from ({from_str})")
+    d = d0
+    one = timedelta(days=1)
+    while d <= d1:
+        yield d.isoformat()
+        d += one
 
-    # aggregate per company
-    agg = {}
-    with open(ART_IN, newline="", encoding="utf-8") as f:
-        r = csv.DictReader(f)
+def read_articles(dstr: str):
+    f = ARTICLES_DIR / f"{dstr}-articles.csv"
+    if not f.exists():
+        print(f"[INFO] No headline file for {dstr} at {f}; nothing to aggregate.", flush=True)
+        return []
+    rows = []
+    with f.open(newline="", encoding="utf-8") as fh:
+        r = csv.DictReader(fh)
         for row in r:
-            brand = (row.get("company") or "").strip()
-            if not brand: continue
-            sent = (row.get("sentiment") or "neutral").strip().lower()
-            a = agg.setdefault(brand, {"positive":0,"neutral":0,"negative":0})
-            if sent not in a: sent = "neutral"
-            a[sent] += 1
+            # expected new columns: company,title,url,source,date,sentiment
+            rows.append({
+                "company": (row.get("company") or "").strip(),
+                "sentiment": (row.get("sentiment") or "").strip().lower(),
+            })
+    return rows
 
-    # write per-day file
-    day_rows = []
-    for brand, c in sorted(agg.items()):
-        total = c["positive"] + c["neutral"] + c["negative"]
-        neg_pct = (c["negative"]/total) if total else 0.0
-        day_rows.append({
-            "date": DATE, "company": brand,
-            "positive": c["positive"], "neutral": c["neutral"], "negative": c["negative"],
-            "total": total, "neg_pct": f"{neg_pct:.4f}"
+def aggregate(rows):
+    # counts per company {company: {"positive": n, "neutral": n, "negative": n, "total": n}}
+    agg = {}
+    for r in rows:
+        company = r["company"]
+        if not company: 
+            continue
+        s = r["sentiment"]
+        bucket = agg.setdefault(company, {"positive":0,"neutral":0,"negative":0,"total":0})
+        if s not in ("positive","neutral","negative"):
+            s = "neutral"
+        bucket[s] += 1
+        bucket["total"] += 1
+    return agg
+
+def write_daily(dstr: str, agg: dict):
+    out = OUT_DIR / f"{dstr}.csv"
+    with out.open("w", newline="", encoding="utf-8") as fh:
+        w = csv.writer(fh)
+        w.writerow(["date","company","positive","neutral","negative","total"])
+        for company, c in sorted(agg.items()):
+            w.writerow([dstr, company, c["positive"], c["neutral"], c["negative"], c["total"]])
+    print(f"[OK] Wrote {out}")
+
+def upsert_daily_index(dstr: str, agg: dict):
+    # load existing index
+    rows = []
+    if DAILY_INDEX.exists():
+        with DAILY_INDEX.open(newline="", encoding="utf-8") as fh:
+            rows = list(csv.DictReader(fh))
+
+    # drop any rows for dstr, then append fresh
+    rows = [r for r in rows if r.get("date") != dstr]
+    for company, c in agg.items():
+        rows.append({
+            "date": dstr,
+            "company": company,
+            "positive": str(c["positive"]),
+            "neutral": str(c["neutral"]),
+            "negative": str(c["negative"]),
+            "total":    str(c["total"]),
         })
 
-    with open(DAY_OUT, "w", newline="", encoding="utf-8") as f:
-        w = csv.DictWriter(f, fieldnames=["date","company","positive","neutral","negative","total","neg_pct"])
-        w.writeheader(); w.writerows(day_rows)
-    print(f"Wrote {DAY_OUT} ({len(day_rows)} rows)")
+    # sort by date, then company
+    rows.sort(key=lambda r: (r["date"], r["company"]))
 
-    # upsert date rows into rolling index
-    existing = []
-    if os.path.exists(IDX_OUT):
-        with open(IDX_OUT, newline="", encoding="utf-8") as f:
-            existing = list(csv.DictReader(f))
+    with DAILY_INDEX.open("w", newline="", encoding="utf-8") as fh:
+        w = csv.DictWriter(fh, fieldnames=["date","company","positive","neutral","negative","total"])
+        w.writeheader()
+        w.writerows(rows)
+    print(f"[OK] Updated {DAILY_INDEX}")
 
-    # drop any existing rows for this date
-    keep = [r for r in existing if (r.get("date") != DATE)]
-    keep.extend(day_rows)
+def process_one(dstr: str):
+    print(f"Processing {dstr}...")
+    rows = read_articles(dstr)
+    if not rows:
+        return
+    agg = aggregate(rows)
+    write_daily(dstr, agg)
+    upsert_daily_index(dstr, agg)
 
-    with open(IDX_OUT, "w", newline="", encoding="utf-8") as f:
-        w = csv.DictWriter(f, fieldnames=["date","company","positive","neutral","negative","total","neg_pct"])
-        w.writeheader(); w.writerows(keep)
-    print(f"Updated {IDX_OUT} (rows: {len(keep)})")
+def main():
+    ap = argparse.ArgumentParser(description="Aggregate brand news sentiment by day/company.")
+    ap.add_argument("--date", help="single YYYY-MM-DD to process")
+    ap.add_argument("--from", dest="from_date", help="start YYYY-MM-DD (inclusive)")
+    ap.add_argument("--to",   dest="to_date",   help="end YYYY-MM-DD (inclusive)")
+    args = ap.parse_args()
+
+    dates = []
+    if args.date:
+        dates = [args.date]
+    elif args.from_date and args.to_date:
+        dates = list(iter_dates(args.from_date, args.to_date))
+    else:
+        dates = [date.today().isoformat()]
+
+    for dstr in dates:
+        process_one(dstr)
 
 if __name__ == "__main__":
     main()
