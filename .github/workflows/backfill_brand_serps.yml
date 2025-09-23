@@ -58,11 +58,17 @@ jobs:
       # Safe commit & push (same pattern you use in daily brands workflow)
       - name: Commit outputs
         shell: bash
+        env:
+          START_IN: ${{ github.event.inputs.start }}
+          END_IN:   ${{ github.event.inputs.end }}
         run: |
           set -euo pipefail
+
+          # Git identity
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
+          # Rebase-safe push flow
           git fetch origin main
           git checkout main
           git pull --rebase origin main
@@ -73,11 +79,14 @@ jobs:
             exit 0
           fi
 
-          LABEL_END="${{ github.event.inputs.end || '' }}"
-          DATE_LABEL="${LABEL_END:-$(date -u +%F)}"
+          # Build commit message labels (use safe defaults)
+          START_DATE="${START_IN:-manual}"
+          DATE_LABEL="${END_IN:-$(date -u +%F)}"
+
           git commit -m "brand SERPs: backfill ${START_DATE}..${DATE_LABEL}"
           if ! git push origin HEAD:main; then
             echo "Push rejected; rebasing once…"
             git pull --rebase origin main
             git push origin HEAD:main
           fi
+
