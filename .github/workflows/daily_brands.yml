@@ -71,16 +71,15 @@ jobs:
 
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
-          # Ensure we're on main and up-to-date
+          # Rebase onto latest main even with local changes from earlier steps
           git fetch origin main
           git checkout main
-          git pull --rebase origin main
+          git pull --rebase --autostash origin main
 
-          # Stage any generated/updated files
+          # Stage & commit any generated/updated files
           git add -A
-
-          # Nothing changed? Exit cleanly.
           if git diff --cached --quiet; then
             echo "No data changes to commit."
             exit 0
@@ -89,9 +88,9 @@ jobs:
           DATE_TO_USE="${RUN_DATE:-$(date -u +%F)}"
           git commit -m "brand pipeline: update data (${DATE_TO_USE})"
 
-          # Push; if rejected (race), rebase once and try again
+          # Push; if remote moved meanwhile, rebase once and retry
           if ! git push origin HEAD:main; then
-            echo "Push rejected; pulling latest and retrying once..."
-            git pull --rebase origin main
+            echo "Push rejected; rebasing once…"
+            git pull --rebase --autostash origin main
             git push origin HEAD:main
           fi
