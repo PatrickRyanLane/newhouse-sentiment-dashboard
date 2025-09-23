@@ -575,16 +575,19 @@ function renderCharts(){
     options:{...commonOpts}
   });
 
-  // SERP line
+  // ---- SERP LINE ----
   const sh = document.getElementById('serpChart').getContext('2d');
   if (serpChart) serpChart.destroy();
   serpChart = new Chart(sh, {
-    type:'line',
-    data:{ labels:d, datasets:[
-      {label:'Negative SERP %', data:sN, tension:.2, borderWidth:2, fill:false},
-      {label:'Control %',      data:sC, tension:.2, borderWidth:2, fill:false}
-    ]},
-    options:{...commonOpts}
+    type: 'line',
+    data: {
+      labels: d,
+      datasets: [
+        { label: 'Negative SERP %', data: sN, tension: .25, borderColor: '#ff8261', backgroundColor: 'rgba(255,130,97,.2)', fill: false },
+        { label: 'Control %',       data: sC, tension: .25, borderColor: '#58dbed', backgroundColor: 'rgba(88,219,237,.15)', fill: false }
+      ]
+    },
+    options: { ...commonOpts }
   });
 }
 
