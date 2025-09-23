@@ -27,11 +27,12 @@ def read_articles(dstr: str):
     if not f.exists():
         print(f"[INFO] No headline file for {dstr} at {f}; nothing to aggregate.", flush=True)
         return []
+
     rows = []
-    with f.open(newline="", encoding="utf-8") as fh:
-        r = csv.DictReader(f)
-        for row in r:
-            # expected new columns: company,title,url,source,date,sentiment
+    # ✅ Open the file and pass the handle to DictReader
+    with f.open("r", newline="", encoding="utf-8") as fh:
+        reader = csv.DictReader(fh)
+        for row in reader:
             rows.append({
                 "company": (row.get("company") or "").strip(),
                 "sentiment": (row.get("sentiment") or "").strip().lower(),
