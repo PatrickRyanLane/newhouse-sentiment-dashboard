@@ -1,0 +1,994 @@
+date,company,url,sentiment,controlled
+2025-09-24,Walmart,,neutral,false
+2025-09-24,Procter & Gamble,,neutral,false
+2025-09-24,Lowe's,,neutral,false
+2025-09-24,Energy Transfer,,neutral,false
+2025-09-24,Apple,,neutral,false
+2025-09-24,Albertsons,,neutral,false
+2025-09-24,RTX,,neutral,false
+2025-09-24,Sysco,,neutral,false
+2025-09-24,Progressive Insurance,,neutral,false
+2025-09-24,American Express,,neutral,false
+2025-09-24,CVS Health,,neutral,false
+2025-09-24,Lockheed Martin,,neutral,false
+2025-09-24,MetLife,,neutral,false
+2025-09-24,HCA Healthcare,,neutral,false
+2025-09-24,Prudential Financial,,neutral,false
+2025-09-24,UnitedHealth,,neutral,false
+2025-09-24,Boeing,,neutral,false
+2025-09-24,Caterpillar,,neutral,false
+2025-09-24,Merck,,neutral,false
+2025-09-24,Pfizer,,neutral,false
+2025-09-24,Allstate,,neutral,false
+2025-09-24,IBM,,neutral,false
+2025-09-24,New York Life Insurance,,neutral,false
+2025-09-24,Delta Air Lines,,neutral,false
+2025-09-24,Publix Super Markets,,neutral,false
+2025-09-24,Nationwide Insurance,,neutral,false
+2025-09-24,Amazon,,neutral,false
+2025-09-24,United Airlines,,neutral,false
+2025-09-24,TD Synnex,,neutral,false
+2025-09-24,TJX,,neutral,false
+2025-09-24,Berkshire Hathaway,,neutral,false
+2025-09-24,ConocoPhillips,,neutral,false
+2025-09-24,AbbVie,,neutral,false
+2025-09-24,Enterprise Products Partners,,neutral,false
+2025-09-24,Performance Food,,neutral,false
+2025-09-24,American Airlines,,neutral,false
+2025-09-24,Alphabet,,neutral,false
+2025-09-24,Charter Communications,,neutral,false
+2025-09-24,Capital One,,neutral,false
+2025-09-24,Costco,,neutral,false
+2025-09-24,Bank of America,,neutral,false
+2025-09-24,McKesson,,neutral,false
+2025-09-24,Cigna,,neutral,false
+2025-09-24,Microsoft,,neutral,false
+2025-09-24,Cencora,,neutral,false
+2025-09-24,Nvidia,,neutral,false
+2025-09-24,Walgreens Boots Alliance,,neutral,false
+2025-09-24,Marathon Petroleum,,neutral,false
+2025-09-24,JPMorgan Chase,,neutral,false
+2025-09-24,Dell Technologies,,neutral,false
+2025-09-24,Kroger,,neutral,false
+2025-09-24,Chevron,,neutral,false
+2025-09-24,Phillips 66,,neutral,false
+2025-09-24,Johnson & Johnson,,neutral,false
+2025-09-24,Morgan Stanley,,neutral,false
+2025-09-24,General Motors,,neutral,false
+2025-09-24,Home Depot,,neutral,false
+2025-09-24,Exxon Mobil,,neutral,false
+2025-09-24,Citigroup,,neutral,false
+2025-09-24,Tesla,,neutral,false
+2025-09-24,Target,,neutral,false
+2025-09-24,Humana,,neutral,false
+2025-09-24,Valero Energy,,neutral,false
+2025-09-24,Archer Daniels Midland,,neutral,false
+2025-09-24,FedEx,,neutral,false
+2025-09-24,Meta Platforms,,neutral,false
+2025-09-24,Intel,,neutral,false
+2025-09-24,PepsiCo,,neutral,false
+2025-09-24,Verizon,,neutral,false
+2025-09-24,State Farm Insurance,,neutral,false
+2025-09-24,HP,,neutral,false
+2025-09-24,Goldman Sachs,,neutral,false
+2025-09-24,AT&T,,neutral,false
+2025-09-24,Freddie Mac,,neutral,false
+2025-09-24,Comcast,,neutral,false
+2025-09-24,Oracle,,neutral,false
+2025-09-24,Wells Fargo,,neutral,false
+2025-09-24,UPS,,neutral,false
+2025-09-24,Cardinal Health,,neutral,false
+2025-09-24,Ford Motor,,neutral,false
+2025-09-24,Walt Disney,,neutral,false
+2025-09-24,Cisco Systems,,neutral,false
+2025-09-24,Tyson Foods,,neutral,false
+2025-09-24,Elevance Health,,neutral,false
+2025-09-24,Ingram Micro,,neutral,false
+2025-09-24,Fannie Mae,,neutral,false
+2025-09-24,Centene,,neutral,false
+2025-09-24,Uber,,neutral,false
+2025-09-24,Mass Mutual,,neutral,false
+2025-09-24,USAA,,neutral,false
+2025-09-24,Bristol-Myers Squibb,,neutral,false
+2025-09-24,Deere,,neutral,false
+2025-09-24,StoneX Group,,neutral,false
+2025-09-24,General Dynamics,,neutral,false
+2025-09-24,Liberty Mutual Insurance,,neutral,false
+2025-09-24,Lithia Motors,,neutral,false
+2025-09-24,Cummins,,neutral,false
+2025-09-24,GE Vernova,,neutral,false
+2025-09-24,Northrop Grumman,,neutral,false
+2025-09-24,Thermo Fisher Scientific,,neutral,false
+2025-09-24,TIAA,,neutral,false
+2025-09-24,Warner Bros Discovery,,neutral,false
+2025-09-24,Dollar General,,neutral,false
+2025-09-24,World Kinect,,neutral,false
+2025-09-24,Nike,,neutral,false
+2025-09-24,Lennar,,neutral,false
+2025-09-24,Molina Healthcare,,neutral,false
+2025-09-24,Bank of New York Mellon,,neutral,false
+2025-09-24,Eli Lilly,,neutral,false
+2025-09-24,Broadcom,,neutral,false
+2025-09-24,Abbott Laboratories,,neutral,false
+2025-09-24,US Bancorp,,neutral,false
+2025-09-24,PNC Financial Services,,neutral,false
+2025-09-24,Philip Morris International,,neutral,false
+2025-09-24,Amgen,,neutral,false
+2025-09-24,The Coca-Cola Company,,neutral,false
+2025-09-24,Travelers Insurance,,neutral,false
+2025-09-24,Best Buy,,neutral,false
+2025-09-24,Northwestern Mutual,,neutral,false
+2025-09-24,Netflix,,neutral,false
+2025-09-24,Mondelez,,neutral,false
+2025-09-24,US Foods,,neutral,false
+2025-09-24,NRG Energy,,neutral,false
+2025-09-24,Salesforce,,neutral,false
+2025-09-24,Nucor,,neutral,false
+2025-09-24,Paccar,,neutral,false
+2025-09-24,CHS,,neutral,false
+2025-09-24,Plains GP,,neutral,false
+2025-09-24,Dollar Tree,,neutral,false
+2025-09-24,CarMax,,neutral,false
+2025-09-24,KKR & Co,,neutral,false
+2025-09-24,Paramount Global,,neutral,false
+2025-09-24,Applied Materials,,neutral,false
+2025-09-24,Jabil,,neutral,false
+2025-09-24,Mastercard,,neutral,false
+2025-09-24,Qualcomm,,neutral,false
+2025-09-24,DR Horton,,neutral,false
+2025-09-24,Charles Schwab,,neutral,false
+2025-09-24,Ferguson Enterprises,,neutral,false
+2025-09-24,Gilead Sciences,,neutral,false
+2025-09-24,HF Sinclair,,neutral,false
+2025-09-24,Arrow Electronics,,neutral,false
+2025-09-24,GuideWell Mutual,,neutral,false
+2025-09-24,Penske Automotive,,neutral,false
+2025-09-24,United Natural Foods,,neutral,false
+2025-09-24,Visa,,neutral,false
+2025-09-24,PBF Energy,,neutral,false
+2025-09-24,Southern Company,,neutral,false
+2025-09-24,Coupang,,neutral,false
+2025-09-24,Micron Technology,,neutral,false
+2025-09-24,PayPal,,neutral,false
+2025-09-24,Honeywell,,neutral,false
+2025-09-24,Occidental Petroleum,,neutral,false
+2025-09-24,Starbucks,,neutral,false
+2025-09-24,Apollo Global Management,,neutral,false
+2025-09-24,AutoNation,,neutral,false
+2025-09-24,Baker Hughes,,neutral,false
+2025-09-24,Kraft Heinz,,neutral,false
+2025-09-24,Discover Financial,,neutral,false
+2025-09-24,Marsh & McLennan,,neutral,false
+2025-09-24,Truist Financial,,neutral,false
+2025-09-24,CBRE Group,,neutral,false
+2025-09-24,Synchrony Financial,,neutral,false
+2025-09-24,Halliburton,,neutral,false
+2025-09-24,Freeport-McMoRan,,neutral,false
+2025-09-24,McDonalds,,neutral,false
+2025-09-24,Advanced Micro Devices,,neutral,false
+2025-09-24,Duke Energy,,neutral,false
+2025-09-24,Sherwin-Williams,,neutral,false
+2025-09-24,EOG Resources,,neutral,false
+2025-09-24,Lear Corporation,,neutral,false
+2025-09-24,Marriott International,,neutral,false
+2025-09-24,Hewlett Packard Enterprise,,neutral,false
+2025-09-24,Southwest Airlines,,neutral,false
+2025-09-24,Booking Holdings,,neutral,false
+2025-09-24,State Street,,neutral,false
+2025-09-24,Danaher,,neutral,false
+2025-09-24,Macys,,neutral,false
+2025-09-24,3M,,neutral,false
+2025-09-24,Quanta Services,,neutral,false
+2025-09-24,Reinsurance Group of America,,neutral,false
+2025-09-24,Oneok,,neutral,false
+2025-09-24,Carrier Global,,neutral,false
+2025-09-24,L3Harris Technologies,,neutral,false
+2025-09-24,Stryker,,neutral,false
+2025-09-24,Exelon,,neutral,false
+2025-09-24,Ross Stores,,neutral,false
+2025-09-24,NextEra Energy,,neutral,false
+2025-09-24,Avnet,,neutral,false
+2025-09-24,American Family Insurance,,neutral,false
+2025-09-24,PG&E,,neutral,false
+2025-09-24,BlackRock,,neutral,false
+2025-09-24,Jones Lang LaSalle,,neutral,false
+2025-09-24,Altria,,neutral,false
+2025-09-24,BJ's Wholesale Club,,neutral,false
+2025-09-24,Genuine Parts,,neutral,false
+2025-09-24,CDW,,neutral,false
+2025-09-24,Colgate-Palmolive,,neutral,false
+2025-09-24,WESCO International,,neutral,false
+2025-09-24,Constellation Energy,,neutral,false
+2025-09-24,Fiserv,,neutral,false
+2025-09-24,Kimberly-Clark,,neutral,false
+2025-09-24,Becton Dickinson,,neutral,false
+2025-09-24,General Mills,,neutral,false
+2025-09-24,Cognizant Technology Solutions,,neutral,false
+2025-09-24,Adobe,,neutral,false
+2025-09-24,Live Nation Entertainment,,neutral,false
+2025-09-24,The Hartford,,neutral,false
+2025-09-24,GE HealthCare Technologies,,neutral,false
+2025-09-24,AIG,,neutral,false
+2025-09-24,Union Pacific,,neutral,false
+2025-09-24,Tenet Healthcare,,neutral,false
+2025-09-24,Group 1 Automotive,,neutral,false
+2025-09-24,Parker-Hannifin,,neutral,false
+2025-09-24,Aflac,,neutral,false
+2025-09-24,AutoZone,,neutral,false
+2025-09-24,Goodyear Tire & Rubber,,neutral,false
+2025-09-24,Corebridge Financial,,neutral,false
+2025-09-24,CH Robinson Worldwide,,neutral,false
+2025-09-24,International Paper,,neutral,false
+2025-09-24,Aramark,,neutral,false
+2025-09-24,Automatic Data Processing,,neutral,false
+2025-09-24,Loews,,neutral,false
+2025-09-24,Steel Dynamics,,neutral,false
+2025-09-24,Fluor,,neutral,false
+2025-09-24,Murphy USA,,neutral,false
+2025-09-24,Newmont,,neutral,false
+2025-09-24,MGM Resorts International,,neutral,false
+2025-09-24,Emerson Electric,,neutral,false
+2025-09-24,Leidos,,neutral,false
+2025-09-24,Edward Jones,,neutral,false
+2025-09-24,Asbury Automotive Group,,neutral,false
+2025-09-24,Intuit,,neutral,false
+2025-09-24,Peter Kiewit Sons',,neutral,false
+2025-09-24,Ameriprise Financial,,neutral,false
+2025-09-24,American Electric Power,,neutral,false
+2025-09-24,PPG Industries,,neutral,false
+2025-09-24,Targa Resources,,neutral,false
+2025-09-24,Ally Financial,,neutral,false
+2025-09-24,PulteGroup,,neutral,false
+2025-09-24,Builders FirstSource,,neutral,false
+2025-09-24,PrIncipal Financial,,neutral,false
+2025-09-24,Markel Group,,neutral,false
+2025-09-24,O'Reilly Automotive,,neutral,false
+2025-09-24,Jacobs Solutions,,neutral,false
+2025-09-24,Cleveland-Cliffs,,neutral,false
+2025-09-24,Northern Trust,,neutral,false
+2025-09-24,Global Partners,,neutral,false
+2025-09-24,ManpowerGroup,,neutral,false
+2025-09-24,Whirlpool,,neutral,false
+2025-09-24,Corteva,,neutral,false
+2025-09-24,Ecolab,,neutral,false
+2025-09-24,WW Grainger,,neutral,false
+2025-09-24,Land O'Lakes,,neutral,false
+2025-09-24,Illinois Tool Works,,neutral,false
+2025-09-24,Devon Energy,,neutral,false
+2025-09-24,Guardian Life insurance,,neutral,false
+2025-09-24,Republic Services,,neutral,false
+2025-09-24,Kohl's,,neutral,false
+2025-09-24,Edison International,,neutral,false
+2025-09-24,Dominion Energy,,neutral,false
+2025-09-24,EchoStar,,neutral,false
+2025-09-24,Boston Scientific,,neutral,false
+2025-09-24,Universal Health Services,,neutral,false
+2025-09-24,LIncoln National,,neutral,false
+2025-09-24,Vistra,,neutral,false
+2025-09-24,Omnicom Group,,neutral,false
+2025-09-24,Pacific Life,,neutral,false
+2025-09-24,AECOM,,neutral,false
+2025-09-24,Cheniere Energy,,neutral,false
+2025-09-24,Auto-Owners Insurance,,neutral,false
+2025-09-24,Estée Lauder,,neutral,false
+2025-09-24,Kyndryl,,neutral,false
+2025-09-24,Nordstrom,,neutral,false
+2025-09-24,Farmers Insurance Exchange,,neutral,false
+2025-09-24,Baxter International,,neutral,false
+2025-09-24,Texas Instruments,,neutral,false
+2025-09-24,First Citizens BancShares,,neutral,false
+2025-09-24,United States Steel,,neutral,false
+2025-09-24,Amphenol,,neutral,false
+2025-09-24,United Rentals,,neutral,false
+2025-09-24,Kenvue,,neutral,false
+2025-09-24,Regeneron Pharmaceuticals,,neutral,false
+2025-09-24,BorgWarner,,neutral,false
+2025-09-24,Fidelity National Financial,,neutral,false
+2025-09-24,Stanley Black & Decker,,neutral,false
+2025-09-24,Corning,,neutral,false
+2025-09-24,Blackstone,,neutral,false
+2025-09-24,Mutual of Omaha,,neutral,false
+2025-09-24,Caseys General Stores,,neutral,false
+2025-09-24,Reliance Inc,,neutral,false
+2025-09-24,IQVIA,,neutral,false
+2025-09-24,Expedia,,neutral,false
+2025-09-24,CSX,,neutral,false
+2025-09-24,Dicks Sporting Goods,,neutral,false
+2025-09-24,Consolidated Edison,,neutral,false
+2025-09-24,Carvana,,neutral,false
+2025-09-24,Textron,,neutral,false
+2025-09-24,Lumen Technologies,,neutral,false
+2025-09-24,LKQ,,neutral,false
+2025-09-24,Lam Research,,neutral,false
+2025-09-24,S&P Global,,neutral,false
+2025-09-24,DaVita,,neutral,false
+2025-09-24,DXC Technology,,neutral,false
+2025-09-24,Western Digital,,neutral,false
+2025-09-24,M&T Bank,,neutral,false
+2025-09-24,Xcel Energy,,neutral,false
+2025-09-24,Western & Southern Financial,,neutral,false
+2025-09-24,Erie Insurance,,neutral,false
+2025-09-24,Raymond James Financial,,neutral,false
+2025-09-24,WR Berkley,,neutral,false
+2025-09-24,Unum Group,,neutral,false
+2025-09-24,Community Health Systems,,neutral,false
+2025-09-24,Ryder System,,neutral,false
+2025-09-24,Kinder Morgan,,neutral,false
+2025-09-24,Labcorp Holdings,,neutral,false
+2025-09-24,DTE Energy,,neutral,false
+2025-09-24,Fifth Third Bancorp,,neutral,false
+2025-09-24,Citizens Financial Group,,neutral,false
+2025-09-24,FirstEnergy,,neutral,false
+2025-09-24,Henry Schein,,neutral,false
+2025-09-24,Otis Worldwide,,neutral,false
+2025-09-24,EMCOR Group,,neutral,false
+2025-09-24,Delek US,,neutral,false
+2025-09-24,Sonic Automotive,,neutral,false
+2025-09-24,Kellanova,,neutral,false
+2025-09-24,DuPont,,neutral,false
+2025-09-24,LPL Financial,,neutral,false
+2025-09-24,Berry Global,,neutral,false
+2025-09-24,Equitable Holdings,,neutral,false
+2025-09-24,Viatris,,neutral,false
+2025-09-24,MasTec,,neutral,false
+2025-09-24,AES,,neutral,false
+2025-09-24,Keurig Dr Pepper,,neutral,false
+2025-09-24,Tractor Supply,,neutral,false
+2025-09-24,Sempra,,neutral,false
+2025-09-24,Air Products & Chemicals,,neutral,false
+2025-09-24,Conagra Brands,,neutral,false
+2025-09-24,Avis Budget,,neutral,false
+2025-09-24,Huntington Bancshares,,neutral,false
+2025-09-24,Ball Corporation,,neutral,false
+2025-09-24,International Flavors & Fragrances,,neutral,false
+2025-09-24,Intercontinental Exchange,,neutral,false
+2025-09-24,BrightSpring Health Services,,neutral,false
+2025-09-24,Eversource Energy,,neutral,false
+2025-09-24,Hormel Foods,,neutral,false
+2025-09-24,Wayfair,,neutral,false
+2025-09-24,Darden Restaurants,,neutral,false
+2025-09-24,Huntington Ingalls Industries,,neutral,false
+2025-09-24,Assurant,,neutral,false
+2025-09-24,Alcoa Corporation,,neutral,false
+2025-09-24,CIncinnati Financial,,neutral,false
+2025-09-24,Norfolk Southern,,neutral,false
+2025-09-24,JB Hunt Transport Services,,neutral,false
+2025-09-24,Las Vegas Sands,,neutral,false
+2025-09-24,Hershey,,neutral,false
+2025-09-24,Graybar Electric,,neutral,false
+2025-09-24,Caesars Entertainment,,neutral,false
+2025-09-24,Ulta Beauty,,neutral,false
+2025-09-24,American Tower,,neutral,false
+2025-09-24,Yum China,,neutral,false
+2025-09-24,Arthur J Gallagher,,neutral,false
+2025-09-24,Owens & Minor,,neutral,false
+2025-09-24,Molson Coors Beverage,,neutral,false
+2025-09-24,Owens Corning,,neutral,false
+2025-09-24,AGCO,,neutral,false
+2025-09-24,Hilton Worldwide,,neutral,false
+2025-09-24,ServiceNow,,neutral,false
+2025-09-24,Thrivent Financial for Lutherans,,neutral,false
+2025-09-24,NVR Inc,,neutral,false
+2025-09-24,Motorola Solutions,,neutral,false
+2025-09-24,Vertex Pharmaceuticals,,neutral,false
+2025-09-24,The Andersons Inc,,neutral,false
+2025-09-24,Airbnb,,neutral,false
+2025-09-24,Mosaic,,neutral,false
+2025-09-24,Mohawk Industries,,neutral,false
+2025-09-24,GXO Logistics,,neutral,false
+2025-09-24,Toll Brothers,,neutral,false
+2025-09-24,DoorDash,,neutral,false
+2025-09-24,Chipotle Mexican Grill,,neutral,false
+2025-09-24,Alaska Air,,neutral,false
+2025-09-24,Advance Auto Parts,,neutral,false
+2025-09-24,Burlington Stores,,neutral,false
+2025-09-24,Diamondback Energy,,neutral,false
+2025-09-24,THOR Industries,,neutral,false
+2025-09-24,Fidelity National Information Services,,neutral,false
+2025-09-24,Jefferies Financial,,neutral,false
+2025-09-24,Entergy,,neutral,false
+2025-09-24,Oshkosh Corporation,,neutral,false
+2025-09-24,VF Corporation,,neutral,false
+2025-09-24,Constellation Brands,,neutral,false
+2025-09-24,Interpublic Group,,neutral,false
+2025-09-24,Global Payments,,neutral,false
+2025-09-24,Lululemon athletica,,neutral,false
+2025-09-24,Booz Allen Hamilton,,neutral,false
+2025-09-24,Cintas,,neutral,false
+2025-09-24,Quest Diagnostics,,neutral,false
+2025-09-24,Westinghouse Air Brake Technologies,,neutral,false
+2025-09-24,APA,,neutral,false
+2025-09-24,Autoliv,,neutral,false
+2025-09-24,Chewy,,neutral,false
+2025-09-24,Williams Companies,,neutral,false
+2025-09-24,Campbell Soup,,neutral,false
+2025-09-24,A-Mark Precious Metals,,neutral,false
+2025-09-24,KLA,,neutral,false
+2025-09-24,News Corp,,neutral,false
+2025-09-24,Celanese,,neutral,false
+2025-09-24,QVC Group,,neutral,false
+2025-09-24,Regions Financial,,neutral,false
+2025-09-24,Public Service Enterprise Group,,neutral,false
+2025-09-24,Icahn Enterprises,,neutral,false
+2025-09-24,Expeditors International of Washington,,neutral,false
+2025-09-24,QXO Building Products,,neutral,false
+2025-09-24,Zoetis,,neutral,false
+2025-09-24,Analog Devices,,neutral,false
+2025-09-24,Ebay,,neutral,false
+2025-09-24,WEC Energy,,neutral,false
+2025-09-24,Skechers USA,,neutral,false
+2025-09-24,Oscar Health,,neutral,false
+2025-09-24,Seaboard,,neutral,false
+2025-09-24,Graphic Packaging,,neutral,false
+2025-09-24,Ace Hardware,,neutral,false
+2025-09-24,Hertz,,neutral,false
+2025-09-24,NOV,,neutral,false
+2025-09-24,Avery Dennison,,neutral,false
+2025-09-24,SpartanNash,,neutral,false
+2025-09-24,Concentrix,,neutral,false
+2025-09-24,Biogen,,neutral,false
+2025-09-24,Interactive Brokers,,neutral,false
+2025-09-24,Packaging Corp of America,,neutral,false
+2025-09-24,JetBlue Airways,,neutral,false
+2025-09-24,Altice USA,,neutral,false
+2025-09-24,Equinix,,neutral,false
+2025-09-24,CenterPoint Energy,,neutral,false
+2025-09-24,PVH,,neutral,false
+2025-09-24,ABM Industries,,neutral,false
+2025-09-24,Intuitive Surgical,,neutral,false
+2025-09-24,PPL,,neutral,false
+2025-09-24,Taylor Morrison Home,,neutral,false
+2025-09-24,Rockwell Automation,,neutral,false
+2025-09-24,Voya Financial,,neutral,false
+2025-09-24,Insight Enterprises,,neutral,false
+2025-09-24,Xylem Inc,,neutral,false
+2025-09-24,Ovintiv,,neutral,false
+2025-09-24,Franklin Resources,,neutral,false
+2025-09-24,Commercial Metals,,neutral,false
+2025-09-24,Foot Locker,,neutral,false
+2025-09-24,KeyCorp,,neutral,false
+2025-09-24,Vertiv,,neutral,false
+2025-09-24,Par Pacific,,neutral,false
+2025-09-24,Welltower,,neutral,false
+2025-09-24,Workday,,neutral,false
+2025-09-24,Solventum,,neutral,false
+2025-09-24,TransDigm,,neutral,false
+2025-09-24,Dover Corporation,,neutral,false
+2025-09-24,KBR,,neutral,false
+2025-09-24,XPO,,neutral,false
+2025-09-24,Sprouts Farmers Market,,neutral,false
+2025-09-24,Eastman Chemical,,neutral,false
+2025-09-24,Palo Alto Networks,,neutral,false
+2025-09-24,American Financial Group,,neutral,false
+2025-09-24,Securian Financial,,neutral,false
+2025-09-24,ARKO,,neutral,false
+2025-09-24,Masco,,neutral,false
+2025-09-24,JM Smucker,,neutral,false
+2025-09-24,Zimmer Biomet,,neutral,false
+2025-09-24,Endeavor Group Holdings,,neutral,false
+2025-09-24,Sirius XM,,neutral,false
+2025-09-24,Sanmina,,neutral,false
+2025-09-24,Williams-Sonoma,,neutral,false
+2025-09-24,Rush Enterprises,,neutral,false
+2025-09-24,Old Republic International,,neutral,false
+2025-09-24,Post Holdings,,neutral,false
+2025-09-24,Newell Brands,,neutral,false
+2025-09-24,Prologis,,neutral,false
+2025-09-24,CACI International,,neutral,false
+2025-09-24,Fastenal,,neutral,false
+2025-09-24,Yum Brands,,neutral,false
+2025-09-24,Patterson Companies Inc,,neutral,false
+2025-09-24,Science Applications International,,neutral,false
+2025-09-24,CMS Energy,,neutral,false
+2025-09-24,Vulcan Materials,,neutral,false
+2025-09-24,Monster Beverage,,neutral,false
+2025-09-24,UGI Utilities Inc,,neutral,false
+2025-09-24,Howmet Aerospace,,neutral,false
+2025-09-24,FM Global,,neutral,false
+2025-09-24,Microchip Technology,,neutral,false
+2025-09-24,Watsco,,neutral,false
+2025-09-24,ODP Business Solutions,,neutral,false
+2025-09-24,Weyerhaeuser,,neutral,false
+2025-09-24,Rite Aid,,neutral,false
+2025-09-24,ON Semiconductor,,neutral,false
+2025-09-24,Crown Holdings,,neutral,false
+2025-09-24,Continental Resources,,neutral,false
+2025-09-24,Dana Incorporated,,neutral,false
+2025-09-24,Flagstar Financial,,neutral,false
+2025-09-24,Albemarle Corporation,,neutral,false
+2025-09-24,Liberty Media,,neutral,false
+2025-09-24,CommScope,,neutral,false
+2025-09-24,Core & Main,,neutral,false
+2025-09-24,Smurfit Westrock,,neutral,false
+2025-09-24,Electronic Arts,,neutral,false
+2025-09-24,Polaris Inc,,neutral,false
+2025-09-24,Ameren,,neutral,false
+2025-09-24,Clorox,,neutral,false
+2025-09-24,Opendoor Technologies,,neutral,false
+2025-09-24,EnLink Midstream,,neutral,false
+2025-09-24,NGL Energy Partners,,neutral,false
+2025-09-24,APi Group,,neutral,false
+2025-09-24,Avantor,,neutral,false
+2025-09-24,EQT,,neutral,false
+2025-09-24,Knight Swift Transportation,,neutral,false
+2025-09-24,Super Micro Computer,,neutral,false
+2025-09-24,UFP Industries,,neutral,false
+2025-09-24,Pioneer Natural Resources,,neutral,false
+2025-09-24,Martin Marietta Materials,,neutral,false
+2025-09-24,Olin,,neutral,false
+2025-09-24,O-I Glass,,neutral,false
+2025-09-24,Crown Castle,,neutral,false
+2025-09-24,Ingredion,,neutral,false
+2025-09-24,RPM International,,neutral,false
+2025-09-24,Moderna,,neutral,false
+2025-09-24,Expand Energy Corporation,,neutral,false
+2025-09-24,Darling Ingredients,,neutral,false
+2025-09-24,Ametek,,neutral,false
+2025-09-24,Boise Cascade,,neutral,false
+2025-09-24,Bath & Body Works,,neutral,false
+2025-09-24,Domtar,,neutral,false
+2025-09-24,Dillards,,neutral,false
+2025-09-24,Agilent Technologies,,neutral,false
+2025-09-24,Xerox,,neutral,false
+2025-09-24,Vertiv,,neutral,false
+2025-09-24,Ingersoll Rand,,neutral,false
+2025-09-24,CF Industries,,neutral,false
+2025-09-24,Sonoco Products,,neutral,false
+2025-09-24,Tapestry,,neutral,false
+2025-09-24,Select Medical Holdings,,neutral,false
+2025-09-24,Marathon Oil,,neutral,false
+2025-09-24,T Rowe Price,,neutral,false
+2025-09-24,Insperity,,neutral,false
+2025-09-24,PENN Entertainment,,neutral,false
+2025-09-24,Roper Technologies,,neutral,false
+2025-09-24,NetApp,,neutral,false
+2025-09-24,Victorias Secret,,neutral,false
+2025-09-24,Amkor Technology,,neutral,false
+2025-09-24,Edwards Lifesciences,,neutral,false
+2025-09-24,KB Home,,neutral,false
+2025-09-24,Brunswick,,neutral,false
+2025-09-24,Academy Sports and Outdoors,,neutral,false
+2025-09-24,Fortive,,neutral,false
+2025-09-24,Hyatt Hotels,,neutral,false
+2025-09-24,McCormick & Company,,neutral,false
+2025-09-24,Regal Rexnord,,neutral,false
+2025-09-24,Ralph Lauren,,neutral,false
+2025-09-24,Levi Strauss,,neutral,false
+2025-09-24,Resideo Technologies,,neutral,false
+2025-09-24,Spirit AeroSystems,,neutral,false
+2025-09-24,Silgan,,neutral,false
+2025-09-24,Old Dominion Freight Line,,neutral,false
+2025-09-24,Warner Music Group,,neutral,false
+2025-09-24,ADT,,neutral,false
+2025-09-24,Gartner,,neutral,false
+2025-09-24,Nasdaq Inc,,neutral,false
+2025-09-24,Ingles Markets,,neutral,false
+2025-09-24,Coterra Energy,,neutral,false
+2025-09-24,Organon,,neutral,false
+2025-09-24,Broadridge Financial Solutions,,neutral,false
+2025-09-24,American Axle & Manufacturing,,neutral,false
+2025-09-24,U-Haul,,neutral,false
+2025-09-24,Petco Health and Wellness,,neutral,false
+2025-09-24,Hanover Insurance Group,,neutral,false
+2025-09-24,Hanesbrands,,neutral,false
+2025-09-24,Carlisle Companies,,neutral,false
+2025-09-24,Huntsman,,neutral,false
+2025-09-24,Primoris Services,,neutral,false
+2025-09-24,Arista Networks,,neutral,false
+2025-09-24,Simon Property Group,,neutral,false
+2025-09-24,Harley-Davidson,,neutral,false
+2025-09-24,Moodys Corporation,,neutral,false
+2025-09-24,Synopsys,,neutral,false
+2025-09-24,Frontier Communications,,neutral,false
+2025-09-24,Genworth Financial,,neutral,false
+2025-09-24,Chemours,,neutral,false
+2025-09-24,Church & Dwight,,neutral,false
+2025-09-24,Meritage Homes,,neutral,false
+2025-09-24,Anywhere Real Estate Inc,,neutral,false
+2025-09-24,Autodesk,,neutral,false
+2025-09-24,Endeavor Group,,neutral,false
+2025-09-24,Under Armour,,neutral,false
+2025-09-24,Teledyne Technologies,,neutral,false
+2025-09-24,Robert Half,,neutral,false
+2025-09-24,First American Financial,,neutral,false
+2025-09-24,CME Group,,neutral,false
+2025-09-24,Camping World,,neutral,false
+2025-09-24,Wynn Resorts,,neutral,false
+2025-09-24,Coty,,neutral,false
+2025-09-24,Juniper Networks,,neutral,false
+2025-09-24,Southwest Gas Holdings,,neutral,false
+2025-09-24,Cornerstone Building Brands,,neutral,false
+2025-09-24,Pool Corporation,,neutral,false
+2025-09-24,Evergy,,neutral,false
+2025-09-24,Lamb Weston,,neutral,false
+2025-09-24,Take-Two Interactive Software,,neutral,false
+2025-09-24,SS&C Technologies,,neutral,false
+2025-09-24,Globe Life,,neutral,false
+2025-09-24,Sealed Air Corporation,,neutral,false
+2025-09-24,Penn Mutual Life Insurance,,neutral,false
+2025-09-24,Schneider National,,neutral,false
+2025-09-24,NiSource,,neutral,false
+2025-09-24,Mattel,,neutral,false
+2025-09-24,Parsons Corporation,,neutral,false
+2025-09-24,Spirit Airlines,,neutral,false
+2025-09-24,Fortinet,,neutral,false
+2025-09-24,TruStage,,neutral,false
+2025-09-24,Telephone & Data Systems,,neutral,false
+2025-09-24,Greif,,neutral,false
+2025-09-24,Marvell Technology,,neutral,false
+2025-09-24,Comfort Systems USA,,neutral,false
+2025-09-24,American Eagle Outfitters,,neutral,false
+2025-09-24,Bread Financial,,neutral,false
+2025-09-24,Hubbell,,neutral,false
+2025-09-24,Equifax,,neutral,false
+2025-09-24,Clean Harbors,,neutral,false
+2025-09-24,Keysight Technologies,,neutral,false
+2025-09-24,Terex,,neutral,false
+2025-09-24,Host Hotels & Resorts,,neutral,false
+2025-09-24,GameStop,,neutral,false
+2025-09-24,First Horizon,,neutral,false
+2025-09-24,Comerica,,neutral,false
+2025-09-24,Stifel Financial,,neutral,false
+2025-09-24,Iron Mountain,,neutral,false
+2025-09-24,Digital Realty Trust,,neutral,false
+2025-09-24,TopBuild,,neutral,false
+2025-09-24,Lennox International,,neutral,false
+2025-09-24,Ryerson Holding,,neutral,false
+2025-09-24,Urban Outfitters,,neutral,false
+2025-09-24,Paychex,,neutral,false
+2025-09-24,Landstar System,,neutral,false
+2025-09-24,Sentry Insurance Group,,neutral,false
+2025-09-24,Flowers Foods,,neutral,false
+2025-09-24,TelevisaUnivision,,neutral,false
+2025-09-24,Hasbro,,neutral,false
+2025-09-24,Coherent,,neutral,false
+2025-09-24,Peabody Energy,,neutral,false
+2025-09-24,Brinks Company,,neutral,false
+2025-09-24,OneMain,,neutral,false
+2025-09-24,Navient,,neutral,false
+2025-09-24,Nexstar Media Group,,neutral,false
+2025-09-24,GMS,,neutral,false
+2025-09-24,Weis Markets,,neutral,false
+2025-09-24,TriNet Group,,neutral,false
+2025-09-24,Tempur Sealy International,,neutral,false
+2025-09-24,MDU Resources Group,,neutral,false
+2025-09-24,Kelly Services Inc,,neutral,false
+2025-09-24,Puget Sound Energy,,neutral,false
+2025-09-24,Compass Group,,neutral,false
+2025-09-24,Marriott Vacations Worldwide,,neutral,false
+2025-09-24,Pinnacle West Capital,,neutral,false
+2025-09-24,Encompass Health,,neutral,false
+2025-09-24,Antero Resources,,neutral,false
+2025-09-24,Kemper,,neutral,false
+2025-09-24,Fortune Brands Innovations,,neutral,false
+2025-09-24,Ares Management,,neutral,false
+2025-09-24,Leggett & Platt,,neutral,false
+2025-09-24,Mercury General,,neutral,false
+2025-09-24,Maximus,,neutral,false
+2025-09-24,Skyworks Solutions,,neutral,false
+2025-09-24,Liberty Energy,,neutral,false
+2025-09-24,Agilon Health,,neutral,false
+2025-09-24,AMC Entertainment,,neutral,false
+2025-09-24,JELD-WEN Holding,,neutral,false
+2025-09-24,Timken,,neutral,false
+2025-09-24,Elanco Animal Health,,neutral,false
+2025-09-24,Worthington Enterprises,,neutral,false
+2025-09-24,Snap-on,,neutral,false
+2025-09-24,Zions Bancorp,,neutral,false
+2025-09-24,Bloomin Brands,,neutral,false
+2025-09-24,Tetra Tech,,neutral,false
+2025-09-24,Rivian Automotive,,neutral,false
+2025-09-24,Texas Roadhouse,,neutral,false
+2025-09-24,EPAM Systems,,neutral,false
+2025-09-24,Public Storage,,neutral,false
+2025-09-24,ASGN,,neutral,false
+2025-09-24,Zebra Technologies,,neutral,false
+2025-09-24,ArcBest,,neutral,false
+2025-09-24,Dominos Pizza Inc,,neutral,false
+2025-09-24,Lyft,,neutral,false
+2025-09-24,Zoom Video Communications,,neutral,false
+2025-09-24,Toro Company,,neutral,false
+2025-09-24,Ventas Inc,,neutral,false
+2025-09-24,Illumina Inc,,neutral,false
+2025-09-24,Floor & Decor,,neutral,false
+2025-09-24,FMC Corporation,,neutral,false
+2025-09-24,Snap Inc,,neutral,false
+2025-09-24,Graham Holdings Company,,neutral,false
+2025-09-24,PriceSmart,,neutral,false
+2025-09-24,Western Union,,neutral,false
+2025-09-24,Ciena,,neutral,false
+2025-09-24,SiteOne Landscape Supply,,neutral,false
+2025-09-24,Western Alliance Bancorp,,neutral,false
+2025-09-24,GoDaddy,,neutral,false
+2025-09-24,IAC,,neutral,false
+2025-09-24,Country Financial,,neutral,false
+2025-09-24,Brown & Brown,,neutral,false
+2025-09-24,Selective Insurance Group,,neutral,false
+2025-09-24,Option Care Health,,neutral,false
+2025-09-24,Flowserve,,neutral,false
+2025-09-24,Applied Industrial Technologies,,neutral,false
+2025-09-24,ResMed,,neutral,false
+2025-09-24,Abercrombie & Fitch,,neutral,false
+2025-09-24,Topgolf Callaway Brands,,neutral,false
+2025-09-24,Catalent,,neutral,false
+2025-09-24,NCR Atleos,,neutral,false
+2025-09-24,Advantage Solutions,,neutral,false
+2025-09-24,Atmos Energy,,neutral,false
+2025-09-24,Hub Group,,neutral,false
+2025-09-24,eXp World,,neutral,false
+2025-09-24,Valmont Industries,,neutral,false
+2025-09-24,Brighthouse Financial,,neutral,false
+2025-09-24,CrossAmerica Partners,,neutral,false
+2025-09-24,Calumet,,neutral,false
+2025-09-24,CNO Financial Group,,neutral,false
+2025-09-24,Hyster-Yale,,neutral,false
+2025-09-24,American Water Works,,neutral,false
+2025-09-24,Middleby,,neutral,false
+2025-09-24,Twilio,,neutral,false
+2025-09-24,Lincoln Electric,,neutral,false
+2025-09-24,ATI Inc,,neutral,false
+2025-09-24,Splunk,,neutral,false
+2025-09-24,MillerKnoll,,neutral,false
+2025-09-24,Generac,,neutral,false
+2025-09-24,Cadence,,neutral,false
+2025-09-24,Service Corp International,,neutral,false
+2025-09-24,Patterson-UTI Energy,,neutral,false
+2025-09-24,Dycom Industries,,neutral,false
+2025-09-24,Hilton Grand Vacations,,neutral,false
+2025-09-24,Brown-Forman,,neutral,false
+2025-09-24,Charles River Laboratories International,,neutral,false
+2025-09-24,Brinker International,,neutral,false
+2025-09-24,MSC Industrial Direct,,neutral,false
+2025-09-24,East West Bancorp,,neutral,false
+2025-09-24,Upbound Group,,neutral,false
+2025-09-24,Greenbrier,,neutral,false
+2025-09-24,Plexus,,neutral,false
+2025-09-24,Acuity Inc,,neutral,false
+2025-09-24,Chord Energy,,neutral,false
+2025-09-24,Grocery Outlet Holding,,neutral,false
+2025-09-24,Spectrum Brands,,neutral,false
+2025-09-24,V2X,,neutral,false
+2025-09-24,Garrett Motion Inc,,neutral,false
+2025-09-24,Realty Income,,neutral,false
+2025-09-24,Popular Inc,,neutral,false
+2025-09-24,Dentsply Sirona,,neutral,false
+2025-09-24,Hologic,,neutral,false
+2025-09-24,Visteon,,neutral,false
+2025-09-24,M/I Homes,,neutral,false
+2025-09-24,TransUnion,,neutral,false
+2025-09-24,Mettler-Toledo International,,neutral,false
+2025-09-24,NCR Voyix,,neutral,false
+2025-09-24,Alliant Energy,,neutral,false
+2025-09-24,Tutor Perini Corporation,,neutral,false
+2025-09-24,Align Technology,,neutral,false
+2025-09-24,Medical Mutual of Ohio,,neutral,false
+2025-09-24,iHeartMedia,,neutral,false
+2025-09-24,Toast Inc,,neutral,false
+2025-09-24,LCI Industries,,neutral,false
+2025-09-24,Cabot Corporation,,neutral,false
+2025-09-24,Webster Financial,,neutral,false
+2025-09-24,Rocket Companies,,neutral,false
+2025-09-24,Akamai Technologies,,neutral,false
+2025-09-24,Trimble,,neutral,false
+2025-09-24,Crocs,,neutral,false
+2025-09-24,ScanSource,,neutral,false
+2025-09-24,A O Smith,,neutral,false
+2025-09-24,Copart,,neutral,false
+2025-09-24,Diebold Nixdorf,,neutral,false
+2025-09-24,Cboe Global Markets,,neutral,false
+2025-09-24,ChampionX,,neutral,false
+2025-09-24,Boyd Gaming,,neutral,false
+2025-09-24,Dream Finders Homes,,neutral,false
+2025-09-24,NLV Financial,,neutral,false
+2025-09-24,AMN Healthcare Services,,neutral,false
+2025-09-24,RXO Inc,,neutral,false
+2025-09-24,MYR Group,,neutral,false
+2025-09-24,DexCom,,neutral,false
+2025-09-24,IDEXX Laboratories,,neutral,false
+2025-09-24,Frontier Airlines,,neutral,false
+2025-09-24,Sally Beauty,,neutral,false
+2025-09-24,Corpay,,neutral,false
+2025-09-24,Ensign Group,,neutral,false
+2025-09-24,Sylvamo,,neutral,false
+2025-09-24,VICI Properties,,neutral,false
+2025-09-24,Cooper Cos,,neutral,false
+2025-09-24,MKS Instruments,,neutral,false
+2025-09-24,Euronet Worldwide,,neutral,false
+2025-09-24,Scotts Miracle-Gro,,neutral,false
+2025-09-24,Tri Pointe Homes,,neutral,false
+2025-09-24,Century Communities,,neutral,false
+2025-09-24,EnerSys,,neutral,false
+2025-09-24,Deckers Outdoor,,neutral,false
+2025-09-24,Atlassian,,neutral,false
+2025-09-24,Patrick Industries,,neutral,false
+2025-09-24,TreeHouse Foods,,neutral,false
+2025-09-24,Entegris,,neutral,false
+2025-09-24,Roku,,neutral,false
+2025-09-24,Incyte,,neutral,false
+2025-09-24,Conduent,,neutral,false
+2025-09-24,AptarGroup,,neutral,false
+2025-09-24,Granite Construction,,neutral,false
+2025-09-24,DraftKings,,neutral,false
+2025-09-24,HB Fuller,,neutral,false
+2025-09-24,Rithm Capital,,neutral,false
+2025-09-24,Mueller Industries,,neutral,false
+2025-09-24,CNX Resources,,neutral,false
+2025-09-24,Chefs Warehouse,,neutral,false
+2025-09-24,Civitas Resources,,neutral,false
+2025-09-24,Cheesecake Factory,,neutral,false
+2025-09-24,Hawaiian Electric Industries,,neutral,false
+2025-09-24,Qorvo,,neutral,false
+2025-09-24,Winnebago Industries,,neutral,false
+2025-09-24,Cracker Barrel Old Country Store,,neutral,false
+2025-09-24,MRC Global,,neutral,false
+2025-09-24,Alight Solutions,,neutral,false
+2025-09-24,Five Below,,neutral,false
+2025-09-24,Atkore,,neutral,false
+2025-09-24,Columbia Sportswear,,neutral,false
+2025-09-24,FTI Consulting,,neutral,false
+2025-09-24,Murphy Oil,,neutral,false
+2025-09-24,AppLovin,,neutral,false
+2025-09-24,Donaldson Company,,neutral,false
+2025-09-24,Valley National Bancorp,,neutral,false
+2025-09-24,Chart Industries,,neutral,false
+2025-09-24,Match Group,,neutral,false
+2025-09-24,Vishay Intertechnology,,neutral,false
+2025-09-24,Range Resources,,neutral,false
+2025-09-24,Alpha Metallurgical Resources,,neutral,false
+2025-09-24,Synovus Financial,,neutral,false
+2025-09-24,First Solar,,neutral,false
+2025-09-24,IDEX,,neutral,false
+2025-09-24,Moog Inc,,neutral,false
+2025-09-24,Green Plains Inc,,neutral,false
+2025-09-24,Gray Television,,neutral,false
+2025-09-24,Gen Digital,,neutral,false
+2025-09-24,Boston Properties,,neutral,false
+2025-09-24,Arch Resources,,neutral,false
+2025-09-24,FirstCash,,neutral,false
+2025-09-24,Herc Rentals,,neutral,false
+2025-09-24,Central Garden & Pet,,neutral,false
+2025-09-24,G-III Apparel Group,,neutral,false
+2025-09-24,Steelcase,,neutral,false
+2025-09-24,ITT,,neutral,false
+2025-09-24,Sinclair,,neutral,false
+2025-09-24,Werner Enterprises,,neutral,false
+2025-09-24,Sun Communities,,neutral,false
+2025-09-24,Jackson Financial,,neutral,false
+2025-09-24,Permian Resources,,neutral,false
+2025-09-24,AdaptHealth,,neutral,false
+2025-09-24,Genesis Energy,,neutral,false
+2025-09-24,Cal-Maine Foods,,neutral,false
+2025-09-24,Pitney Bowes,,neutral,false
+2025-09-24,Federated Mutual Insurance,,neutral,false
+2025-09-24,Vontier,,neutral,false
+2025-09-24,Rackspace Technology,,neutral,false
+2025-09-24,BOK Financial,,neutral,false
+2025-09-24,Kirby Corporation,,neutral,false
+2025-09-24,Advanced Drainage Systems,,neutral,false
+2025-09-24,Brookdale Senior Living,,neutral,false
+2025-09-24,Hillenbrand,,neutral,false
+2025-09-24,BlueLinx,,neutral,false
+2025-09-24,Wintrust Financial,,neutral,false
+2025-09-24,Kaiser Aluminum,,neutral,false
+2025-09-24,Western Midstream Partners,,neutral,false
+2025-09-24,Teleflex,,neutral,false
+2025-09-24,Rollins Inc,,neutral,false
+2025-09-24,Matson Inc,,neutral,false
+2025-09-24,Cinemark,,neutral,false
+2025-09-24,NeueHealth,,neutral,false
+2025-09-24,Coinbase Global,,neutral,false
+2025-09-24,Carlyle Group,,neutral,false
+2025-09-24,Restoration Hardware,,neutral,false
+2025-09-24,Allison Transmission,,neutral,false
+2025-09-24,Designer Brands,,neutral,false
+2025-09-24,Bruker,,neutral,false
+2025-09-24,HEICO,,neutral,false
+2025-09-24,Avient,,neutral,false
+2025-09-24,Pinterest,,neutral,false
+2025-09-24,Instacart,,neutral,false
+2025-09-24,PACS Group,,neutral,false
+2025-09-24,Waters Corporation,,neutral,false
+2025-09-24,Vista Outdoor,,neutral,false
+2025-09-24,Sabre Corporation,,neutral,false
+2025-09-24,Trinity Industries,,neutral,false
+2025-09-24,CrowdStrike,,neutral,false
+2025-09-24,Equity Residential,,neutral,false
+2025-09-24,Carters Inc,,neutral,false
+2025-09-24,QuidelOrtho,,neutral,false
+2025-09-24,Energizer Holdings,,neutral,false
+2025-09-24,West Pharmaceutical Services,,neutral,false
+2025-09-24,TEGNA,,neutral,false
+2025-09-24,Pure Storage,,neutral,false
+2025-09-24,Radius Recycling,,neutral,false
+2025-09-24,F5,,neutral,false
+2025-09-24,Woodward Inc,,neutral,false
+2025-09-24,Acadia Healthcare,,neutral,false
+2025-09-24,Light & Wonder,,neutral,false
+2025-09-24,PennyMac Financial Services,,neutral,false
+2025-09-24,SkyWest,,neutral,false
+2025-09-24,BrightView Holdings,,neutral,false
+2025-09-24,Caleres Inc,,neutral,false
+2025-09-24,Helmerich & Payne,,neutral,false
+2025-09-24,Portland General Electric,,neutral,false
+2025-09-24,Saia Inc,,neutral,false
+2025-09-24,PC Connection Inc,,neutral,false
+2025-09-24,Snowflake Inc,,neutral,false
+2025-09-24,Benchmark Electronics,,neutral,false
+2025-09-24,Revvity,,neutral,false
+2025-09-24,Primerica,,neutral,false
+2025-09-24,Vail Resorts,,neutral,false
+2025-09-24,Sallie Mae,,neutral,false
+2025-09-24,First National of Nebraska,,neutral,false
+2025-09-24,Knife River Corporation,,neutral,false
+2025-09-24,Peloton Interactive,,neutral,false
+2025-09-24,Viasat,,neutral,false
+2025-09-24,Installed Building Products,,neutral,false
+2025-09-24,AvalonBay Communities,,neutral,false
+2025-09-24,DocuSign,,neutral,false
+2025-09-24,Amica Mutual Insurance,,neutral,false
+2025-09-24,ESAB,,neutral,false
+2025-09-24,Cooper-Standard,,neutral,false
+2025-09-24,Griffon Corporation,,neutral,false
+2025-09-24,Curtiss-Wright,,neutral,false
+2025-09-24,Hawaiian Airlines Inc,,neutral,false
+2025-09-24,MasterBrand,,neutral,false
+2025-09-24,Korn Ferry,,neutral,false
+2025-09-24,Verisk Analytics,,neutral,false
+2025-09-24,ModivCare,,neutral,false
+2025-09-24,SBA Communications,,neutral,false
+2025-09-24,Park Hotels & Resorts,,neutral,false
+2025-09-24,Alexandria Real Estate Equities,,neutral,false
+2025-09-24,Matador Resources,,neutral,false
+2025-09-24,Titan Machinery,,neutral,false
+2025-09-24,Columbia Banking System,,neutral,false
+2025-09-24,Adams Resources & Energy,,neutral,false
+2025-09-24,California Resources,,neutral,false
+2025-09-24,Guess Inc,,neutral,false
+2025-09-24,Summit Materials,,neutral,false
+2025-09-24,Etsy,,neutral,false
+2025-09-24,Stericycle,,neutral,false
+2025-09-24,Surgery Partners,,neutral,false
+2025-09-24,UL Solutions,,neutral,false
+2025-09-24,NewMarket Corporation,,neutral,false
+2025-09-24,Teradyne,,neutral,false
+2025-09-24,AMC Networks,,neutral,false
+2025-09-24,Spire Inc,,neutral,false
+2025-09-24,Nordson,,neutral,false
+2025-09-24,OGE Energy,,neutral,false
+2025-09-24,Valvoline Inc,,neutral,false
+2025-09-24,Air Lease,,neutral,false
+2025-09-24,REV Group,,neutral,false
+2025-09-24,Gannett,,neutral,false
+2025-09-24,Cullen Frost Bankers,,neutral,false
+2025-09-24,Americold Realty Trust,,neutral,false
+2025-09-24,Roblox,,neutral,false
+2025-09-24,Kontoor Brands,,neutral,false
+2025-09-24,Extra Space Storage,,neutral,false
+2025-09-24,Bio-Rad Laboratories,,neutral,false
+2025-09-24,Hovnanian Enterprises,,neutral,false
+2025-09-24,ProFrac Holding,,neutral,false
+2025-09-24,WEX,,neutral,false
+2025-09-24,Shift4 Payments,,neutral,false
+2025-09-24,Skyline Champion,,neutral,false
+2025-09-24,Universal Corporation,,neutral,false
+2025-09-24,Old National Bancorp,,neutral,false
+2025-09-24,Teladoc Health,,neutral,false
+2025-09-24,Playtika Holding,,neutral,false
+2025-09-24,Louisiana-Pacific Corporation,,neutral,false
+2025-09-24,Dropbox,,neutral,false
+2025-09-24,Carpenter Technology,,neutral,false
+2025-09-24,Alliance Resource Partners,,neutral,false
+2025-09-24,MSCI,,neutral,false
+2025-09-24,Clear Channel Outdoor Hldgs,,neutral,false
+2025-09-24,Stagwell,,neutral,false
+2025-09-24,Exact Sciences,,neutral,false
+2025-09-24,Consol Energy,,neutral,false
+2025-09-24,Allegiant Travel Company,,neutral,false
+2025-09-24,Envista,,neutral,false
+2025-09-24,Ingram Micro,,neutral,false
+2025-09-24,Talen Energy,,neutral,false
+2025-09-24,BWX Technologies,,neutral,false
+2025-09-24,Belden,,neutral,false
+2025-09-24,Wabash National,,neutral,false
+2025-09-24,AGNC Investment,,neutral,false
+2025-09-24,Mativ,,neutral,false
