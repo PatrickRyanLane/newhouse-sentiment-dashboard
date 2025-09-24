@@ -41,33 +41,17 @@ jobs:
         run: |
           set -euo pipefail
           DATE="${DATE_IN:-$(date -u +%F)}"
-          echo "Processing brand SERPs for ${DATE}"
-          python scripts/process_serps_brands.py --date "${DATE}"
-
-          echo "Requested DATE: ${DATE}"
-          if [ ! -f "$ROW" ]; then
-            echo "No rows for ${DATE} at ${ROW} — trying yesterday (UTC)…"
-            YDAY="$(date -u -d "${DATE} -1 day" +%F)"
-            ROW="data/serp_rows/${YDAY}-brand-serps-rows.csv"
-            if [ -f "$ROW" ]; then
-              DATE="$YDAY"
-              echo "Using yesterday: ${DATE}"
-            else
-              echo "Still not found. Trying latest available rows file…"
-              latest=$(ls -1 data/serp_rows/*-brand-serps-rows.csv 2>/dev/null | sort | tail -n 1 || true)
-              if [ -n "${latest}" ]; then
-                DATE="$(basename "${latest}" | sed 's/-brand-serps-rows\.csv//')"
-                ROW="$latest"
-                echo "Using latest available date: ${DATE}"
-              else
-                echo "No brand SERP rows exist yet; skipping without error."
-                exit 0
-              fi
-            fi
+          ROW="data/serp_rows/${DATE}-brand-serps-rows.csv"
+      
+          # Optional idempotence – skip if we already wrote this date
+          if [ -s "$ROW" ]; then
+            echo "Rows already exist for ${DATE}; skipping."
+            exit 0
           fi
-
+      
           echo "Processing brand SERPs for ${DATE}"
           python scripts/process_serps_brands.py --date "${DATE}"
+
 
       # (leave your commit/push step as-is, or use the autostash version we added earlier)
 
