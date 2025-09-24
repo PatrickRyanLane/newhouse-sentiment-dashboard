@@ -427,51 +427,27 @@ async function buildRowsForDate(d){
 }
 
 /********************** Rendering **********************/
- async function renderAll() {
-  try {
-    const dateEl = document.getElementById('dateSelect');
-    const filterEl = document.getElementById('filterInput');
-
-    const d = dateEl ? dateEl.value : undefined;
-    const filter = (filterEl && filterEl.value ? filterEl.value : '')
-      .trim()
-      .toLowerCase();
-
-    // Build rows for the selected date, then apply the text filter
-    const allRows = await buildRowsForDate(d);
-    const rows = (allRows || []).filter(r =>
-      !filter || ((r.company || '').toLowerCase().includes(filter))
-    );
-
-    filteredRows = rows;
-    currentPage = 1;
-
-    // Auto-select the single visible brand
-    if (rows.length === 1) {
-      selectedCompany = rows[0].company;
-    } else if (selectedCompany && !rows.some(r => r.company === selectedCompany)) {
-      // Clear selection if the selected brand is no longer visible
-      selectedCompany = null;
-    }
-
-    renderTable();
-    renderCharts();
-  } catch (err) {
-    console.error('renderAll() failed:', err);
-    // Show a friendly error on the page so it’s not blank
-    const host = document.getElementById('tableContainer') || document.body;
-    const msg = (err && err.message) ? err.message : String(err);
-    host.innerHTML = `<div style="padding:12px;border-radius:8px;background:#3b1f1f;color:#ffd2d2">
-      Error loading dashboard: ${msg}
-    </div>`;
-  }
+async function renderAll(){
+  const d = document.getElementById('dateSelect').value;
+  const filter = document.getElementById('filterInput').value.trim().toLowerCase();
+  const rows = (await buildRowsForDate(d)).filter(r => !filter || r.company.toLowerCase().includes(filter));
+  filteredRows = rows;
+  currentPage = 1;
+  renderTable();
+  renderCharts();
 }
 
-// If you call renderAll on load, make sure it runs after the DOM is ready:
-document.addEventListener('DOMContentLoaded', () => {
-  try { renderAll(); } catch (e) { console.error(e); }
-});
+function renderTable(){
+  const tbody = document.getElementById('tbody');
+  let rows = [...filteredRows];
 
+  if (currentSort.key){
+    rows.sort((a,b)=>{
+      const ka=a[currentSort.key], kb=b[currentSort.key];
+      if (typeof ka==='string') return currentSort.dir*ka.localeCompare(kb);
+      return currentSort.dir*((ka??-1)-(kb??-1));
+    });
+  }
 
   const start = (currentPage-1)*PAGE_SIZE;
   const pageRows = rows.slice(start, start+PAGE_SIZE);
