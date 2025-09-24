@@ -47,16 +47,26 @@ jobs:
           ENDIN: ${{ github.event.inputs.end }}
         run: |
           set -euo pipefail
-          START_DATE="${START}"
-          END_DATE="${ENDIN:-$(date -u +%F)}"
+          python - <<'PY'
+          import os, sys, subprocess
+          import datetime as dt
 
-          echo "Backfilling BRAND SERPs from ${START_DATE} to ${END_DATE}"
-          d="${START_DATE}"
-          while [ "$(date -u -d "$d" +%s)" -le "$(date -u -d "$END_DATE" +%s)" ]; do
-            echo "→ $d"
-            python scripts/process_serps_brands.py --date "$d"
-            d="$(date -u -d "$d +1 day" +%F)"
-          done
+          start = os.environ.get("START")
+          end   = os.environ.get("ENDIN") or dt.date.today().isoformat()
+      
+          d = dt.date.fromisoformat(start)
+          end_d = dt.date.fromisoformat(end)
+
+          while d <= end_d:
+            s = d.isoformat()
+            print(f"Processing {s}…")
+            rc = subprocess.call([sys.executable, "scripts/process_serps_brands.py", "--date", s])
+            if rc != 0:
+              # Treat as a SKIP so the workflow keeps going when S3 is missing
+              print(f"[skip] {s} (no raw SERP on S3 or non-fatal error)")
+            d += dt.timedelta(days=1)
+          PY
+
 
       - name: Commit outputs
         shell: bash
