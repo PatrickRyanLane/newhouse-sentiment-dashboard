@@ -609,8 +609,17 @@ async function renderAll(){
   filteredRows = rows;
   currentPage = 1;
 
-  renderTable();
-  renderCharts(); // charts keep using existing aggregated sources
+  // Auto-select when the filter leaves exactly one CEO
+  if (rows.length === 1) {
+    selectedCeo = rows[0].ceo;
+  } else if (selectedCeo && !rows.some(r => r.ceo === selectedCeo)) {
+    // If the previously selected CEO is no longer visible, clear it
+    selectedCeo = null;
+}
+
+renderTable();
+renderCharts(); // charts keep using existing aggregated sources
+
 }
 
 function renderTable(){
