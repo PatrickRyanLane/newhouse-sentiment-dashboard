@@ -56,10 +56,51 @@ jobs:
           set -euo pipefail
           python scripts/news_sentiment_brands.py
 
-      - name: Process brand SERPs
+      - name: Process brand SERPs (with fallback, idempotency, force option)
+        shell: bash
+        env:
+          # Optional manual input; leave blank to default to today (UTC)
+          DATE_IN: ${{ github.event.inputs.date || '' }}
+          # Set to 1 if you want to reprocess even if outputs already exist
+          FORCE_REPROCESS: ${{ github.event.inputs.force_reprocess || 0 }}
         run: |
           set -euo pipefail
-          python scripts/process_serps_brands.py
+      
+          # Prefer input date; else today (UTC)
+          DATE="${DATE_IN:-$(date -u +%F)}"
+          ROW="data/serp_rows/${DATE}-brand-serps-rows.csv"
+      
+          echo "Requested DATE: ${DATE}"
+          if [ ! -f "$ROW" ]; then
+            echo "No rows for ${DATE} at ${ROW} — trying yesterday (UTC)…"
+            YDAY="$(date -u -d "${DATE} -1 day" +%F)"
+            ROW="data/serp_rows/${YDAY}-brand-serps-rows.csv"
+            if [ -f "$ROW" ]; then
+              DATE="$YDAY"
+              echo "Using yesterday: ${DATE}"
+            else
+              echo "Still not found. Trying latest available rows file…"
+              latest=$(ls -1 data/serp_rows/*-brand-serps-rows.csv 2>/dev/null | sort | tail -n 1 || true)
+              if [ -n "${latest}" ]; then
+                DATE="$(basename "${latest}" | sed 's/-brand-serps-rows\.csv//')"
+                ROW="$latest"
+                echo "Using latest available date: ${DATE}"
+              else
+                echo "No brand SERP rows exist yet; skipping without error."
+                exit 0
+              fi
+            fi
+          fi
+      
+          # Idempotency guard: skip if already processed unless FORCE_REPROCESS=1
+          PROCESSED="data/processed_serps/${DATE}-brand-serps-processed.csv"
+          if [ -f "$PROCESSED" ] && [ "$FORCE_REPROCESS" != "1" ]; then
+            echo "Already processed for ${DATE} (${PROCESSED} exists). Skipping."
+            exit 0
+          fi
+      
+          echo "Processing brand SERPs for ${DATE}"
+          python scripts/process_serps_brands.py --date "${DATE}"
 
       # --- Safe commit & push: rebase onto latest main, retry once if needed ---
       - name: Commit outputs
