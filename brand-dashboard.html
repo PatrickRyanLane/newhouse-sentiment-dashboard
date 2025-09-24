@@ -308,12 +308,20 @@ async function loadSerpDaily(){
 }
 
 /********************** Risk **********************/
+// NEW risk logic:
+// If neg% > 0  => "High"
+// If neg% = 0 and control < 40% => "Medium"
+// Else => "Low"
 function computeRisk(negPct, ctrlPct){
-  const n = (negPct ?? 0)*100, c = (ctrlPct ?? 0)*100;
-  if (negPct==null || ctrlPct==null) return 'N/A';
-  if (n >= 40 || c < 25) return 'High';
-  if (n >= 25 || c < 50) return 'Medium';
-  return 'Low';
+  // Require negPct; if missing we can't score
+  if (negPct == null || isNaN(negPct)) return 'N/A';
+
+  // Any measurable negative SERP -> High
+  if (negPct > 0) return 'High';
+
+  // negPct is exactly zero; need control to decide
+  if (ctrlPct == null || isNaN(ctrlPct)) return 'N/A';
+  return ctrlPct < 0.40 ? 'Medium' : 'Low';
 }
 
 /********************** Per-date sources **********************/
