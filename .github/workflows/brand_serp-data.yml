@@ -25,7 +25,14 @@ jobs:
           pip install pandas requests vaderSentiment
 
       - name: Process brand SERPs
-        run: python scripts/process_serps_brands.py
+        shell: bash
+        env:
+          DATE_IN: ${{ github.event.inputs.date }}
+        run: |
+          set -euo pipefail
+          DATE="${DATE_IN:-$(date -u +%F)}"
+          echo "Processing brand SERPs for ${DATE}"
+          python scripts/process_serps_brands.py --date "${DATE}"
 
       - name: Commit & push
         run: |
