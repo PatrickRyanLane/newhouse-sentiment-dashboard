@@ -34,7 +34,6 @@ jobs:
             python -m pip install pandas requests vaderSentiment
           fi
 
-      # ⬇️ UPDATED: robust date selection + file existence guard
       - name: Process brand SERPs
         shell: bash
         env:
@@ -42,7 +41,8 @@ jobs:
         run: |
           set -euo pipefail
           DATE="${DATE_IN:-$(date -u +%F)}"
-          ROW="data/serp_rows/${DATE}-brand-serps-rows.csv"
+          echo "Processing brand SERPs for ${DATE}"
+          python scripts/process_serps_brands.py --date "${DATE}"
 
           echo "Requested DATE: ${DATE}"
           if [ ! -f "$ROW" ]; then
