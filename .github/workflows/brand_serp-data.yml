@@ -2,7 +2,7 @@ name: Brand SERP Processing
 
 on:
   schedule:
-    - cron: "10 9 * * *"   # keep your existing schedule (edit if you prefer)
+    - cron: "0 16 * * *"   # 12:00 PM EDT
   workflow_dispatch:
     inputs:
       date:
