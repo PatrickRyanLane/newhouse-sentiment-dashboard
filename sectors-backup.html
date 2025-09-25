@@ -461,49 +461,7 @@ function renderTable(){
 }
 
 /* Build date series for charts (index average or chosen sector) */
-function getDateSeries(){
-  let allowed = null; // null => all brands (index)
-  if (selectedSector && brandsBySector.has(selectedSector)){
-    allowed = brandsBySector.get(selectedSector); // Set of brands in sector
-  }
-
-  const byDate = new Map();       // date -> {pos,neu,neg}
-  allCountsRows.forEach(r=>{
-    const b = canonBrand(r.company || r.brand || '');
-    if (allowed && !allowed.has(b)) return;
-    const key = r.date;
-    if (!byDate.has(key)) byDate.set(key,{pos:0,neu:0,neg:0});
-    const b = byDate.get(key);
-    b.pos += +r.pos||0; b.neu += +r.neu||0; b.neg += +r.neg||0;
-  });
-
-  const serpByDate = new Map();   // date -> {total,neg,ctrl}
-  serpsDaily.forEach(r=>{
-    const b = canonBrand(r.company || r.brand || '');
-    if (allowed && !allowed.has(b)) return;
-    const key = r.date;
-    if (!serpByDate.has(key)) serpByDate.set(key,{total:0,neg:0,ctrl:0});
-    const s = serpByDate.get(key);
-    s.total += +r.total||0; s.neg += +r.neg_serp||0; s.ctrl += +r.ctrl||0;
-  });
-
-  const dates = [...new Set([...byDate.keys(), ...serpByDate.keys()])].filter(isISODate).sort();
-
-  const newsPos=[], newsNeu=[], newsNeg=[], serpNegPct=[], serpCtrlPct=[];
-  dates.forEach(d=>{
-    const n = byDate.get(d)||{pos:0,neu:0,neg:0};
-    const t = n.pos+n.neu+n.neg || 0;
-    newsPos.push(t? n.pos/t*100 : 0);
-    newsNeu.push(t? n.neu/t*100 : 0);
-    newsNeg.push(t? n.neg/t*100 : 0);
-
-    const s = serpByDate.get(d)||{total:0,neg:0,ctrl:0};
-    serpNegPct.push(s.total? s.neg/s.total*100 : 0);
-    serpCtrlPct.push(s.total? s.ctrl/s.total*100 : 0);
-  });
-
-  return {dates, newsPos, newsNeu, newsNeg, serpNegPct, serpCtrlPct};
-}
+function getDateSeries()
 
 function renderCharts(){
   const {dates, newsPos, newsNeu, newsNeg, serpNegPct, serpCtrlPct} = getDateSeries();
