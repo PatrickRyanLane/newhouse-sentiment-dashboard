@@ -8,7 +8,10 @@ on:
       - "Daily CEO News Sentiment"
     types:
       - completed
-
+  repository_dispatch:
+    types: [send_alerts]
+  workflow_dispatch: {}
+  
 permissions:
   contents: read
 
