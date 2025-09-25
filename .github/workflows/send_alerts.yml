@@ -1,19 +1,13 @@
 name: Send Sentiment Alerts (pipeline, API, or manual)
 
 on:
-  # 1) After specific pipeline workflows complete (only if they succeed)
   workflow_run:
     workflows:
-      # TODO: Replace with your actual workflow names, exactly as shown in the Actions tab
       - "Daily Data Pipeline"
       - "Sentiment ETL"
     types: [completed]
-
-  # 2) API trigger: repository_dispatch
   repository_dispatch:
     types: [send_alerts]
-
-  # 3) Manual trigger from the Actions tab (always allowed)
   workflow_dispatch:
     inputs:
       alert_send_mode:
@@ -21,9 +15,7 @@ on:
         required: false
         default: "same_morning"
         type: choice
-        options:
-          - same_morning
-          - next_morning
+        options: [same_morning, next_morning]
       negative_threshold:
         description: "Alert threshold (0.0 - 1.0). Leave blank to use default/vars."
         required: false
@@ -46,12 +38,8 @@ concurrency:
 
 jobs:
   send-alerts:
-    # Allow:
-    #  - Any manual (workflow_dispatch) or API (repository_dispatch) run
-    #  - workflow_run only when the upstream workflow succeeded
     if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -72,12 +60,12 @@ jobs:
 
       - name: Run alert sender
         env:
+          PYTHONPATH: ${{ github.workspace }}
           MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
           MAILGUN_DOMAIN: ${{ secrets.MAILGUN_DOMAIN }}
           MAILGUN_FROM: ${{ secrets.MAILGUN_FROM }}
           MAILGUN_TO: ${{ secrets.MAILGUN_TO }}
           MAILGUN_REGION: ${{ secrets.MAILGUN_REGION }}
-          # Prefer manual inputs when provided; else fall back to Actions vars; else app defaults.
           ALERT_SEND_MODE: ${{ github.event.inputs.alert_send_mode || vars.ALERT_SEND_MODE }}
           NEGATIVE_THRESHOLD: ${{ github.event.inputs.negative_threshold || vars.NEGATIVE_THRESHOLD }}
           ALERT_COOLDOWN_DAYS: ${{ github.event.inputs.cooldown_days || vars.ALERT_COOLDOWN_DAYS }}
