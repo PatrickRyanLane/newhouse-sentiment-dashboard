@@ -185,6 +185,9 @@ const isISODate = s => /^\d{4}-\d{2}-\d{2}$/.test(String(s||'').trim());
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const fmtPct = v => (v==null) ? 'N/A' : (Math.round(v*100) + '%');
 
+// Canonicalize brand/company names so maps line up across CSVs
+const canonBrand = s => String(s || '').toLowerCase().replace(/\s+/g,' ').trim();
+
 function clampDateStart(total){
   if (total <= DATE_WINDOW_SIZE) return 0;
   const maxStart = total - DATE_WINDOW_SIZE;
@@ -268,23 +271,34 @@ async function loadSerpDaily(){
   }catch(e){ serpsDaily = []; }
 }
 
-async function loadRosterSectors(){
-  const rows = await fetchCsvAny(ROSTER_CANDIDATES);
+let sectorFromBrand = new Map();   // canon(brand) -> sector (display)
+let brandsBySector = new Map();    // sector (display) -> Set(canon(brand))
+
+async function loadRosterSectors() {
+  const rows = await fetchCsvAny([
+    'data/serps/roster.csv',
+    'data/roster.csv'
+  ]);
+
   sectorFromBrand.clear();
   brandsBySector.clear();
-  rows.forEach(r=>{
-    const brand  = String(r.company || r.Company || r.brand || r.Brand || '').trim();
-    const sector = String(r.sector  || r.Sector  || '').trim();
-    if (!brand || !sector) return;
-    sectorFromBrand.set(brand, sector);
+
+  rows.forEach(r => {
+    const brandRaw  = r.company || r.Company || r.brand || r.Brand || '';
+    const sector    = r.sector  || r.Sector  || '';
+    const brandKey  = canonBrand(brandRaw);
+    if (!brandKey || !sector) return;
+
+    sectorFromBrand.set(brandKey, sector);
     if (!brandsBySector.has(sector)) brandsBySector.set(sector, new Set());
-    brandsBySector.get(sector).add(brand);
+    brandsBySector.get(sector).add(brandKey);
   });
 }
 
+
 /* ================= Init ================= */
 async function init(){
-  await Promise.all([loadRosterSectors(), loadCounts(), loadSerpDaily()]);
+  await Promise.all([loadRosterSectors(), loadRoster(), loadCounts(), loadSerpDaily(), loadBoards()]);
 
   // Date options from available series
   const dateSet = new Set([
@@ -324,48 +338,63 @@ async function init(){
 }
 
 /* ================= Sector rows ================= */
-async function buildSectorRowsForDate(d){
-  // brand -> news counts for that date
-  const newsByBrand = new Map();
-  allCountsRows.forEach(r=>{
-    if (r.date!==d) return;
-    const b = r.company;
-    const cur = newsByBrand.get(b) || {pos:0,neu:0,neg:0};
-    cur.pos += +r.pos||0; cur.neu += +r.neu||0; cur.neg += +r.neg||0;
+async function buildSectorRowsForDate(d) {
+  // Build brand -> news counts for this date (pos/neu/neg)
+  const newsByBrand = new Map();  // canon(brand) -> {pos, neu, neg}
+  for (const r of allCountsRows) {
+    if (r.date !== d) continue;
+    const b = canonBrand(r.company || r.brand || r.ceo || '');
+    if (!b) continue;
+    const cur = newsByBrand.get(b) || {pos:0, neu:0, neg:0};
+    cur.pos += +r.pos || 0;
+    cur.neu += +r.neu || 0;
+    cur.neg += +r.neg || 0;
     newsByBrand.set(b, cur);
-  });
+  }
 
-  // brand -> serp counts for that date
-  const serpByBrand = new Map();
-  serpsDaily.forEach(r=>{
-    if (r.date!==d) return;
-    const b = r.company;
-    const cur = serpByBrand.get(b) || {total:0,neg:0,ctrl:0};
-    cur.total += +r.total||0; cur.neg += +r.neg_serp||0; cur.ctrl += +r.ctrl||0;
+  // Build brand -> SERP counts for this date (total/neg/ctrl)
+  const serpByBrand = new Map();  // canon(brand) -> {total, neg, ctrl}
+  for (const r of serpsDaily) {
+    if (r.date !== d) continue;
+    const b = canonBrand(r.company || r.brand || '');
+    if (!b) continue;
+    const cur = serpByBrand.get(b) || {total:0, neg:0, ctrl:0};
+    cur.total += +r.total   || 0;
+    cur.neg   += +r.neg_serp|| 0;
+    cur.ctrl  += +r.ctrl    || 0;
     serpByBrand.set(b, cur);
-  });
+  }
 
-  // sector aggregates
-  const rows = [];
+  // Aggregate to sectors (weighted by underlying counts)
+  const sectors = [];
   brandsBySector.forEach((brandSet, sectorName) => {
     let nPos=0, nNeu=0, nNeg=0, sTot=0, sNeg=0, sCtrl=0;
-    brandSet.forEach(b=>{
-      const n = newsByBrand.get(b); if (n){ nPos+=n.pos; nNeu+=n.neu; nNeg+=n.neg; }
-      const s = serpByBrand.get(b); if (s){ sTot+=s.total; sNeg+=s.neg; sCtrl+=s.ctrl; }
-    });
-    const newsTot = nPos+nNeu+nNeg;
-    const neg_news = newsTot ? (nNeg/newsTot) : null;
-    const neg_serp = sTot ? (sNeg/sTot) : null;
-    const ctrl_pct = sTot ? (sCtrl/sTot) : null;
 
-    if (newsTot || sTot){
-      rows.push({ sector: sectorName, neg_news, neg_serp, ctrl_pct });
+    brandSet.forEach(bKey => {
+      const n = newsByBrand.get(bKey);
+      if (n) { nPos += n.pos; nNeu += n.neu; nNeg += n.neg; }
+      const s = serpByBrand.get(bKey);
+      if (s) { sTot += s.total; sNeg += s.neg; sCtrl += s.ctrl; }
+    });
+
+    const newsTot = nPos + nNeu + nNeg;
+
+    // Percentages: if we have any counts, compute weighted %; else leave null
+    const neg_news = newsTot ? (nNeg / newsTot) : null;
+    const neg_serp = sTot    ? (sNeg / sTot)    : null;
+    const ctrl_pct = sTot    ? (sCtrl / sTot)   : null;
+
+    // Only include sectors that have some data for the day (news OR SERP)
+    if (newsTot || sTot) {
+      sectors.push({ sector: sectorName, neg_news, neg_serp, ctrl_pct });
     }
   });
 
-  rows.sort((a,b)=> a.sector.localeCompare(b.sector));
-  return rows;
+  // Consistent order
+  sectors.sort((a,b) => a.sector.localeCompare(b.sector));
+  return sectors;
 }
+
 
 /* ================= Renderers ================= */
 async function renderAll(){
