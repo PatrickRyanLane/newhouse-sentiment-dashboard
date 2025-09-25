@@ -1,8 +1,6 @@
 name: Brand SERP Processing
 # this is old and can probably be deleted. daily_brands.yml now handles this process
 on:
-  schedule:
-    - cron: "0 16 * * *"   # 12:00 PM EDT
   workflow_dispatch:
     inputs:
       date:
