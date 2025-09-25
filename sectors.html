@@ -1,567 +1,595 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Fortune 1000 Sectors Dashboard</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Fortune 1000 — Sectors Dashboard</title>
 
-  <!-- Tailwind -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Papa Parse -->
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<!-- Chart.js + PapaParse -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
-  <style>
-    .th-sort { cursor:pointer; user-select:none }
-    .th-sort .arrow { opacity:.35; margin-left:.25rem }
-    .th-sort.active .arrow { opacity:1 }
-    #trendWrap { height: 22rem; }
-  </style>
+<style>
+:root {
+  /* Palette (matches brand dashboard) */
+  --bg: #044152;
+  --card: #092e37;
+  --muted: #a2ebf3;
+  --text: #ebf2f2;
+  --accent: #58dbed;
+  --black: #1f2121;
+
+  --pill-neg: #ff8261;
+  --pill-neu: #cfdbdd;
+  --pill-pos: #82c618;
+
+  --stroke: #0e2230;
+  --chip: #12343e;
+  --chipBorder: #174550;
+}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.4 Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+.wrap{max-width:1200px;margin:0 auto;padding:20px}
+h1{font-size:28px;margin:6px 0 18px}
+
+/* Controls */
+.controls{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:0 0 16px}
+.card{background:var(--card);border:1px solid var(--stroke);border-radius:12px;padding:12px 12px}
+select,input[type="text"]{background:#1f2121;border:1px solid #23314d;border-radius:10px;color:var(--text);padding:8px 10px}
+button{background:#1f2121;border:1px solid #2a3b5e;color:var(--text);border-radius:10px;padding:8px 12px;cursor:pointer}
+button:hover{filter:brightness(1.08)}
+
+/* Charts grid */
+.grid{
+  display:grid;
+  grid-template-rows: minmax(360px, 42vh) minmax(360px, 42vh);
+  gap:18px;
+  margin:16px 0;
+}
+.chart-card{ background:var(--card); border:1px solid var(--stroke);
+  border-radius:12px; padding:12px 12px 48px; position:relative }
+.chart-card canvas{ width:100% !important; height:100% !important; display:block }
+
+/* Range + pager (top right of each chart card) */
+.chart-actions{ position:absolute; top:10px; right:12px; display:flex; align-items:center; gap:10px; }
+.chart-actions .dates-range{ font-size:12px; }
+.chart-actions .dates-pager{ display:flex; gap:6px; }
+.chart-actions .dates-pager button{
+  background:#1f2121; border:1px solid #2a3b5e; color:var(--text);
+  border-radius:8px; padding:4px 8px; cursor:pointer;
+}
+.chart-actions .dates-pager button[disabled]{ opacity:.45; cursor:not-allowed; }
+
+/* Table */
+.table-card{background:var(--card);border:1px solid var(--stroke);border-radius:12px;padding:10px}
+.table-hint{margin:0 0 8px;color:var(--muted)}
+table{width:100%;border-collapse:separate;border-spacing:0 6px}
+thead th{font-size:12px;color:var(--muted);text-align:left;padding:6px 8px}
+tbody td{padding:10px 8px;background:#1f2121;border-top:1px solid #0f1831;border-bottom:1px solid #0f1831}
+tbody tr td:first-child{border-left:1px solid #0f1831;border-radius:10px 0 0 10px}
+tbody tr td:last-child{border-right:1px solid #0f1831;border-radius:0 10px 10px 0}
+.right{text-align:right}
+.center{text-align:center}
+
+/* Mobile horizontal scroll */
+.table-scroll{ overflow-x:auto; -webkit-overflow-scrolling:touch }
+.table-scroll::-webkit-scrollbar{height:8px}
+.table-scroll::-webkit-scrollbar-track{background:rgba(255,255,255,.05);border-radius:8px}
+.table-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:8px}
+@media (max-width: 960px){
+  .table-card{ padding:8px }
+  thead th, tbody td{ padding:8px 10px }
+  table{ min-width: 820px }
+}
+/* Pagination */
+.pagination{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:8px}
+
+/* Utilities */
+.muted{color:var(--muted)}
+</style>
 </head>
-<body class="bg-slate-50 text-slate-900">
-  <div class="max-w-7xl mx-auto p-6">
-    <header class="mb-6">
-      <h1 class="text-3xl font-bold">Fortune 1000 Sectors Dashboard</h1>
-      <p class="text-sm text-slate-600">
-      Fortune 1000 sectors Google newsfeed sentiment, SERP control, and SERP sentiment.
-      </p>
-    </header>
 
-    <!-- Controls -->
-    <section class="mb-4 grid gap-3 md:grid-cols-3">
-      <div>
-        <label class="block text-sm font-medium mb-1">Pick date</label>
-        <select id="dateSelect" class="w-full border rounded-lg p-2 bg-white"></select>
-      </div>
-      <div>
-        <label class="block text-sm font-medium mb-1">Filter sectors</label>
-        <input id="filterInput" type="text" placeholder="Type to filter…" class="w-full border rounded-lg p-2"/>
-      </div>
-      <div class="flex items-end gap-2">
-        <button id="refreshBtn" class="px-3 py-2 rounded-lg bg-slate-900 text-white">Refresh</button>
-      </div>
-    </section>
+<body>
+<div class="wrap">
+  <h1>Fortune 1000 — Sectors Dashboard</h1>
 
-    <!-- Trend -->
-    <section class="mb-6 p-4 border rounded-xl bg-white">
-      <div class="flex items-center justify-between mb-2">
-        <h2 class="text-lg font-semibold">Sentiment trend</h2>
-        <div class="flex items-center gap-2 text-xs text-slate-500" id="trendInfo"></div>
-      </div>
-      <div id="trendWrap"><canvas id="trendChart"></canvas></div>
-    </section>
-
-    <!-- Table -->
-    <section class="overflow-x-auto">
-      <table class="min-w-full text-sm bg-white rounded-xl overflow-hidden border">
-        <thead class="bg-slate-100">
-          <tr>
-            <th class="p-3 text-left"><input type="checkbox" id="selectAll"></th>
-            <th class="p-3 text-left">Sector</th>
-            <th class="p-3 text-left th-sort active" data-sort="negNewsPct">
-              Negative News (%) <span class="arrow">▾</span>
-            </th>
-            <th class="p-3 text-left th-sort" data-sort="negSerpPct">
-              Negative SERP (%) <span class="arrow">▾</span>
-            </th>
-            <th class="p-3 text-left th-sort" data-sort="controlPct">
-              SERP Control (%) <span class="arrow">▾</span>
-            </th>
-            <th class="p-3 text-left th-sort" data-sort="riskRank">
-              Risk <span class="arrow">▾</span>
-            </th>
-            <th class="p-3 text-left">SERP</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-      </table>
-
-      <div class="mt-3 flex items-center gap-2">
-        <button id="prevBtn" class="px-3 py-1.5 border rounded disabled:opacity-40">Prev</button>
-        <button id="nextBtn" class="px-3 py-1.5 border rounded disabled:opacity-40">Next</button>
-        <span id="pageInfo" class="text-xs text-slate-600 ml-2"></span>
-      </div>
-
-      <p id="status" class="text-xs text-slate-500 mt-2"></p>
-    </section>
+  <div class="controls card">
+    <div>
+      <div class="muted" style="font-size:12px;margin:0 0 4px">Date</div>
+      <select id="dateSelect"></select>
+    </div>
+    <div style="flex:1 1 420px">
+      <div class="muted" style="font-size:12px;margin:0 0 4px">Filter (Sector)</div>
+      <input id="filterInput" type="text" placeholder="Type to filter…" />
+    </div>
+    <button id="refreshBtn">Refresh Data</button>
+    <button id="clearBtn">Clear Selection</button>
   </div>
 
-  <!-- Modal -->
-  <div id="modalBackdrop" class="fixed inset-0 z-50 hidden">
-    <div class="absolute inset-0 bg-black/40"></div>
-    <div class="absolute inset-0 flex items-center justify-center p-4">
-      <div class="w-full max-w-3xl bg-white rounded-2xl shadow-xl overflow-hidden">
-        <div class="flex items-center justify-between p-4 border-b">
-          <div>
-            <h3 id="modalTitle" class="text-xl font-bold">SERP</h3>
-            <p id="modalSubtitle" class="text-sm text-slate-600"></p>
-          </div>
-          <button id="modalClose" class="px-3 py-1.5 rounded-lg border">Close</button>
-        </div>
-        <div id="modalBody" class="max-h-[70vh] overflow-y-auto p-4">
-          <p class="text-sm text-slate-500">Loading…</p>
+  <div class="grid">
+    <div class="chart-card">
+      <h3>News sentiment (percent of articles)</h3>
+      <div class="chart-actions">
+        <span class="dates-range muted" aria-live="polite"></span>
+        <div class="dates-pager">
+          <button class="dates-prev" title="Older window">←</button>
+          <button class="dates-next" title="Newer window">→</button>
         </div>
       </div>
+      <canvas id="newsChart"></canvas>
+    </div>
+    <div class="chart-card">
+      <h3>SERP (Negative % • Control %)</h3>
+      <div class="chart-actions">
+        <span class="dates-range muted" aria-live="polite"></span>
+        <div class="dates-pager">
+          <button class="dates-prev" title="Older window">←</button>
+          <button class="dates-next" title="Newer window">→</button>
+        </div>
+      </div>
+      <canvas id="serpChart"></canvas>
     </div>
   </div>
 
+  <div class="table-card">
+    <div class="table-hint">Select a sector to view its trend lines. When the filter shows one sector, it will auto-select.</div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:56px">Select</th>
+            <th data-key="sector">Sector</th>
+            <th data-key="neg_news" class="right">Negative News % ▲▼</th>
+            <th data-key="neg_serp" class="right">Negative SERP % ▲▼</th>
+            <th data-key="ctrl_pct" class="right">SERP Control % ▲▼</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="pagination">
+      <button id="prevBtn">Prev</button>
+      <div>Page <span id="pageNo">1</span> / <span id="pageTotal">1</span></div>
+      <button id="nextBtn">Next</button>
+    </div>
+  </div>
+</div>
+
 <script>
-(() => {
-  // ------- Config -------
-  const GH_USER = 'jonas-sickler';
-  const GH_REPO = 'news-sentiment-dashboard';
-  const GH_PAGES_BASE = `https://${GH_USER}.github.io/${GH_REPO}/`;
+/* ================= Config & Runtime ================= */
+const COUNTS_CANDIDATES = [ 'data/processed_articles/daily_counts.csv' ];                  // brand-level article counts by day
+const SERPS_DAILY_CSV   = 'data/serps/brand_serps_daily.csv';           // brand-level SERP aggregates by day
+const ROSTER_CANDIDATES = [ 'data/roster.csv' ]; // brand->sector mapping
 
-  const CSV_ROSTER = 'data/roster.csv';
-  const CSV_COUNTS = 'data/daily_counts.csv';
-  const CSV_SERPS  = 'data/serps/brand_serps.csv';
+let allCountsRows = [];            // [{date, company, pos, neu, neg}, ...]
+let serpsDaily = [];               // [{date, company, total, neg_serp, ctrl}, ...]
+let sectorFromBrand = new Map();   // brand -> sector
+let brandsBySector = new Map();    // sector -> Set(brands)
 
-  const PAGE_SIZE = 25;
+let filteredRows = [];             // table rows (sectors) after filter
+let selectedSector = null;         // current sector selection
+let currentSort = { key:null, dir:1 };
+let currentPage = 1;
+const PAGE_SIZE = 25;
 
-  // ------- Elements -------
-  const dateSelect  = document.getElementById('dateSelect');
-  const filterInput = document.getElementById('filterInput');
-  const refreshBtn  = document.getElementById('refreshBtn');
-  const selectAll   = document.getElementById('selectAll');
+let newsChart, serpChart;
 
-  const tableBody   = document.getElementById('tableBody');
-  const statusEl    = document.getElementById('status');
+/* Chart windowing (synced across both charts) */
+const DATE_WINDOW_SIZE = 30;
+let dateWindowStart = null;
 
-  const prevBtn     = document.getElementById('prevBtn');
-  const nextBtn     = document.getElementById('nextBtn');
-  const pageInfo    = document.getElementById('pageInfo');
+/* ================= Utilities ================= */
+const isISODate = s => /^\d{4}-\d{2}-\d{2}$/.test(String(s||'').trim());
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const fmtPct = v => (v==null) ? 'N/A' : (Math.round(v*100) + '%');
 
-  const trendCanvas = document.getElementById('trendChart');
-  const trendInfo   = document.getElementById('trendInfo');
+// Canonicalize brand/company names so maps line up across CSVs
+const canonBrand = s => String(s || '').toLowerCase().replace(/\s+/g,' ').trim();
 
-  // Modal
-  const modalBackdrop = document.getElementById('modalBackdrop');
-  const modalTitle    = document.getElementById('modalTitle');
-  const modalSubtitle = document.getElementById('modalSubtitle');
-  const modalBody     = document.getElementById('modalBody');
-  const modalClose    = document.getElementById('modalClose');
+function clampDateStart(total){
+  if (total <= DATE_WINDOW_SIZE) return 0;
+  const maxStart = total - DATE_WINDOW_SIZE;
+  const start = (dateWindowStart ?? maxStart);
+  return Math.min(Math.max(0, start), maxStart);
+}
+function sliceWindow(arr, start, size){ return arr.slice(start, start + size); }
+function updateDateRangeUI(allDates){
+  const start = clampDateStart(allDates.length);
+  const end = Math.min(allDates.length, start + DATE_WINDOW_SIZE);
+  const label = allDates.length ? `${allDates[start]} — ${allDates[end - 1]}` : '';
+  document.querySelectorAll('.dates-range').forEach(el => el.textContent = label);
 
-  // ------- State -------
-  let roster = [];
-  let counts = [];
-  let serps  = [];
+  const atStart = start === 0;
+  const atEnd   = (start + DATE_WINDOW_SIZE) >= allDates.length;
+  document.querySelectorAll('.dates-prev').forEach(b => b.disabled = atStart);
+  document.querySelectorAll('.dates-next').forEach(b => b.disabled = atEnd);
+}
+function hookDatePager(allDates){
+  const goPrev = () => {
+    const total = allDates.length;
+    if (total <= DATE_WINDOW_SIZE) return;
+    dateWindowStart = clampDateStart(total) - DATE_WINDOW_SIZE;
+    if (dateWindowStart < 0) dateWindowStart = 0;
+    renderCharts();
+  };
+  const goNext = () => {
+    const total = allDates.length;
+    if (total <= DATE_WINDOW_SIZE) return;
+    const maxStart = total - DATE_WINDOW_SIZE;
+    dateWindowStart = Math.min(maxStart, clampDateStart(total) + DATE_WINDOW_SIZE);
+    renderCharts();
+  };
+  document.querySelectorAll('.dates-prev').forEach(b => b.onclick = goPrev);
+  document.querySelectorAll('.dates-next').forEach(b => b.onclick = goNext);
+}
 
-  let companyToSector = new Map();
-
-  let allDates = [];
-  let currentDate = null;
-
-  let sectorsRows = [];
-  let filteredRows = [];
-  let selected = new Set();
-  let page = 0;
-
-  let sortKey = 'negNewsPct';
-  let sortDir = 'desc';
-
-  let chart = null;
-
-  // ------- Utils -------
-  const normKey = k => String(k||'').replace(/^\ufeff/, '').trim().toLowerCase();
-  function normHeaders(row){ const out={}; for(const k in row){ out[normKey(k)] = row[k]; } return out; }
-
-  function fetchCSV(path){
-    const rel = new URL(path, location.href).href + (path.includes('?')?'&':'?') + '_=' + Date.now();
-    const abs = GH_PAGES_BASE + path + (path.includes('?')?'&':'?') + '_=' + Date.now();
-    const candidates = [rel];
-    if(!rel.startsWith(GH_PAGES_BASE)) candidates.push(abs);
-    return (async ()=>{
-      for(const url of candidates){
-        try{
-          const r = await fetch(url, {cache:'no-store', mode:'cors'});
-          if(!r.ok) continue;
-          const text = await r.text();
-          const parsed = Papa.parse(text, {header:true, dynamicTyping:true});
-          return (parsed.data||[]).map(normHeaders);
-        }catch(_e){}
-      }
-      return [];
-    })();
-  }
-
-  function asYMD(x){
-    const s = String(x||'').trim();
-    if(!s) return '';
-    const m = s.match(/^(\d{4}-\d{2}-\d{2})/);
-    if(m) return m[1];
-    const t = Date.parse(s);
-    if(!isNaN(t)){ return new Date(t).toISOString().slice(0,10); }
-    return s.split(/[ T]/)[0];
-  }
-
-  function normName(s){
-    return String(s||'')
-      .toLowerCase()
-      .replace(/&/g,'and')
-      .replace(/\b(the|inc|inc\.|corp|co|co\.|company|ltd|ltd\.|plc|holdings?|group|corporation|services|stores|systems|international|intl|us|usa)\b/g,'')
-      .replace(/[^a-z0-9]+/g,'')
-      .trim();
-  }
-
-  const pct = (n,d,dp=0)=> d? +( (n/d)*100 ).toFixed(dp) : 0;
-  const fmtPct = v => `${Math.round(v)}%`;
-
-  function riskLabel(negSerpPct, controlPct){
-    if(negSerpPct > 0) return {label:'High', rank:3};
-    if(negSerpPct === 0 && controlPct < 70) return {label:'Medium', rank:2};
-    return {label:'Low', rank:1};
-  }
-  function badge(txt, color){
-    const cls = {
-      green:'bg-emerald-100 text-emerald-700',
-      gray: 'bg-slate-100 text-slate-700',
-      red:  'bg-rose-100 text-rose-700',
-      blue: 'bg-sky-100 text-sky-700',
-      amber:'bg-amber-100 text-amber-800'
-    }[color] || 'bg-slate-100 text-slate-700';
-    return `<span class="inline-block px-2 py-0.5 rounded-full text-[11px] ${cls}">${txt}</span>`;
-  }
-  const esc = s => String(s||'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
-
-  // ------- Load -------
-  async function loadAll(){
-    statusEl.textContent = 'Loading CSVs…';
-    [roster, counts, serps] = await Promise.all([
-      fetchCSV(CSV_ROSTER),
-      fetchCSV(CSV_COUNTS),
-      fetchCSV(CSV_SERPS)
-    ]);
-
-    // Normalize news rows
-    counts = counts
-      .filter(r=> r && r.date && r.brand)
-      .map(r=> ({...r,
-        date: asYMD(r.date),
-        brand: String(r.brand).trim()
-      }));
-
-    // Normalize SERPs; date may be missing or a single fixed value
-    serps = serps.map(r=>{
-      const date = asYMD(r.date || r['date'] || r['Date'] || '');
-      const brand = String(r.brand || r['Brand'] || '').trim();
-      return {...r, date, brand};
+/* ================= CSV helpers ================= */
+async function fetchCsv(url){
+  const r = await fetch(url, {cache:'no-store'});
+  if (!r.ok) throw new Error(`HTTP ${r.status} for ${url}`);
+  const t = await r.text();
+  return await new Promise((res, rej) => {
+    Papa.parse(t, {header:true, skipEmptyLines:true,
+      complete: out => res(out.data || []), error: e => rej(e)
     });
-
-    // Roster company -> sector map
-    companyToSector = new Map();
-    for(const r of roster){
-      const comp = (r.company || r.brand || r.name || r['company name'] || '').trim();
-      const sect = (r.sector || r.industry || 'Unknown').trim();
-      if(comp) companyToSector.set(normName(comp), sect);
-    }
-
-    // Dates from news (if none, we can't build the page)
-    const dates = Array.from(new Set(counts.map(r=> r.date))).sort();
-    allDates = dates;
-    currentDate = dates[dates.length-1] || null;
-    renderDateOptions();
-
-    computeSectors();
-    renderTable();
-    renderTrend();
-
-    // Status
-    const uniqueSerpDates = new Set(serps.map(s=> s.date).filter(Boolean));
-    const serpMode = uniqueSerpDates.size > 3 ? 'date-filtered' : 'date-agnostic';
-    statusEl.textContent =
-      `Roster: ${roster.length} • News: ${counts.length} • SERPs: ${serps.length} (${serpMode})`;
+  });
+}
+async function fetchCsvAny(candidates){
+  for (const u of candidates){
+    try { const rows = await fetchCsv(u); if (Array.isArray(rows)) return rows; }
+    catch(e){ /* keep trying */ }
   }
+  return [];
+}
 
-  function renderDateOptions(){
-    dateSelect.innerHTML = allDates.map(d=> `<option value="${d}">${d}</option>`).join('');
-    if(currentDate) dateSelect.value = currentDate;
-  }
+/* ================= Loading ================= */
+async function loadCounts(){
+  const rows = await fetchCsvAny(COUNTS_CANDIDATES);
+  allCountsRows = rows
+    .map(r => ({
+      date: String(r.date || '').trim(),
+      company: String(r.company || r.brand || '').trim(),
+      pos: +r.positive || +r.pos || 0,
+      neu: +r.neutral  || +r.neu || 0,
+      neg: +r.negative || +r.neg || 0
+    }))
+    .filter(r => isISODate(r.date) && r.company);
+}
 
-  function companySectorForBrand(brand){
-    const key = normName(brand);
-    return companyToSector.get(key) || 'Unknown';
-  }
+async function loadSerpDaily(){
+  try{
+    const rows = await fetchCsv(SERPS_DAILY_CSV);
+    serpsDaily = rows.map(r => ({
+      date: (r.date||'').trim(),
+      company: (r.company||r.brand||'').trim(),
+      total: +r.total || 0,
+      neg_serp: +r.negative_serp || +r.neg_serp || 0,
+      ctrl: +r.controlled || +r.control || 0,
+    })).filter(r => isISODate(r.date) && r.company);
+  }catch(e){ serpsDaily = []; }
+}
 
-  function computeSectors(){
-    // Aggregate news by sector for the selected date
-    const newsBySector = new Map();
-    for(const r of counts){
-      if(r.date !== currentDate) continue;
-      const sec = companySectorForBrand(r.brand || '');
-      const acc = newsBySector.get(sec) || {pos:0,neu:0,neg:0};
-      acc.pos += +r.positive || 0;
-      acc.neu += +r.neutral || 0;
-      acc.neg += +r.negative || 0;
-      newsBySector.set(sec, acc);
-    }
+async function loadRosterSectors() {
+  const rows = await fetchCsvAny([
+    'data/serps/roster.csv',
+    'data/roster.csv'
+  ]);
 
-    // Decide SERP date behavior:
-    // If the SERP file has many distinct dates ( > 3 ), we filter by currentDate.
-    // Otherwise we treat SERPs as date-agnostic and aggregate across all rows.
-    const uniqueSerpDates = new Set(serps.map(s=> s.date).filter(Boolean));
-    const serpFilterByDate = uniqueSerpDates.size > 3;
+  sectorFromBrand.clear();
+  brandsBySector.clear();
 
-    const serpBySector = new Map();
-    for(const s of serps){
-      if(serpFilterByDate && s.date && s.date !== currentDate) continue;
-      const sec = companySectorForBrand(s.brand || '');
-      const isNeg = String(s.sentiment || s['Sentiment'] || '').toLowerCase() === 'negative' ? 1 : 0;
-      const ctrl  = /^(true|yes|1)$/i.test(String(s.control || s['Control'] || 'false')) ? 1 : 0;
+  rows.forEach(r => {
+    const brandRaw  = r.company || r.Company || r.brand || r.Brand || '';
+    const sector    = r.sector  || r.Sector  || '';
+    const brandKey  = canonBrand(brandRaw);
+    if (!brandKey || !sector) return;
 
-      const acc = serpBySector.get(sec) || {tot:0,neg:0,ctrl:0};
-      acc.tot  += 1;
-      acc.neg  += isNeg;
-      acc.ctrl += ctrl;
-      serpBySector.set(sec, acc);
-    }
+    sectorFromBrand.set(brandKey, sector);
+    if (!brandsBySector.has(sector)) brandsBySector.set(sector, new Set());
+    brandsBySector.get(sector).add(brandKey);
+  });
+}
 
-    const sectors = new Set([...newsBySector.keys(), ...serpBySector.keys()]);
-    const rows = [];
-    for(const sec of sectors){
-      const n = newsBySector.get(sec) || {pos:0,neu:0,neg:0};
-      const tNews = n.pos + n.neu + n.neg;
-      const negNewsPct = pct(n.neg, tNews);
 
-      const s = serpBySector.get(sec) || {tot:0,neg:0,ctrl:0};
-      const negSerpPct = pct(s.neg, s.tot);
-      const controlPct = pct(s.ctrl, s.tot);
+/* ================= Init ================= */
+async function init(){
+  await Promise.all([loadRosterSectors(), loadCounts(), loadSerpDaily()]);
 
-      const risk = riskLabel(negSerpPct, controlPct);
+  // Date options from available series
+  const dateSet = new Set([
+    ...allCountsRows.map(r => r.date),
+    ...serpsDaily.map(r => r.date)
+  ].filter(isISODate));
+  const dates = [...dateSet].sort();
+  const sel = document.getElementById('dateSelect');
+  sel.innerHTML = dates.map(d => `<option value="${d}">${d}</option>`).join('');
+  sel.value = dates[dates.length-1] || '';
+  sel.addEventListener('change', ()=>{ currentPage=1; selectedSector=null; renderAll(); });
 
-      rows.push({
-        sector: sec,
-        pos: n.pos, neu: n.neu, neg: n.neg, tNews,
-        serpTot: s.tot, serpNeg: s.neg, serpCtrl: s.ctrl,
-        negNewsPct, negSerpPct, controlPct,
-        risk: risk.label, riskRank: risk.rank
-      });
-    }
+  document.getElementById('filterInput').addEventListener('input', ()=>{ currentPage=1; renderAll(); });
+  document.getElementById('refreshBtn').onclick = async ()=>{ await init(); };
+  document.getElementById('clearBtn').onclick = ()=>{ selectedSector=null; document.getElementById('filterInput').value=''; renderAll(); };
+  document.getElementById('prevBtn').onclick = ()=>{ if (currentPage>1){ currentPage--; renderTable(); } };
+  document.getElementById('nextBtn').onclick = ()=>{ const totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE)); if (currentPage<totalPages){ currentPage++; renderTable(); } };
 
-    sectorsRows = rows;
-    applyFilterAndSort();
-  }
-
-  // ------- Filter / sort / paginate -------
-  function applyFilterAndSort(){
-    const q = (filterInput.value || '').trim().toLowerCase();
-    filteredRows = sectorsRows.filter(r => !q || r.sector.toLowerCase().includes(q));
-    sortRows();
-    page = 0;
-    updatePagination();
-  }
-
-  function sortRows(){
-    const dir = sortDir === 'asc' ? 1 : -1;
-    filteredRows.sort((a,b)=>{
-      let va = a[sortKey], vb = b[sortKey];
-      if(typeof va === 'string') va = va.toLowerCase();
-      if(typeof vb === 'string') vb = vb.toLowerCase();
-      if(va < vb) return -1*dir;
-      if(va > vb) return 1*dir;
-      return 0;
-    });
-  }
-
-  function updatePagination(){
-    const total = filteredRows.length;
-    const maxPage = Math.max(0, Math.ceil(total / PAGE_SIZE) - 1);
-    page = Math.min(page, maxPage);
-    prevBtn.disabled = (page <= 0);
-    nextBtn.disabled = (page >= maxPage);
-    pageInfo.textContent = total ? `Page ${page+1} of ${maxPage+1} • ${total} sectors` : '';
-    renderTable();
-    renderTrend();
-  }
-
-  // ------- Render table -------
-  function fmtPctRound(v){ return isFinite(v) ? `${Math.round(v)}%` : '—'; }
-  function renderTable(){
-    const start = page * PAGE_SIZE;
-    const rows = filteredRows.slice(start, start + PAGE_SIZE);
-
-    tableBody.innerHTML = rows.map(r=>{
-      const isSel = selected.has(r.sector);
-      return `<tr class="border-t hover:bg-slate-50">
-        <td class="p-3"><input type="checkbox" data-sector="${r.sector.replace(/"/g,'&quot;')}" ${isSel?'checked':''}></td>
-        <td class="p-3 font-medium">${r.sector}</td>
-        <td class="p-3">${fmtPctRound(r.negNewsPct)}</td>
-        <td class="p-3">${fmtPctRound(r.negSerpPct)}</td>
-        <td class="p-3">${fmtPctRound(r.controlPct)}</td>
-        <td class="p-3">${r.risk === 'High' ? badge('High','red') : (r.risk==='Medium'?badge('Medium','amber'):badge('Low','green'))}</td>
-        <td class="p-3"><button class="px-2 py-1 border rounded-lg" data-serp="${r.sector.replace(/"/g,'&quot;')}">View</button></td>
-      </tr>`;
-    }).join('\n');
-
-    tableBody.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
-      cb.addEventListener('change', ()=>{
-        const sec = cb.getAttribute('data-sector');
-        if(cb.checked) selected.add(sec); else selected.delete(sec);
-        renderTrend();
-      });
-    });
-
-    tableBody.querySelectorAll('button[data-serp]').forEach(btn=>{
-      btn.addEventListener('click', ()=> showSectorSerps(btn.getAttribute('data-serp')));
-    });
-
-    const visibleAllChecked = rows.length && rows.every(r=> selected.has(r.sector));
-    selectAll.checked = visibleAllChecked;
-  }
-
-  // ------- Trend -------
-  function seriesFor(sectorsSet){
-    const use = sectorsSet && sectorsSet.size ? sectorsSet : null;
-    const labels = allDates.slice(-30);
-    const pos=[], neu=[], neg=[];
-    for(const d of labels){
-      let ap={pos:0,neu:0,neg:0};
-      for(const r of counts){
-        if(r.date!==d) continue;
-        const sec = companySectorForBrand(r.brand || '');
-        if(use && !use.has(sec)) continue;
-        ap.pos += +r.positive||0;
-        ap.neu += +r.neutral||0;
-        ap.neg += +r.negative||0;
-      }
-      const total = ap.pos+ap.neu+ap.neg;
-      pos.push(pct(ap.pos,total,1));
-      neu.push(pct(ap.neu,total,1));
-      neg.push(pct(ap.neg,total,1));
-    }
-    return {labels,pos,neu,neg};
-  }
-
-  function renderTrend(){
-    const s = seriesFor(selected);
-    trendInfo.textContent = selected.size===1
-      ? `SECTOR: ${Array.from(selected)[0]}`
-      : 'INDEX average (all/selected) over last 30 days';
-
-    const data = {
-      labels: s.labels,
-      datasets: [
-        { label: 'Positive', data: s.pos, backgroundColor: '#98c15b', stack: 'sent' },
-        { label: 'Neutral',  data: s.neu, backgroundColor: '#dae5e6', stack: 'sent' },
-        { label: 'Negative', data: s.neg, backgroundColor: '#ffb199', stack: 'sent' }
-      ]
-    };
-    const options = {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        x: { stacked:true, ticks:{ maxRotation:0, autoSkip:true, maxTicksLimit:8 } },
-        y: { stacked:true, beginAtZero:true, ticks:{ callback:v=> v+'%' } }
-      },
-      plugins: {
-        legend: { position:'top' },
-        tooltip: { callbacks:{ label:(ctx)=> `${ctx.dataset.label}: ${ctx.parsed.y}%` } }
-      }
-    };
-    if(chart) chart.destroy();
-    chart = new Chart(trendCanvas.getContext('2d'), {type:'bar', data, options});
-  }
-
-  // ------- SERP modal -------
-  function openModal(){ modalBackdrop.classList.remove('hidden'); }
-  function closeModal(){ modalBackdrop.classList.add('hidden'); }
-  modalClose.addEventListener('click', closeModal);
-  modalBackdrop.addEventListener('click', (e)=>{ if(e.target===modalBackdrop) closeModal(); });
-  window.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeModal(); });
-
-  function showSectorSerps(sector){
-    modalTitle.textContent = `${sector} — SERPs`;
-    modalSubtitle.textContent = `Date: ${currentDate}`;
-    openModal();
-
-    // Use the same “date-agnostic unless many dates” rule
-    const uniqueSerpDates = new Set(serps.map(s=> s.date).filter(Boolean));
-    const serpFilterByDate = uniqueSerpDates.size > 3;
-
-    const rows = serps.filter(s=>{
-      if(serpFilterByDate && s.date && s.date !== currentDate) return false;
-      return companySectorForBrand(s.brand || '') === sector;
-    });
-
-    if(!rows.length){
-      modalBody.innerHTML = '<p class="text-sm text-slate-600">No SERP rows found for this sector.</p>';
-      return;
-    }
-
-    const byBrand = new Map();
-    for(const r of rows){
-      const b = String(r.brand||'Unknown');
-      if(!byBrand.has(b)) byBrand.set(b, []);
-      byBrand.get(b).push(r);
-    }
-
-    const html = [];
-    for(const [brand, list] of byBrand.entries()){
-      html.push(`<div class="mb-4 pb-3 border-b">
-        <div class="font-semibold">${esc(brand)}</div>
-        <div class="mt-2 space-y-2">
-          ${list.map(item=>{
-            const root = item['root domain'] || item.rootdomain || '';
-            const title = item.title || item['Title'] || '';
-            const link  = item.link || item['Link'] || '#';
-            const snip  = item.snippet || item['Snippet'] || '';
-            const ctrl  = /^(true|yes|1)$/i.test(String(item.control||item['Control']||'false'));
-            const sent  = String(item.sentiment||item['Sentiment']||'').toLowerCase();
-            const bCtrl = ctrl ? badge('controlled','blue') : badge('uncontrolled','gray');
-            const bSent = sent==='negative' ? badge('negative','red') : (sent==='positive'?badge('positive','green'):badge('neutral','gray'));
-            return `<div class="p-3 border rounded-xl">
-              <div class="flex items-center justify-between gap-3">
-                <div class="text-xs text-slate-500">${esc(root||'')}</div>
-                <div class="flex items-center gap-2">${bCtrl}${bSent}</div>
-              </div>
-              <a href="${esc(link)}" target="_blank" rel="noopener" class="block mt-1 font-medium underline">${esc(title)}</a>
-              ${snip? `<div class="text-xs text-slate-600 mt-1">${esc(snip)}</div>`:''}
-            </div>`;
-          }).join('')}
-        </div>
-      </div>`);
-    }
-
-    modalBody.innerHTML = html.join('\n');
-  }
-
-  // ------- Events -------
-  refreshBtn.addEventListener('click', loadAll);
-  dateSelect.addEventListener('change', ()=>{ currentDate = dateSelect.value; computeSectors(); renderTable(); renderTrend(); });
-  filterInput.addEventListener('input', applyFilterAndSort);
-
-  document.querySelectorAll('.th-sort').forEach(th=>{
+  // Header sorting
+  document.querySelectorAll('thead th[data-key]').forEach(th=>{
+    th.style.cursor='pointer';
     th.addEventListener('click', ()=>{
-      const key = th.getAttribute('data-sort');
-      if(sortKey === key){
-        sortDir = (sortDir==='asc') ? 'desc' : 'asc';
-      }else{
-        sortKey = key;
-        sortDir = 'desc';
-        document.querySelectorAll('.th-sort').forEach(x=> x.classList.remove('active'));
-        th.classList.add('active');
-      }
-      sortRows();
-      page = 0;
-      updatePagination();
+      const k = th.getAttribute('data-key');
+      if (currentSort.key === k) currentSort.dir *= -1; else { currentSort.key = k; currentSort.dir = 1; }
+      renderTable();
     });
   });
 
-  selectAll.addEventListener('change', ()=>{
-    const start = page * PAGE_SIZE;
-    const rows = filteredRows.slice(start, start + PAGE_SIZE);
-    if(selectAll.checked){ rows.forEach(r=> selected.add(r.sector)); }
-    else { rows.forEach(r=> selected.delete(r.sector)); }
-    renderTable();
-    renderTrend();
+  // Charts resize with their cards
+  const ro = new ResizeObserver(() => {
+    if (newsChart) newsChart.resize();
+    if (serpChart) serpChart.resize();
+  });
+  document.querySelectorAll('.chart-card').forEach(el => ro.observe(el));
+
+  renderAll();
+}
+
+/* ================= Sector rows ================= */
+async function buildSectorRowsForDate(d) {
+  // Build brand -> news counts for this date (pos/neu/neg)
+  const newsByBrand = new Map();  // canon(brand) -> {pos, neu, neg}
+  for (const r of allCountsRows) {
+    if (r.date !== d) continue;
+    const b = canonBrand(r.company || r.brand || r.ceo || '');
+    if (!b) continue;
+    const cur = newsByBrand.get(b) || {pos:0, neu:0, neg:0};
+    cur.pos += +r.pos || 0;
+    cur.neu += +r.neu || 0;
+    cur.neg += +r.neg || 0;
+    newsByBrand.set(b, cur);
+  }
+
+  // Build brand -> SERP counts for this date (total/neg/ctrl)
+  const serpByBrand = new Map();  // canon(brand) -> {total, neg, ctrl}
+  for (const r of serpsDaily) {
+    if (r.date !== d) continue;
+    const b = canonBrand(r.company || r.brand || '');
+    if (!b) continue;
+    const cur = serpByBrand.get(b) || {total:0, neg:0, ctrl:0};
+    cur.total += +r.total   || 0;
+    cur.neg   += +r.neg_serp|| 0;
+    cur.ctrl  += +r.ctrl    || 0;
+    serpByBrand.set(b, cur);
+  }
+
+  // Aggregate to sectors (weighted by underlying counts)
+  const sectors = [];
+  brandsBySector.forEach((brandSet, sectorName) => {
+    let nPos=0, nNeu=0, nNeg=0, sTot=0, sNeg=0, sCtrl=0;
+
+    brandSet.forEach(bKey => {
+      const n = newsByBrand.get(bKey);
+      if (n) { nPos += n.pos; nNeu += n.neu; nNeg += n.neg; }
+      const s = serpByBrand.get(bKey);
+      if (s) { sTot += s.total; sNeg += s.neg; sCtrl += s.ctrl; }
+    });
+
+    const newsTot = nPos + nNeu + nNeg;
+
+    // Percentages: if we have any counts, compute weighted %; else leave null
+    const neg_news = newsTot ? (nNeg / newsTot) : null;
+    const neg_serp = sTot    ? (sNeg / sTot)    : null;
+    const ctrl_pct = sTot    ? (sCtrl / sTot)   : null;
+
+    // Only include sectors that have some data for the day (news OR SERP)
+    if (newsTot || sTot) {
+      sectors.push({ sector: sectorName, neg_news, neg_serp, ctrl_pct });
+    }
   });
 
-  prevBtn.addEventListener('click', ()=>{ if(page>0){ page--; updatePagination(); } });
-  nextBtn.addEventListener('click', ()=>{ page++; updatePagination(); });
+  // Consistent order
+  sectors.sort((a,b) => a.sector.localeCompare(b.sector));
+  return sectors;
+}
 
-  // ------- Init -------
-  loadAll();
-})();
+
+/* ================= Renderers ================= */
+async function renderAll(){
+  const d = document.getElementById('dateSelect').value;
+  const filter = document.getElementById('filterInput').value.trim().toLowerCase();
+
+  const rows = (await buildSectorRowsForDate(d)).filter(r =>
+    !filter || r.sector.toLowerCase().includes(filter)
+  );
+
+  filteredRows = rows;
+  currentPage = 1;
+
+  // Auto-select when only one row remains
+  if (rows.length === 1){
+    selectedSector = rows[0].sector;
+  } else if (selectedSector && !rows.some(r => r.sector === selectedSector)){
+    selectedSector = null;
+  }
+
+  renderTable();
+  renderCharts();
+}
+
+function renderTable(){
+  const tbody = document.getElementById('tbody');
+  let rows = [...filteredRows];
+
+  if (currentSort.key){
+    rows.sort((a,b)=>{
+      const ka = a[currentSort.key], kb = b[currentSort.key];
+      if (typeof ka === 'string') return currentSort.dir * ka.localeCompare(kb);
+      return currentSort.dir * ((ka ?? -1) - (kb ?? -1));
+    });
+  }
+
+  const start = (currentPage-1)*PAGE_SIZE;
+  const pageRows = rows.slice(start, start+PAGE_SIZE);
+
+  tbody.innerHTML = pageRows.map(r=>{
+    const checked = (selectedSector && selectedSector===r.sector) ? 'checked' : '';
+    return `<tr>
+      <td class="center"><input type="checkbox" class="sectorCheck" data-sector="${esc(r.sector)}" ${checked} /></td>
+      <td>${esc(r.sector)}</td>
+      <td class="right">${fmtPct(r.neg_news)}</td>
+      <td class="right">${fmtPct(r.neg_serp)}</td>
+      <td class="right">${fmtPct(r.ctrl_pct)}</td>
+    </tr>`;
+  }).join('');
+
+  // Single-select behavior
+  tbody.querySelectorAll('.sectorCheck').forEach(cb=>{
+    cb.addEventListener('change', (e)=>{
+      const sec = e.target.getAttribute('data-sector');
+      if (e.target.checked){
+        selectedSector = sec;
+        tbody.querySelectorAll('.sectorCheck').forEach(x=>{ if (x!==e.target) x.checked=false; });
+      } else {
+        if (selectedSector === sec) selectedSector = null;
+      }
+      renderCharts();
+    });
+  });
+
+  document.getElementById('pageNo').textContent = String(currentPage);
+  document.getElementById('pageTotal').textContent = String(Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE)));
+}
+
+/* Build date series for charts (index average or chosen sector) */
+function getDateSeries(){
+  let allowed = null; // null => all brands (index)
+  if (selectedSector && brandsBySector.has(selectedSector)){
+    allowed = brandsBySector.get(selectedSector); // Set of canon(brand)
+  }
+
+  const byDate = new Map();       // date -> {pos,neu,neg}
+  allCountsRows.forEach(r=>{
+    const brandKey = canonBrand(r.company || r.brand || '');
+    if (allowed && !allowed.has(brandKey)) return;
+    const key = r.date;
+    if (!byDate.has(key)) byDate.set(key,{pos:0,neu:0,neg:0});
+    const bucket = byDate.get(key);
+    bucket.pos += +r.pos||0;
+    bucket.neu += +r.neu||0;
+    bucket.neg += +r.neg||0;
+  });
+
+  const serpByDate = new Map();   // date -> {total,neg,ctrl}
+  serpsDaily.forEach(r=>{
+    const brandKey = canonBrand(r.company || r.brand || '');
+    if (allowed && !allowed.has(brandKey)) return;
+    const key = r.date;
+    if (!serpByDate.has(key)) serpByDate.set(key,{total:0,neg:0,ctrl:0});
+    const s = serpByDate.get(key);
+    s.total += +r.total||0;
+    s.neg   += +r.neg_serp||0;
+    s.ctrl  += +r.ctrl||0;
+  });
+
+  const dates = [...new Set([...byDate.keys(), ...serpByDate.keys()])]
+    .filter(isISODate)
+    .sort();
+
+  const newsPos=[], newsNeu=[], newsNeg=[], serpNegPct=[], serpCtrlPct=[];
+  dates.forEach(d=>{
+    const n = byDate.get(d)||{pos:0,neu:0,neg:0};
+    const t = n.pos+n.neu+n.neg || 0;
+    newsPos.push(t? n.pos/t*100 : 0);
+    newsNeu.push(t? n.neu/t*100 : 0);
+    newsNeg.push(t? n.neg/t*100 : 0);
+
+    const s = serpByDate.get(d)||{total:0,neg:0,ctrl:0};
+    serpNegPct.push(s.total? s.neg/s.total*100 : 0);
+    serpCtrlPct.push(s.total? s.ctrl/s.total*100 : 0);
+  });
+
+  return {dates, newsPos, newsNeu, newsNeg, serpNegPct, serpCtrlPct};
+}
+
+function renderCharts(){
+  const {dates, newsPos, newsNeu, newsNeg, serpNegPct, serpCtrlPct} = getDateSeries();
+
+  // Initialize default window to the last 30 points
+  if (dateWindowStart === null){
+    dateWindowStart = Math.max(0, dates.length - DATE_WINDOW_SIZE);
+  }
+  const start = clampDateStart(dates.length);
+  const d  = sliceWindow(dates,       start, DATE_WINDOW_SIZE);
+  const nP = sliceWindow(newsPos,     start, DATE_WINDOW_SIZE);
+  const nN = sliceWindow(newsNeu,     start, DATE_WINDOW_SIZE);
+  const nG = sliceWindow(newsNeg,     start, DATE_WINDOW_SIZE);
+  const sN = sliceWindow(serpNegPct,  start, DATE_WINDOW_SIZE);
+  const sC = sliceWindow(serpCtrlPct, start, DATE_WINDOW_SIZE);
+
+  updateDateRangeUI(dates);
+  hookDatePager(dates);
+
+  const who = selectedSector ? selectedSector : "Index Average";
+  const fmtPctInt = v => `${Math.round(v)}%`;
+
+  const commonOpts = {
+    responsive: true,
+    maintainAspectRatio: false,
+    layout: { padding: { bottom: 24 } },
+    scales: {
+      x: { ticks: { color: '#ebf2f2' }, grid: { color: 'rgba(255,255,255,.05)' } },
+      y: {
+        ticks: { color: '#ebf2f2', stepSize: 20, callback: (v) => fmtPctInt(v) },
+        grid: { color: 'rgba(255,255,255,.06)' },
+        suggestedMin: 0, suggestedMax: 100
+      }
+    },
+    plugins: {
+      legend: { labels: { color: '#ebf2f2' } },
+      title: { display: true, text: who, color: '#ebf2f2',
+        font: { weight: 'bold', size: 14 }, padding: { top: 10, bottom: 6 } },
+      tooltip: { callbacks: { label: (ctx) => {
+        const label = ctx.dataset?.label ? `${ctx.dataset.label}: ` : '';
+        const val = (ctx.parsed && typeof ctx.parsed.y === 'number') ? ctx.parsed.y : (typeof ctx.parsed === 'number' ? ctx.parsed : 0);
+        return `${label}${fmtPctInt(val)}`;
+      }}}
+    }
+  };
+
+  // NEWS stacked bar
+  const nh = document.getElementById('newsChart').getContext('2d');
+  if (newsChart) newsChart.destroy();
+  newsChart = new Chart(nh, {
+    type: 'bar',
+    data: {
+      labels: d,
+      datasets: [
+        { label: 'Positive %', data: nP, backgroundColor: '#82c618', stack: 's' },
+        { label: 'Neutral %',  data: nN, backgroundColor: '#cfdbdd', stack: 's' },
+        { label: 'Negative %', data: nG, backgroundColor: '#ff8261', stack: 's' }
+      ]
+    },
+    options: { ...commonOpts }
+  });
+
+  // SERP lines
+  const sh = document.getElementById('serpChart').getContext('2d');
+  if (serpChart) serpChart.destroy();
+  serpChart = new Chart(sh, {
+    type: 'line',
+    data: {
+      labels: d,
+      datasets: [
+        { label: 'Negative SERP %', data: sN, tension: .25, borderColor: '#ff8261', backgroundColor: 'rgba(255,130,97,.2)', fill: false },
+        { label: 'Control %',       data: sC, tension: .25, borderColor: '#58dbed', backgroundColor: 'rgba(88,219,237,.15)', fill: false }
+      ]
+    },
+    options: { ...commonOpts }
+  });
+}
+
+/* ================= Go ================= */
+init();
 </script>
 </body>
 </html>
