@@ -83,4 +83,4 @@ jobs:
           ALERT_COOLDOWN_DAYS: ${{ github.event.inputs.cooldown_days || vars.ALERT_COOLDOWN_DAYS }}
           SOFT_SHIFT_HOURS: ${{ github.event.inputs.soft_shift_hours || vars.SOFT_SHIFT_HOURS }}
         run: |
-          python scripts/send_alerts.py
+          python -m scripts.send_alerts
