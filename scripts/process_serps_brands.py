@@ -4,7 +4,6 @@ Process daily BRAND SERP data:
 - Fetch raw SERPs from S3: https://tk-public-data.s3.us-east-1.amazonaws.com/serp_files/{date}-brand-serps.csv
 - Classify sentiment (VADER) and control (using data/roster.csv for canonical domains).
 - Apply rules:
-    * YouTube and TikTok are UNCONTROLLED.
     * Any result matching the brand's canonical domain from roster is CONTROLLED.
     * If CONTROLLED -> sentiment defaults to POSITIVE (overrides VADER).
 - Write outputs:
@@ -44,9 +43,6 @@ ROSTER_CSV = "data/roster.csv"
 OUT_ROWS_DIR = "data/serp_rows"
 OUT_DAILY_DIR = "data/processed_serps"
 OUT_ROLLUP = "data/serps/brand_serps_daily.csv"
-
-# Domains explicitly UNCONTROLLED
-UNCONTROLLED_DOMAINS = {"youtube.com", "youtu.be", "tiktok.com"}
 
 # If controlled, force sentiment to positive (matches your CEO rule change)
 FORCE_POSITIVE_IF_CONTROLLED = True
