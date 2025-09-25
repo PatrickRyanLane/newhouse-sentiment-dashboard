@@ -1,0 +1,51 @@
+name: Send Sentiment Alerts (on pipeline completion)
+
+on:
+  workflow_run:
+    workflows:
+      # TODO: Replace these with your actual pipeline workflow names, exactly as shown in the Actions tab
+      - "Daily Brands Pipeline"
+      - "Daily CEO News Sentiment"
+    types:
+      - completed
+
+permissions:
+  contents: read
+
+concurrency:
+  group: send-alerts
+  cancel-in-progress: false
+
+jobs:
+  send-alerts:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          else:
+            pip install pandas requests
+
+      - name: Run alert sender
+        env:
+          MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
+          MAILGUN_DOMAIN: ${{ secrets.MAILGUN_DOMAIN }}
+          MAILGUN_FROM: ${{ secrets.MAILGUN_FROM }}
+          MAILGUN_TO: ${{ secrets.MAILGUN_TO }}
+          MAILGUN_REGION: ${{ secrets.MAILGUN_REGION }}
+          NEGATIVE_THRESHOLD: ${{ vars.NEGATIVE_THRESHOLD }}
+          ALERT_COOLDOWN_DAYS: ${{ vars.ALERT_COOLDOWN_DAYS }}
+          SOFT_SHIFT_HOURS: ${{ vars.SOFT_SHIFT_HOURS }}
+        run: |
+          python scripts/send_alerts.py
