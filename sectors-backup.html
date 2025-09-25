@@ -271,9 +271,6 @@ async function loadSerpDaily(){
   }catch(e){ serpsDaily = []; }
 }
 
-let sectorFromBrand = new Map();   // canon(brand) -> sector (display)
-let brandsBySector = new Map();    // sector (display) -> Set(canon(brand))
-
 async function loadRosterSectors() {
   const rows = await fetchCsvAny([
     'data/serps/roster.csv',
@@ -298,7 +295,7 @@ async function loadRosterSectors() {
 
 /* ================= Init ================= */
 async function init(){
-  await Promise.all([loadRosterSectors(), loadRoster(), loadCounts(), loadSerpDaily(), loadBoards()]);
+  await Promise.all([loadRosterSectors(), loadCounts(), loadSerpDaily()]);
 
   // Date options from available series
   const dateSet = new Set([
@@ -472,7 +469,8 @@ function getDateSeries(){
 
   const byDate = new Map();       // date -> {pos,neu,neg}
   allCountsRows.forEach(r=>{
-    if (allowed && !allowed.has(r.company)) return;
+    const b = canonBrand(r.company || r.brand || '');
+    if (allowed && !allowed.has(b)) return;
     const key = r.date;
     if (!byDate.has(key)) byDate.set(key,{pos:0,neu:0,neg:0});
     const b = byDate.get(key);
@@ -481,7 +479,8 @@ function getDateSeries(){
 
   const serpByDate = new Map();   // date -> {total,neg,ctrl}
   serpsDaily.forEach(r=>{
-    if (allowed && !allowed.has(r.company)) return;
+    const b = canonBrand(r.company || r.brand || '');
+    if (allowed && !allowed.has(b)) return;
     const key = r.date;
     if (!serpByDate.has(key)) serpByDate.set(key,{total:0,neg:0,ctrl:0});
     const s = serpByDate.get(key);
