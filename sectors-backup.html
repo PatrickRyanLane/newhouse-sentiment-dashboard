@@ -159,9 +159,9 @@ tbody tr td:last-child{border-right:1px solid #0f1831;border-radius:0 10px 10px 
 
 <script>
 /* ================= Config & Runtime ================= */
-const COUNTS_CANDIDATES = [ 'data/daily_counts.csv' ];                  // brand-level article counts by day
+const COUNTS_CANDIDATES = [ 'data/processed_articles/daily_counts.csv' ];                  // brand-level article counts by day
 const SERPS_DAILY_CSV   = 'data/serps/brand_serps_daily.csv';           // brand-level SERP aggregates by day
-const ROSTER_CANDIDATES = [ 'data/roster.csv', 'data/serps/roster.csv']; // brand->sector mapping
+const ROSTER_CANDIDATES = [ 'data/roster.csv' ]; // brand->sector mapping
 
 let allCountsRows = [];            // [{date, company, pos, neu, neg}, ...]
 let serpsDaily = [];               // [{date, company, total, neg_serp, ctrl}, ...]
