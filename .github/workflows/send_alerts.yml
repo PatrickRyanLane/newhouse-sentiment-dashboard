@@ -68,6 +68,7 @@ jobs:
             pip install -r requirements.txt
           else
             pip install pandas requests
+          fi
 
       - name: Run alert sender
         env:
