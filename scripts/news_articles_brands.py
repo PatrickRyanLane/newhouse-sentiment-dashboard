@@ -17,7 +17,7 @@ def classify(headline, analyzer):
     s = analyzer.polarity_scores(headline or "")
     c = s["compound"]
     if c >= 0.25:  return "positive"
-    if c <= -0.25: return "negative"
+    if c <= -0.05: return "negative"
     return "neutral"
 
 def fetch_one(brand, analyzer, pause=1.2):
