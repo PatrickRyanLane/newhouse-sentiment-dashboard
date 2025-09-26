@@ -13,19 +13,41 @@ def _load_counts(csv_path: str) -> pd.DataFrame | None:
         print(f"Info: {csv_path} not found; skipping.")
         return None
     try:
+        import pandas as pd
         df = pd.read_csv(csv_path)
+
+        # --- normalize column names ---
+        # which column holds the entity name?
+        for c in ["name", "brand", "company", "ceo",]:
+            if c in df.columns:
+                df = df.rename(columns={c: "name"})
+                break
+        # which columns hold negative/total counts?
+        for c in ["neg", "negative"]:
+            if c in df.columns:
+                df = df.rename(columns={c: "neg"})
+                break
+        for c in ["tot", "total"]:
+            if c in df.columns:
+                df = df.rename(columns={c: "tot"})
+                break
+
+        # validate required columns now that we've normalized
         required = {"date", "name", "neg", "tot"}
         missing = required - set(df.columns)
         if missing:
-            print(f"Warning: {csv_path} missing columns: {sorted(missing)}; skipping.")
+            print(f"Warning: {csv_path} missing columns after normalization: {sorted(missing)}; skipping.")
             return None
+
+        # coerce types
         df["date"] = pd.to_datetime(df["date"], errors="coerce").dt.date
-        df["neg"] = pd.to_numeric(df["neg"], errors="coerce").fillna(0).astype(int)
-        df["tot"] = pd.to_numeric(df["tot"], errors="coerce").fillna(0).astype(int)
+        df["neg"]  = pd.to_numeric(df["neg"], errors="coerce").fillna(0).astype(int)
+        df["tot"]  = pd.to_numeric(df["tot"], errors="coerce").fillna(0).astype(int)
         return df
     except Exception as e:
         print(f"Error reading {csv_path}: {e}")
         return None
+
 
 def _prepare_entities_for_date(df: pd.DataFrame) -> tuple[List[Dict[str, Any]], str] | None:
     if df.empty:
@@ -48,9 +70,8 @@ def main() -> None:
     recipients = [a.strip() for a in MAILGUN_TO.split(",") if a.strip()]
 
     targets = [
-        ("Brand", "data/daily_counts.csv"),
+        ("Brand", "data/processed_articles/daily_counts.csv"),
         ("CEO", "data_ceos/daily_counts.csv"),
-        ("ROC", "data_roc/daily_counts.csv"),
     ]
 
     any_sent = False
