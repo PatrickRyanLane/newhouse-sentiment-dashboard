@@ -73,13 +73,13 @@ jobs:
         run: |
           python -m scripts.send_alerts
 
-        - name: Commit cooldown JSON
-          if: success() && hashFiles('data/last_alert_dates.json') != ''
-          run: |
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            # ensure the data dir exists
-            test -f data/last_alert_dates.json || exit 0
-            git add data/last_alert_dates.json
-            git commit -m "chore(state): update last_alert_dates.json [skip ci]" || echo "No changes to commit"
-            git push
+      - name: Commit cooldown JSON
+        if: success() && hashFiles('data/last_alert_dates.json') != ''
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          # ensure the data dir exists
+          test -f data/last_alert_dates.json || exit 0
+          git add data/last_alert_dates.json
+          git commit -m "chore(state): update last_alert_dates.json [skip ci]" || echo "No changes to commit"
+          git push
