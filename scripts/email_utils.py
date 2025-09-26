@@ -82,23 +82,51 @@ def send_mailgun_summary(
     region: str | None = None,
     schedule_mode: str | None = None,
 ) -> bool:
+    """
+    Send a single Mailgun email summarizing all entities that met the threshold.
+    For CEOs, show 'CEO Name (Company)' in the list.
+    """
     if not (MAILGUN_API_KEY and MAILGUN_DOMAIN and MAILGUN_FROM and MAILGUN_TO):
-        print("Warning: Mailgun config missing.")
+        print("Mailgun config missing; skipping.")
         return False
-    delivery_time = _compute_delivery_time_rfc2822(run_date_str, schedule_mode or ALERT_SEND_MODE)
-    subject = f"High Negative Sentiment Alert for {len(entities_to_alert)} {entity_type if len(entities_to_alert)==1 else entity_type+'s'}"
-    content_html = f"<p>The following {entity_type.lower()}s have high negative sentiment for {run_date_str}:</p><ul>"
-    for e in entities_to_alert:
-        name, neg, tot = e.get("name"), e.get("neg"), e.get("tot")
-        if name and tot:
-            pct = round((neg / tot) * 100) if tot else 0
-            content_html += f"<li><strong>{name}:</strong> {neg}/{tot} ({pct}%) negative articles.</li>"
-    content_html += "</ul>"
-    base = "https://api.mailgun.net" if (not region or region.lower()!="eu") else "https://api.eu.mailgun.net"
+
+    # Subject
+    count = len(entities_to_alert)
+    plural = f"{entity_type}s" if count != 1 else entity_type
+    subject = f"High Negative Sentiment Alert for {count} {plural}"
+
+    # Body
+    content_html = [f"<p>The following {plural.lower()} have high negative sentiment for {run_date_str}:</p>", "<ul>"]
+    for row in entities_to_alert:
+        name = row.get("name")  # brand/company name
+        ceo = row.get("ceo")    # may be None for Brand rows
+        neg = row.get("neg")
+        tot = row.get("tot")
+        if not (name and isinstance(neg, int) and isinstance(tot, int) and tot > 0):
+            continue
+        pct = round((neg / tot) * 100)
+
+        # If this is a CEO alert and we have a CEO name, display "CEO (Company)"
+        display = f"{ceo} ({name})" if (entity_type == "CEO" and ceo) else name
+        content_html.append(f"<li><strong>{display}:</strong> {neg}/{tot} ({pct}%) negative articles.</li>")
+    content_html.append("</ul>")
+    content_html = "\n".join(content_html)
+
+    # Delivery time (same-morning vs next-morning @ 9am ET)
+    delivery_time = _compute_delivery_time_rfc2822(run_date_str, schedule_mode)
+
+    # Mailgun endpoint (US vs EU)
+    base = "https://api.eu.mailgun.net" if (region or "").lower() == "eu" else "https://api.mailgun.net"
     url = f"{base}/v3/{MAILGUN_DOMAIN}/messages"
-    data = {"from": MAILGUN_FROM, "to": MAILGUN_TO, "subject": subject, "html": content_html}
+    data = {
+        "from": MAILGUN_FROM,
+        "to": MAILGUN_TO,
+        "subject": subject,
+        "html": content_html,
+    }
     if delivery_time:
         data["o:deliverytime"] = delivery_time
+
     try:
         r = requests.post(url, auth=("api", MAILGUN_API_KEY), data=data, timeout=30)
         r.raise_for_status()
@@ -107,6 +135,7 @@ def send_mailgun_summary(
     except requests.exceptions.RequestException as e:
         print(f"Mailgun error: {e}")
         return False
+
 
 def check_and_send_alerts(
     entities: List[Dict[str, Any]],
@@ -137,7 +166,10 @@ def check_and_send_alerts(
                     continue
             except Exception:
                 pass
-        to_alert.append({"name": name, "neg": int(neg), "tot": int(tot)})
+        ceo = row.get("ceo")  # new line
+        to_alert.append(
+            {"name": name, "neg": int(neg), "tot": int(tot), **({"ceo": ceo} if ceo else {})}
+        )
     if to_alert:
         if send_mailgun_summary(run_date, to_alert, MAILGUN_API_KEY, MAILGUN_DOMAIN, MAILGUN_FROM, MAILGUN_TO, entity_type, region, schedule_mode):
             for e in to_alert:
