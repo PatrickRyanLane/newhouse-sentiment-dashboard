@@ -9,15 +9,18 @@
     /* Smooth-ish height updates for the iframe */
     #dashFrame { transition: height .12s ease; }
     .tab-btn {
-      @apply px-4 py-2 rounded-full font-semibold transition;
-      background: #e2e8f0;        /* slate-200 */
-      color: #0f172a;             /* slate-900 */
+      @apply px-5 py-2.5 rounded-lg font-medium transition;
+      background: #000000;   /* black when unselected */
+      color: #ffffff;
     }
-    .tab-btn:hover { background: #cbd5e1; } /* slate-300 */
+    .tab-btn:hover {
+      background: #333333;   /* slightly lighter black on hover */
+    }
     .tab-btn.active {
-      background: #0f172a;        /* slate-900 */
-      color: #fff;
+      background: #00809e;   /* teal blue when active */
+      color: #ffffff;
     }
+
   </style>
 </head>
 <body class="bg-[#92e8ef] text-slate-900">
