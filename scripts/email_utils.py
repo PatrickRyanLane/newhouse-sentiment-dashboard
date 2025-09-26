@@ -11,14 +11,28 @@ from datetime import datetime, timedelta, date
 from zoneinfo import ZoneInfo
 from email.utils import format_datetime
 from typing import List, Dict, Any, Optional
+# --- Safe env helpwers ---
+def _get_int_env(name: str, default: int) -> int:
+    val = os.environ.get(name)
+    try:
+        return int(str(val).strip()) if val not in (None, "") else default
+    except (ValueError, TypeError):
+        return default
+
+def _get_float_env(name: str, default: float) -> float:
+    val = os.environ.get(name)
+    try:
+        return float(str(val).strip()) if val not in (None, "") else default
+    except (ValueError, TypeError):
+        return default
 
 # Config
-NEGATIVE_THRESHOLD = float(os.environ.get("NEGATIVE_THRESHOLD", "0.4"))
-ALERT_COOLDOWN_DAYS = int(os.environ.get("ALERT_COOLDOWN_DAYS", "180"))
+NEGATIVE_THRESHOLD = _get_float_env("NEGATIVE_THRESHOLD", 0.4)
+ALERT_COOLDOWN_DAYS = _get_int_env("ALERT_COOLDOWN_DAYS", 180)
 EASTERN = ZoneInfo("US/Eastern")
-SOFT_SHIFT_HOURS = int(os.environ.get("SOFT_SHIFT_HOURS", "6"))
+SOFT_SHIFT_HOURS = _get_int_env("SOFT_SHIFT_HOURS", 6)
 LAST_ALERT_DATES_PATH = os.environ.get("LAST_ALERT_DATES_PATH", "data/last_alert_dates.json")
-ALERT_SEND_MODE = os.environ.get("ALERT_SEND_MODE", "same_morning").lower()
+ALERT_SEND_MODE = (os.environ.get("ALERT_SEND_MODE") or "same_morning").lower()
 
 def _ensure_parents(p: str) -> None:
     d = os.path.dirname(p)
