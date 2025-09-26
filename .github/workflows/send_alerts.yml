@@ -58,6 +58,16 @@ jobs:
             pip install pandas requests
           fi
 
+      - name: Download last cooldown artifact
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: send_alerts.yml         # your workflow file name
+          workflow_conclusion: success
+          branch: main
+          name: cooldown-state              # must match the upload name below
+          path: .
+          if_no_artifact_found: ignore
+
       - name: Run alert sender
         env:
           PYTHONPATH: ${{ github.workspace }}
@@ -72,14 +82,12 @@ jobs:
           SOFT_SHIFT_HOURS: ${{ github.event.inputs.soft_shift_hours || vars.SOFT_SHIFT_HOURS || '6' }}
         run: |
           python -m scripts.send_alerts
-
-      - name: Commit cooldown JSON
+          
+      - name: Upload cooldown state
         if: success() && hashFiles('data/last_alert_dates.json') != ''
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          # ensure the data dir exists
-          test -f data/last_alert_dates.json || exit 0
-          git add data/last_alert_dates.json
-          git commit -m "chore(state): update last_alert_dates.json [skip ci]" || echo "No changes to commit"
-          git push
+        uses: actions/upload-artifact@v4
+        with:
+          name: cooldown-state
+          path: data/last_alert_dates.json
+          if-no-files-found: warn
+          retention-days: 365
