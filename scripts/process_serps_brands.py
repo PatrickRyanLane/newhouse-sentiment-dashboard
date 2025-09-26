@@ -47,6 +47,17 @@ OUT_ROLLUP = "data/serps/brand_serps_daily.csv"
 # If controlled, force sentiment to positive (matches your CEO rule change)
 FORCE_POSITIVE_IF_CONTROLLED = True
 
+# Domains explicitly CONTROLLED (social/app stores)
+ALWAYS_CONTROLLED_DOMAINS = {
+    "facebook.com",
+    "instagram.com",
+    "twitter.com",
+    "x.com",
+    "linkedin.com",
+    "play.google.com",
+    "apps.apple.com",
+}
+
 # -----------------------
 # Helpers
 # -----------------------
@@ -114,26 +125,44 @@ def extract_domain(url: str) -> str:
     except Exception:
         return ""
 
-def classify_control(company: str, url: str, company_domains: Dict[str, str]) -> bool:
+def classify_control(company: str, url: str, roster_domains: set[str]) -> bool:
     """
-    Rules:
-      - UNCONTROLLED_DOMAINS are always uncontrolled.
-      - If the URL's domain ends with the brand's canonical domain from roster -> controlled.
+    Controlled if:
+      1) Host is in ALWAYS_CONTROLLED_DOMAINS (or is a subdomain of those),
+      2) Host matches (is or endswith) any roster domain,
+      3) Host 'core' contains normalized brand name (e.g., capitalone in capitalonetravel.com).
+
+    Uncontrolled if:
+      - Host in UNCONTROLLED_DOMAINS (YouTube/TikTok).
     """
-    domain = extract_domain(url)
-    if not domain:
+    host = _hostname(url)
+    if not host:
         return False
 
-    # Always uncontrolled for these:
+    # Always uncontrolled
     for bad in UNCONTROLLED_DOMAINS:
-        if domain.endswith(bad):
+        if host == bad or host.endswith("." + bad):
             return False
 
-    brand_domain = company_domains.get(company.lower())
-    if brand_domain and (domain == brand_domain or domain.endswith("." + brand_domain)):
-        return True
+    # Always controlled
+    for good in ALWAYS_CONTROLLED_DOMAINS:
+        if host == good or host.endswith("." + good):
+            return True
+
+    # Roster domains → controlled (allow subdomains)
+    for rd in roster_domains:
+        if host == rd or host.endswith("." + rd):
+            return True
+
+    # Brand-name heuristic → controlled
+    brand_token = _norm_token(company)
+    if brand_token:
+        host_token = _norm_domain_for_name_match(host)
+        if brand_token in host_token:
+            return True
 
     return False
+
 
 def vader_label(analyzer: SentimentIntensityAnalyzer, text: str) -> Tuple[float, str]:
     """
@@ -148,6 +177,57 @@ def vader_label(analyzer: SentimentIntensityAnalyzer, text: str) -> Tuple[float,
     else:
         lab = "neutral"
     return c, lab
+
+def _hostname(url: str) -> str:
+    try:
+        host = urlparse(url).hostname or ""
+        return host.lower().replace("www.", "")
+    except Exception:
+        return ""
+
+def _norm_token(s: str) -> str:
+    # lowercase and keep only [a-z0-9]; collapse whitespace/punct
+    return "".join(ch for ch in (s or "").lower() if ch.isalnum())
+
+def _norm_domain_for_name_match(host: str) -> str:
+    # strip dots and hyphens before TLD awareness (simple heuristic)
+    return "".join(ch for ch in host if ch.isalnum())
+
+def load_controlled_domains_from_roster() -> set[str]:
+    """
+    Read domains from roster files and return hostnames treated as controlled.
+    Accept columns like: domain, website, url, site, homepage (any case).
+    """
+    candidates = ROSTER_CANDIDATES
+    domains: set[str] = set()
+    wanted_cols = {"domain", "website", "url", "site", "homepage"}
+
+    for path in candidates:
+        if not os.path.exists(path):
+            continue
+        try:
+            with open(path, newline="", encoding="utf-8") as f:
+                rdr = csv.DictReader(f)
+                # Map header names to lowercase once
+                lower_headers = [h.lower() for h in rdr.fieldnames or []]
+                col_ix = [i for i, h in enumerate(lower_headers) if h in wanted_cols]
+
+                for row in rdr:
+                    # try each eligible column for a URL/domain
+                    values = []
+                    for k, v in row.items():
+                        if k and k.lower() in wanted_cols and v:
+                            values.append(str(v).strip())
+                    for v in values:
+                        host = _hostname(v if v.startswith(("http://", "https://")) else "http://" + v)
+                        if host:
+                            domains.add(host)
+        except Exception as e:
+            print(f"[WARN] Failed reading roster at {path}: {e}")
+            continue
+
+    return domains
+
 
 # -----------------------
 # Main processing
