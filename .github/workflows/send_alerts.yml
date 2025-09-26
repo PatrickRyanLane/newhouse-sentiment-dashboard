@@ -66,9 +66,9 @@ jobs:
           MAILGUN_FROM: ${{ secrets.MAILGUN_FROM }}
           MAILGUN_TO: ${{ secrets.MAILGUN_TO }}
           MAILGUN_REGION: ${{ secrets.MAILGUN_REGION }}
-          ALERT_SEND_MODE: ${{ github.event.inputs.alert_send_mode || vars.ALERT_SEND_MODE }}
-          NEGATIVE_THRESHOLD: ${{ github.event.inputs.negative_threshold || vars.NEGATIVE_THRESHOLD }}
-          ALERT_COOLDOWN_DAYS: ${{ github.event.inputs.cooldown_days || vars.ALERT_COOLDOWN_DAYS }}
-          SOFT_SHIFT_HOURS: ${{ github.event.inputs.soft_shift_hours || vars.SOFT_SHIFT_HOURS }}
+          ALERT_SEND_MODE: ${{ github.event.inputs.alert_send_mode || vars.ALERT_SEND_MODE || 'same_morning' }}
+          NEGATIVE_THRESHOLD: ${{ github.event.inputs.negative_threshold || vars.NEGATIVE_THRESHOLD || '0.4' }}
+          ALERT_COOLDOWN_DAYS: ${{ github.event.inputs.cooldown_days || vars.ALERT_COOLDOWN_DAYS || '180' }}
+          SOFT_SHIFT_HOURS: ${{ github.event.inputs.soft_shift_hours || vars.SOFT_SHIFT_HOURS || '6' }}
         run: |
           python -m scripts.send_alerts
