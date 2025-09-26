@@ -49,12 +49,23 @@ def _load_counts(csv_path: str) -> pd.DataFrame | None:
         return None
 
 
-def _prepare_entities_for_date(df: pd.DataFrame) -> tuple[List[Dict[str, Any]], str] | None:
+def _prepare_entities_for_date(df: pd.DataFrame, entity_type: str) -> tuple[List[Dict[str, Any]], str] | None:
     if df.empty:
         return None
     most_recent = df["date"].max()
-    cur = df[df["date"] == most_recent].copy().groupby("name", as_index=False).agg({"neg": "sum", "tot": "sum"})
-    return cur.to_dict(orient="records"), most_recent.isoformat()
+    cur = df[df["date"] == most_recent].copy()
+
+    if entity_type == "CEO" and {"brand", "ceo"}.issubset(cur.columns):
+        # Keep both brand (as name) and ceo
+        cur = cur.rename(columns={"brand": "name"})
+        cur = cur.groupby(["name", "ceo"], as_index=False).agg({"neg": "sum", "tot": "sum"})
+        entities = cur.to_dict("records")
+    else:
+        # Default behavior
+        cur = cur.groupby("name", as_index=False).agg({"neg": "sum", "tot": "sum"})
+        entities = cur.to_dict("records")
+
+    return entities, most_recent.isoformat()
 
 def main() -> None:
     MAILGUN_API_KEY = os.environ.get("MAILGUN_API_KEY")
@@ -79,10 +90,12 @@ def main() -> None:
         df = _load_counts(csv_path)
         if df is None:
             continue
-        prepared = _prepare_entities_for_date(df)
+
+        prepared = _prepare_entities_for_date(df, entity_type)
         if not prepared:
             print(f"Info: no rows for {csv_path}; skipping.")
             continue
+
         entities, run_date_str = prepared
         check_and_send_alerts(
             entities, run_date_str,
