@@ -635,10 +635,6 @@ function renderCharts(){
     ]},
     options:{...commonOpts}
   });
-  
-  // Compute index-wide averages across ALL days, excluding 0% and 100%
-  const avgNegAll = avgPctExcludingExtremes(serpNegPct);
-  const avgCtrlAll = avgPctExcludingExtremes(serpCtrlPct);
 
   // ---- SERP LINE ----
   
