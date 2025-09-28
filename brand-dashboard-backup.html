@@ -335,9 +335,9 @@ async function loadSerpDaily(){
       const indexCtrlDailyPct = [];
 
       for (const rows of byDate.values()) {
-        const negs  = rows.map(r => +r.neg_serp)
+        const negs  = rows.map(r => (+r.neg_serp) * 100)
                           .filter(v => Number.isFinite(v) && v > 0 && v < 100);
-        const ctrls = rows.map(r => +r.ctrl)
+        const ctrls = rows.map(r => (+r.ctrl) * 100)
                           .filter(v => Number.isFinite(v) && v > 0 && v < 100);
 
         indexNegDailyPct.push(negs.length  ? (negs.reduce((a,b)=>a+b,0)  / negs.length)  : NaN);
