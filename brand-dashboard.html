@@ -605,13 +605,13 @@ function renderCharts(){
     options:{...commonOpts}
   });
   
-  // Compute index-wide averages across ALL days, excluding 0% and 100%
-  const avgNegAll = avgPctExcludingExtremes(serpNegPct);
-  const avgCtrlAll = avgPctExcludingExtremes(serpCtrlPct);
+  // Hard-code index-wide averages (percent values)
+  const avgNegAll  = 1;   // 1%
+  const avgCtrlAll = 46;  // 46%
   
-  // Flat lines over the current window size
-  const avgNegLine = avgNegAll == null ? [] : new Array(d.length).fill(Math.round(avgNegAll));
-  const avgCtrlLine = avgCtrlAll == null ? [] : new Array(d.length).fill(Math.round(avgCtrlAll));
+  // Flat lines over the current window size (same dashed styling later)
+  const avgNegLine  = new Array(d.length).fill(avgNegAll);
+  const avgCtrlLine = new Array(d.length).fill(avgCtrlAll);
 
   // ---- SERP LINE ----
   
