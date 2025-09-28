@@ -233,6 +233,13 @@ const isISODate = s => /^\d{4}-\d{2}-\d{2}$/.test(String(s||'').trim());
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const fmtPct = (v) => (v==null) ? 'N/A' : Math.round(v*100)+'%';
 
+/*************** Style (SERP chart) ***************/
+const NEG_COLOR   = '#ff8261';
+const CTRL_COLOR  = '#58dbed';
+const SOLID_WIDTH = 3;        // daily (solid) thickness
+const DASH_WIDTH  = 2;        // averages (dashed) thickness
+const DASH_PATTERN = [8, 6];  // dash pattern for averages
+
 /* ===== Pager helpers (same as CEO) ===== */
 function clampDateStart(total){
   if (total <= DATE_WINDOW_SIZE) return 0;
@@ -607,6 +614,7 @@ function renderCharts(){
   const avgCtrlLine = avgCtrlAll == null ? [] : new Array(d.length).fill(Math.round(avgCtrlAll));
 
   // ---- SERP LINE ----
+  
   const sh = document.getElementById('serpChart').getContext('2d');
   if (serpChart) serpChart.destroy();
   serpChart = new Chart(sh, {
@@ -614,50 +622,51 @@ function renderCharts(){
     data: {
       labels: d,
       datasets: [
-        // Daily lines (renamed for clarity)
-        {
-          label: 'Daily Negative SERP %',
-          data: sN,
-          tension: .2,
-          borderWidth: 2,
-          fill: false,
-          borderColor: getComputedStyle(document.documentElement).getPropertyValue('--neg').trim(),
-          pointBackgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--neg').trim(),
-          pointBorderColor: getComputedStyle(document.documentElement).getPropertyValue('--neg').trim()
-        },
-        {
-          label: 'Daily Control %',
-          data: sC,
-          tension: .2,
-          borderWidth: 2,
-          fill: false,
-          borderColor: getComputedStyle(document.documentElement).getPropertyValue('--ctrl').trim(),
-          pointBackgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--ctrl').trim(),
-          pointBorderColor: getComputedStyle(document.documentElement).getPropertyValue('--ctrl').trim()
-        },
-      
-        // New index-average lines (horizontal, dashed, no points)
-        ...(avgNegLine.length ? [{
-          label: 'Average Negative SERP %',
-          data: avgNegLine,
-          tension: 0,
-          fill: false,
-          borderWidth: 2,
-          pointRadius: 0,
-          borderDash: [8,6],
-          borderColor: getComputedStyle(document.documentElement).getPropertyValue('--neg').trim()
-        }] : []),
-        ...(avgCtrlLine.length ? [{
-          label: 'Average Control %',
-          data: avgCtrlLine,
-          tension: 0,
-          fill: false,
-          borderWidth: 2,
-          pointRadius: 0,
-          borderDash: [8,6],
-          borderColor: getComputedStyle(document.documentElement).getPropertyValue('--ctrl').trim()
-        }] : [])
-      ]
+  // Daily (solid)
+  {
+    label: 'Daily Negative SERP %',
+    data: sN,
+    tension: 0.2,
+    borderWidth: SOLID_WIDTH,
+    fill: false,
+    borderColor: NEG_COLOR,
+    pointBackgroundColor: NEG_COLOR,
+    pointBorderColor: NEG_COLOR
+  },
+  {
+    label: 'Daily Control %',
+    data: sC,
+    tension: 0.2,
+    borderWidth: SOLID_WIDTH,
+    fill: false,
+    borderColor: CTRL_COLOR,
+    pointBackgroundColor: CTRL_COLOR,
+    pointBorderColor: CTRL_COLOR
+  },
+
+  // Index averages (horizontal, dashed, no points)
+  ...(avgNegLine.length ? [{
+    label: 'Average Negative SERP %',
+    data: avgNegLine,
+    tension: 0,
+    fill: false,
+    borderWidth: DASH_WIDTH,
+    borderDash: DASH_PATTERN,
+    borderColor: NEG_COLOR,
+    pointRadius: 0
+  }] : []),
+
+  ...(avgCtrlLine.length ? [{
+    label: 'Average Daily Control %',
+    data: avgCtrlLine,
+    tension: 0,
+    fill: false,
+    borderWidth: DASH_WIDTH,
+    borderDash: DASH_PATTERN,
+    borderColor: CTRL_COLOR,
+    pointRadius: 0
+  }] : [])
+]
 
     },
     options: { ...commonOpts }
