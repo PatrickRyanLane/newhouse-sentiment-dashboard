@@ -271,6 +271,14 @@ function hookDatePager(allDates){
   document.querySelectorAll('.dates-next').forEach(b => b.onclick = goNext);
 }
 
+// Average of a % array, excluding 0 and 100 and non-numbers.
+// Accepts values in 0–100 already; adjust if yours are 0–1.
+function avgPctExcludingExtremes(arr){
+  const vals = (arr || []).filter(v => Number.isFinite(v) && v > 0 && v < 100);
+  if (!vals.length) return null;
+  return vals.reduce((a,b)=>a+b, 0) / vals.length;
+}
+  
 /********************** CSV helpers **********************/
 async function fetchCsv(url){
   const r = await fetch(url, {cache:'no-store'});
@@ -589,6 +597,14 @@ function renderCharts(){
     ]},
     options:{...commonOpts}
   });
+  
+  // Compute index-wide averages across ALL days, excluding 0% and 100%
+  const avgNegAll = avgPctExcludingExtremes(serpNegPct);
+  const avgCtrlAll = avgPctExcludingExtremes(serpCtrlPct);
+  
+  // Flat lines over the current window size
+  const avgNegLine = avgNegAll == null ? [] : new Array(d.length).fill(Math.round(avgNegAll));
+  const avgCtrlLine = avgCtrlAll == null ? [] : new Array(d.length).fill(Math.round(avgCtrlAll));
 
   // ---- SERP LINE ----
   const sh = document.getElementById('serpChart').getContext('2d');
@@ -598,9 +614,51 @@ function renderCharts(){
     data: {
       labels: d,
       datasets: [
-        { label: 'Negative SERP %', data: sN, tension: .25, borderColor: '#ff8261', backgroundColor: 'rgba(255,130,97,.2)', fill: false },
-        { label: 'Control %',       data: sC, tension: .25, borderColor: '#58dbed', backgroundColor: 'rgba(88,219,237,.15)', fill: false }
+        // Daily lines (renamed for clarity)
+        {
+          label: 'Daily Negative SERP %',
+          data: sN,
+          tension: .2,
+          borderWidth: 2,
+          fill: false,
+          borderColor: getComputedStyle(document.documentElement).getPropertyValue('--neg').trim(),
+          pointBackgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--neg').trim(),
+          pointBorderColor: getComputedStyle(document.documentElement).getPropertyValue('--neg').trim()
+        },
+        {
+          label: 'Daily Control %',
+          data: sC,
+          tension: .2,
+          borderWidth: 2,
+          fill: false,
+          borderColor: getComputedStyle(document.documentElement).getPropertyValue('--ctrl').trim(),
+          pointBackgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--ctrl').trim(),
+          pointBorderColor: getComputedStyle(document.documentElement).getPropertyValue('--ctrl').trim()
+        },
+      
+        // New index-average lines (horizontal, dashed, no points)
+        ...(avgNegLine.length ? [{
+          label: 'Average Negative SERP %',
+          data: avgNegLine,
+          tension: 0,
+          fill: false,
+          borderWidth: 2,
+          pointRadius: 0,
+          borderDash: [8,6],
+          borderColor: getComputedStyle(document.documentElement).getPropertyValue('--neg').trim()
+        }] : []),
+        ...(avgCtrlLine.length ? [{
+          label: 'Average Control %',
+          data: avgCtrlLine,
+          tension: 0,
+          fill: false,
+          borderWidth: 2,
+          pointRadius: 0,
+          borderDash: [8,6],
+          borderColor: getComputedStyle(document.documentElement).getPropertyValue('--ctrl').trim()
+        }] : [])
       ]
+
     },
     options: { ...commonOpts }
   });
