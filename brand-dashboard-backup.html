@@ -220,6 +220,10 @@ const PAGE_SIZE = 25;
 
 let newsChart, serpChart;
 
+// Index-wide (constant) averages for dashed lines
+let INDEX_AVG_NEG = null;   // Average Negative SERP % across the index (all days)
+let INDEX_AVG_CTRL = null;  // Average Daily Control % across the index (all days)
+
 // per-date caches
 const _articlesCache = new Map(); // date -> Map(company -> {neg_pct})
 const _serpAggCache  = new Map(); // date -> Map(company -> {total, neg_serp, controlled})
@@ -319,6 +323,31 @@ async function loadSerpDaily(){
       neg_serp:+r.negative_serp||+r.neg_serp||0,
       ctrl:+r.controlled||+r.control||0
     })).filter(r=>isISODate(r.date) && r.company);
+    // ---- compute constant index averages (index-wide; run once per load)
+{
+  const byDate = new Map();
+  for (const r of serpsDaily) {
+    const key = r.date;
+    if (!byDate.has(key)) byDate.set(key, []);
+    byDate.get(key).push(r);
+  }
+
+  const indexNegDailyPct  = [];
+  const indexCtrlDailyPct = [];
+
+  for (const rows of byDate.values()) {
+    const negs  = rows.map(r => +r.neg_serp)
+                      .filter(v => Number.isFinite(v) && v > 0 && v < 100);
+    const ctrls = rows.map(r => +r.ctrl)
+                      .filter(v => Number.isFinite(v) && v > 0 && v < 100);
+
+    indexNegDailyPct.push(negs.length  ? (negs.reduce((a,b)=>a+b,0)  / negs.length)  : NaN);
+    indexCtrlDailyPct.push(ctrls.length ? (ctrls.reduce((a,b)=>a+b,0) / ctrls.length) : NaN);
+  }
+
+  INDEX_AVG_NEG  = avgPctExcludingExtremes(indexNegDailyPct);
+  INDEX_AVG_CTRL = avgPctExcludingExtremes(indexCtrlDailyPct);
+}
   }catch(e){ serpsDaily = []; }
 }
 
@@ -617,10 +646,15 @@ function renderCharts(){
   
   const sh = document.getElementById('serpChart').getContext('2d');
   if (serpChart) serpChart.destroy();
+  
+  const avgNegLine = INDEX_AVG_NEG  == null ? [] : new Array(d.length).fill(INDEX_AVG_NEG);
+  const avgCtrlLine = INDEX_AVG_CTRL == null ? [] : new Array(d.length).fill(INDEX_AVG_CTRL);
+  
   serpChart = new Chart(sh, {
     type: 'line',
     data: {
       labels: d,
+
       datasets: [
   // Daily (solid)
   {
