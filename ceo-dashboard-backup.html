@@ -793,6 +793,21 @@ function renderCharts(){
     options: { ...commonOpts }
   });
 
+  // Hard-code CEO-wide averages for dashed lines (match brand styling)
+  const avgNegAll  = 3;   // 3%
+  const avgCtrlAll = 38;  // 38%
+  
+  // Expand to current window length
+  const avgNegLine  = new Array(d.length).fill(avgNegAll);
+  const avgCtrlLine = new Array(d.length).fill(avgCtrlAll);
+  
+  // Styling constants (same as brand)
+  const SOLID_WIDTH  = 3;
+  const DASH_WIDTH   = 2;
+  const DASH_PATTERN = [8, 6];
+  const NEG_COLOR    = '#ff8261';
+  const CTRL_COLOR   = '#58dbed';
+
   // ---- SERP LINE ----
   const sh = document.getElementById('serpChart').getContext('2d');
   if (serpChart) serpChart.destroy();
@@ -801,9 +816,46 @@ function renderCharts(){
     data: {
       labels: d,
       datasets: [
-        { label: 'Negative SERP %', data: sN, tension: .25, borderColor: '#ff8261', backgroundColor: 'rgba(255,130,97,.2)', fill: false },
-        { label: 'Control %',       data: sC, tension: .25, borderColor: '#58dbed', backgroundColor: 'rgba(88,219,237,.15)', fill: false }
-      ]
+  // Daily (solid)
+  {
+    label: 'Daily Negative SERP %',   // was 'Negative SERP %'
+    data: sN,
+    tension: 0.25,
+    borderWidth: SOLID_WIDTH,
+    borderColor: NEG_COLOR,
+    fill: false
+  },
+  {
+    label: 'Daily SERP Control %',    // was 'Control %'
+    data: sC,
+    tension: 0.25,
+    borderWidth: SOLID_WIDTH,
+    borderColor: CTRL_COLOR,
+    fill: false
+  },
+
+  // Averages (dashed, no points)
+  {
+    label: 'Average Negative SERP %',
+    data: avgNegLine,
+    tension: 0,
+    fill: false,
+    borderWidth: DASH_WIDTH,
+    borderDash: DASH_PATTERN,
+    borderColor: NEG_COLOR,
+    pointRadius: 0
+  },
+  {
+    label: 'Average SERP Control %',
+    data: avgCtrlLine,
+    tension: 0,
+    fill: false,
+    borderWidth: DASH_WIDTH,
+    borderDash: DASH_PATTERN,
+    borderColor: CTRL_COLOR,
+    pointRadius: 0
+  }
+]
     },
     options: { ...commonOpts }
   });
