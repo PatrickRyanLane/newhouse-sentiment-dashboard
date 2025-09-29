@@ -88,7 +88,7 @@ def fetch_rss(query: str) -> feedparser.FeedParserDict:
 def label_sentiment(analyzer: SentimentIntensityAnalyzer, text: str) -> str:
     s = analyzer.polarity_scores(text or "")
     c = s.get("compound", 0.0)
-    if c >= 0.05:
+    if c >= 0.25:
         return "positive"
     if c <= -0.05:
         return "negative"
