@@ -12,6 +12,8 @@
       @apply px-5 py-2.5 rounded-lg font-medium transition;
       background: #000000;   /* black when unselected */
       color: #ffffff;
+      padding: 4px 16px;
+      border-radius: 8px;
     }
     .tab-btn:hover {
       background: #333333;   /* slightly lighter black on hover */
@@ -23,7 +25,7 @@
 
   </style>
 </head>
-<body class="bg-[#92e8ef] text-slate-900">
+<body class="bg-[#5e858e] text-slate-900">
   <div class="max-w-7xl mx-auto p-6">
     <header class="mb-4">
       <h1 class="text-3xl font-bold">Fortune 1000 Brand & CEO Risk Dashboard</h1>
@@ -42,7 +44,7 @@
     </nav>
 
     <!-- Frame -->
-    <section class="rounded-xl border bg-white overflow-hidden">
+    <section class="rounded-xl border-none bg-white overflow-hidden">
       <iframe id="dashFrame" title="Embedded dashboard" src="" class="w-full border-0"></iframe>
     </section>
   </div>
