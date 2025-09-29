@@ -9,6 +9,9 @@ BRANDS_TXT = "brands.txt"
 OUT_DIR = "data/articles"
 OUT_FILE = os.path.join(OUT_DIR, f"{DATE}-articles.csv")
 
+# Tunables (env overrides)
+MAX_PER_ALIAS = int(os.getenv("ARTICLES_MAX_PER_ALIAS", "50"))
+
 def google_news_rss(q):
     qs = urllib.parse.quote(q)
     return f"https://news.google.com/rss/search?q={qs}&hl=en-US&gl=US&ceid=US:en"
@@ -29,7 +32,6 @@ def fetch_one(brand, analyzer, pause=1.2):
     for item in soup.find_all("item"):
         title = (item.title.text or "").strip()
         link  = (item.link.text  or "").strip()
-        # try to unwrap Google redirect
         try:
             if "url=" in link:
                 link = urllib.parse.parse_qs(urllib.parse.urlparse(link).query).get("url", [link])[0]
@@ -40,10 +42,14 @@ def fetch_one(brand, analyzer, pause=1.2):
         sent   = classify(title, analyzer)
         out.append({
             "company": brand,
-            "title": title, "url": link, "source": source, "date": date, "sentiment": sent
+            "title": title,
+            "url": link,
+            "source": source,
+            "date": date,
+            "sentiment": sent
         })
     time.sleep(pause)  # be respectful
-    return out
+    return out[:MAX_PER_ALIAS]  # cap results
 
 def main():
     os.makedirs(OUT_DIR, exist_ok=True)
