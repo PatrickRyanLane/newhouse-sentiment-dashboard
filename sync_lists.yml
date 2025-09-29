@@ -1,0 +1,79 @@
+name: Sync helper lists from roster.csv
+
+on:
+  push:
+    paths:
+      - 'data/roster.csv'
+      - 'scripts/sync_brands_from_roster.py'
+      - 'sync_ceo_lists.py'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+# Prevent overlapping runs of this combined workflow
+concurrency:
+  group: sync-lists
+  cancel-in-progress: false
+
+jobs:
+  brands:
+    name: Sync Brand helper list
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Generate brands.txt from roster.csv
+        run: python scripts/sync_brands_from_roster.py
+
+      - name: Commit & push if changed (brands)
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git add brands.txt
+            git commit -m "chore(brands-list): sync from data/roster.csv"
+            git pull --rebase --autostash origin main || true
+            git push origin HEAD:main
+          else
+            echo "No changes to commit."
+          fi
+
+  ceo:
+    name: Sync CEO helper lists
+    runs-on: ubuntu-latest
+    needs: brands   # run after brands to avoid concurrent pushes
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Generate CEO lists
+        run: python sync_ceo_lists.py
+
+      - name: Commit & push if changed (ceo)
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git add ceos.txt ceo_companies.csv ceo_aliases.csv
+            git commit -m "chore(ceo-lists): sync from data/roster.csv"
+            git pull --rebase --autostash origin main || true
+            git push origin HEAD:main
+          else
+            echo "No changes to commit."
+          fi
