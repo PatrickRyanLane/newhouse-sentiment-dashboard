@@ -2,7 +2,6 @@
 import csv, sys, pathlib
 
 ROSTER = pathlib.Path("data/roster.csv")
-OUT_CEOS_TXT = pathlib.Path("ceos.txt")
 OUT_CEO_COMP = pathlib.Path("ceo_companies.csv")
 OUT_CEO_ALIAS = pathlib.Path("ceo_aliases.csv")
 
@@ -43,11 +42,7 @@ def main():
     if not ceo2company:
         print("WARNING: No CEO/company pairs parsed from roster.csv. Check headers.", file=sys.stderr)
 
-    # 1) ceos.txt
     names = sorted(ceo2company.keys(), key=lambda s: s.lower())
-    with OUT_CEOS_TXT.open("w", encoding="utf-8", newline="") as f:
-        for n in names:
-            f.write(n + "\n")
 
     # 2) ceo_companies.csv
     with OUT_CEO_COMP.open("w", encoding="utf-8", newline="") as f:
@@ -63,7 +58,7 @@ def main():
         for ceo in names:
             w.writerow([ceo, ceo2company[ceo]])
 
-    print(f"Generated {OUT_CEOS_TXT}, {OUT_CEO_COMP}, {OUT_CEO_ALIAS} from {ROSTER}")
+    print(f"Generated {OUT_CEO_COMP}, {OUT_CEO_ALIAS} from {ROSTER}")
 
 if __name__ == "__main__":
     main()
