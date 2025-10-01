@@ -296,58 +296,31 @@ def process_one_date(date_str: str, alias_map, ceo_to_company):
         axis=1,
     )
 
-    # Sentiment + Control per row
+        # Sentiment + Control per row
     analyzer = SentimentIntensityAnalyzer()
 
-# Neutralize specific terms that should not count as negative
-for term in [
-    "savage", "flees", "rob", "cancer",
-    "nicholas lower", "mad money"
-]:
-    analyzer.lexicon[term.lower()] = 0.0
+    # Neutralize specific terms that should not count as negative
+    for term in [
+        "savage", "flees", "rob", "cancer",
+        "nicholas lower", "mad money"
+    ]:
+        analyzer.lexicon[term.lower()] = 0.0
 
     controlled_domains = load_controlled_domains_from_roster()
 
-    mapped["sentiment"] = mapped.apply(lambda r: vader_label(analyzer, r), axis=1)
-    mapped["controlled"] = mapped.apply(lambda r: classify_control(r["url"], r["position"], r["company"], controlled_domains), axis=1)
+    mapped["sentiment"]  = mapped.apply(lambda r: vader_label(analyzer, r), axis=1)
+    mapped["controlled"] = mapped.apply(
+        lambda r: classify_control(r["url"], r["position"], r["company"], controlled_domains),
+        axis=1
+    )
 
     # Controlled -> positive (override)
     mapped.loc[mapped["controlled"] == True, "sentiment"] = "positive"
 
     # ---- Row-level output (for modal) ----
-    rows_df = pd.DataFrame({
-        "date":      date_str,
-        "ceo":       mapped["ceo"],
-        "company":   mapped["company"],
-        "title":     mapped["title"],
-        "url":       mapped["url"],
-        "position":  mapped["position"],
-        "snippet":   mapped["snippet"],
-        "sentiment": mapped["sentiment"],
-        "controlled":mapped["controlled"],
-    })
-    rows_path = OUT_DIR_ROWS / f"{date_str}-ceo-serps-rows.csv"
-    rows_df.to_csv(rows_path, index=False)
-    print(f"[write] {rows_path}")
-
+    # ... (rows_df build, write)
     # ---- Per-CEO aggregate for the day ----
-    # Choose the most frequent non-empty company name per CEO for display
-    def majority_company(series: pd.Series) -> str:
-        s = pd.Series(series).replace("", pd.NA).dropna()
-        if s.empty:
-            return ""
-        return s.mode().iloc[0]
-
-    ag = mapped.groupby("ceo", dropna=False).agg(
-        total=("sentiment", "size"),
-        controlled=("controlled", "sum"),
-        negative_serp=("sentiment", lambda s: (s == "negative").sum()),
-        neutral_serp=("sentiment",  lambda s: (s == "neutral").sum()),
-        positive_serp=("sentiment", lambda s: (s == "positive").sum()),
-        company=("company", majority_company),
-    ).reset_index()
-    ag.insert(0, "date", date_str)
-
+    # ... (ag build)
     # Save per-day aggregate
     day_path = OUT_DIR_DAILY / f"{date_str}-ceo-serps-processed.csv"
     ag.to_csv(day_path, index=False)
