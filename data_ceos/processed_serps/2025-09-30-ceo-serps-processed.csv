@@ -73,7 +73,7 @@ date,ceo,total,controlled,negative_serp,neutral_serp,positive_serp,company
 2025-09-30,Bob Flexon,10,4,0,6,4,UGI Utilities Inc
 2025-09-30,Bob Iger,13,5,2,4,7,Walt Disney
 2025-09-30,Bob Jordan,10,3,0,7,3,Southwest Airlines
-2025-09-30,Bob Michael,10,5,1,4,5,AbbVie
+2025-09-30,Bob Michael,10,5,0,5,5,AbbVie
 2025-09-30,Bob Pragada,10,4,0,5,5,Jacobs Solutions
 2025-09-30,Bom Kim,11,3,0,6,5,Coupang
 2025-09-30,Bracken Darrell,10,5,0,5,5,VF Corporation
@@ -117,7 +117,7 @@ date,ceo,total,controlled,negative_serp,neutral_serp,positive_serp,company
 2025-09-30,Carol Tome,10,2,1,5,4,UPS
 2025-09-30,Caroline S Grace,10,2,0,1,9,AMN Healthcare Services
 2025-09-30,Carrie Wheeler,10,3,1,6,3,Opendoor Technologies
-2025-09-30,Celeste B Mastin,10,5,1,4,5,HB Fuller
+2025-09-30,Celeste B Mastin,10,5,0,5,5,HB Fuller
 2025-09-30,Charles Chip Blankenship,10,4,0,5,5,Woodward Inc
 2025-09-30,Charles D. Young,9,3,0,4,5,Sun Communities
 2025-09-30,Charles H Giancarlo,10,6,0,4,6,Pure Storage
@@ -241,7 +241,7 @@ date,ceo,total,controlled,negative_serp,neutral_serp,positive_serp,company
 2025-09-30,Drew Houston,10,5,0,4,6,Dropbox
 2025-09-30,Drew M Wilkerson,10,4,0,5,5,RXO Inc
 2025-09-30,Dustin Semach,10,4,0,6,4,Sealed Air Corporation
-2025-09-30,E Jean Savage,10,4,6,0,4,Trinity Industries
+2025-09-30,E Jean Savage,10,4,0,6,4,Trinity Industries
 2025-09-30,Earl Austin,10,4,0,5,5,Quanta Services
 2025-09-30,Ed Bastian,10,4,0,6,4,Delta Air Lines
 2025-09-30,Edmund Shallcross III,10,2,0,7,3,Amica Mutual Insurance
@@ -262,7 +262,7 @@ date,ceo,total,controlled,negative_serp,neutral_serp,positive_serp,company
 2025-09-30,Eric Slifka,9,6,0,3,6,Global Partners
 2025-09-30,Eric T Steigerwalt,10,7,0,2,8,Brighthouse Financial
 2025-09-30,Eric W Gerstenberg,10,4,0,2,8,Clean Harbors
-2025-09-30,Erik Fyrwald,10,4,1,3,6,International Flavors & Fragrances
+2025-09-30,Erik Fyrwald,10,4,0,4,6,International Flavors & Fragrances
 2025-09-30,Erik Gershwind,10,3,0,6,4,MSC Industrial Direct
 2025-09-30,Erik Nordstrom,10,4,0,6,4,Nordstrom
 2025-09-30,Ernest Garcia III,10,3,1,5,4,Carvana
@@ -439,7 +439,7 @@ date,ceo,total,controlled,negative_serp,neutral_serp,positive_serp,company
 2025-09-30,John L Plueger,10,4,0,5,5,Air Lease
 2025-09-30,John May,9,3,1,5,3,Deere
 2025-09-30,John Mengucci,10,3,0,6,4,CACI International
-2025-09-30,John Pfeifer,10,3,1,4,5,Oshkosh Corporation
+2025-09-30,John Pfeifer,10,3,0,5,5,Oshkosh Corporation
 2025-09-30,John Plant,10,3,0,5,5,Howmet Aerospace
 2025-09-30,John R Ciulla,9,3,0,6,3,Webster Financial
 2025-09-30,John Stankey,11,5,1,5,5,AT&T
@@ -475,7 +475,7 @@ date,ceo,total,controlled,negative_serp,neutral_serp,positive_serp,company
 2025-09-30,Joyce Mullen,11,4,0,5,6,Insight Enterprises
 2025-09-30,Juan Andrade,10,3,0,7,3,USAA
 2025-09-30,Juan Luciano,10,4,2,4,4,Archer Daniels Midland
-2025-09-30,Judith Marks,10,3,1,4,5,Otis Worldwide
+2025-09-30,Judith Marks,10,3,0,5,5,Otis Worldwide
 2025-09-30,Judy R McReynolds,10,5,0,4,6,ArcBest
 2025-09-30,Julie Felss Masino,10,4,0,6,4,Cracker Barrel Old Country Store
 2025-09-30,Julie Schertell,9,3,0,4,5,Mativ
@@ -486,7 +486,7 @@ date,ceo,total,controlled,negative_serp,neutral_serp,positive_serp,company
 2025-09-30,Karen S Haller,10,3,0,7,3,Southwest Gas Holdings
 2025-09-30,Karl G. Glassman,10,4,0,6,4,Leggett & Platt
 2025-09-30,Karla Lewis,10,5,0,5,5,Reliance Inc
-2025-09-30,Karsanbhai,10,5,2,2,6,Emerson Electric
+2025-09-30,Karsanbhai,10,5,1,3,6,Emerson Electric
 2025-09-30,Kathleen Johnson,10,3,0,6,4,Lumen Technologies
 2025-09-30,Kathleen Mazzarella,10,3,0,7,3,Graybar Electric
 2025-09-30,Kathleen Quirk,10,4,0,6,4,Freeport-McMoRan
@@ -507,7 +507,7 @@ date,ceo,total,controlled,negative_serp,neutral_serp,positive_serp,company
 2025-09-30,Kevin Hourican,10,4,0,6,4,Sysco
 2025-09-30,Kevin J Wheeler,9,4,0,5,4,A O Smith
 2025-09-30,Kevin Kwilinski,10,2,1,6,3,Berry Global
-2025-09-30,Kevin Lobo,10,5,1,2,7,Stryker
+2025-09-30,Kevin Lobo,10,5,0,3,7,Stryker
 2025-09-30,Kevin M Freeman,10,1,0,4,6,Old Dominion Freight Line
 2025-09-30,Kevin Murphy,19,6,0,12,7,Publix Super Markets
 2025-09-30,Kevin Plank,12,4,0,7,5,Under Armour
@@ -549,7 +549,7 @@ date,ceo,total,controlled,negative_serp,neutral_serp,positive_serp,company
 2025-09-30,Lisa Su,10,4,0,3,7,Advanced Micro Devices
 2025-09-30,Lloyd Yates,10,4,0,5,5,NiSource
 2025-09-30,Lorenzo Simonelli,9,3,0,5,4,Baker Hughes
-2025-09-30,Lori Flees,10,3,5,2,3,Valvoline Inc
+2025-09-30,Lori Flees,10,3,0,7,3,Valvoline Inc
 2025-09-30,Lori Koch,9,4,0,4,5,DuPont
 2025-09-30,Lorie L Tekorius,10,4,0,5,5,Greenbrier
 2025-09-30,Louis V Pinkham,10,4,0,5,5,Regal Rexnord
@@ -563,7 +563,7 @@ date,ceo,total,controlled,negative_serp,neutral_serp,positive_serp,company
 2025-09-30,Malcolm Wilson,10,2,0,8,2,GXO Logistics
 2025-09-30,Marc Benioff,9,4,1,4,4,Salesforce
 2025-09-30,Marc Bitzer,10,4,0,5,5,Whirlpool
-2025-09-30,Marc Casper,10,5,1,3,6,Thermo Fisher Scientific
+2025-09-30,Marc Casper,10,5,0,4,6,Thermo Fisher Scientific
 2025-09-30,Marc Miller,10,5,0,4,6,Universal Health Services
 2025-09-30,Marc Rowan,11,4,0,4,7,Apollo Global Management
 2025-09-30,Marcus Lemonis,10,7,1,2,7,Camping World
@@ -608,7 +608,7 @@ date,ceo,total,controlled,negative_serp,neutral_serp,positive_serp,company
 2025-09-30,Matt Wilson,10,5,0,3,7,Light & Wonder
 2025-09-30,Matthew Flannery,9,4,0,2,7,United Rentals
 2025-09-30,Matthew J Cox,10,3,0,6,4,Matson Inc
-2025-09-30,Matthew J Murphy,10,3,1,5,4,Marvell Technology
+2025-09-30,Matthew J Murphy,10,3,0,6,4,Marvell Technology
 2025-09-30,Matthew Lucey,10,3,0,5,5,PBF Energy
 2025-09-30,Matthew Meloy,9,4,0,4,5,Targa Resources
 2025-09-30,Matthew Missad,10,3,0,4,6,UFP Industries
@@ -625,7 +625,7 @@ date,ceo,total,controlled,negative_serp,neutral_serp,positive_serp,company
 2025-09-30,Michael Doss,10,2,0,6,4,Graphic Packaging
 2025-09-30,Michael E Reed,10,2,0,7,3,Gannett
 2025-09-30,Michael Fiddelke,11,8,0,2,9,Target
-2025-09-30,Michael Hsu,10,3,1,3,6,Kimberly-Clark
+2025-09-30,Michael Hsu,10,3,0,4,6,Kimberly-Clark
 2025-09-30,Michael Hutchins,10,3,0,3,7,Freddie Mac
 2025-09-30,Michael J Brown,10,3,0,7,3,Euronet Worldwide
 2025-09-30,Michael J Happe,11,4,0,4,7,Winnebago Industries
@@ -662,7 +662,7 @@ date,ceo,total,controlled,negative_serp,neutral_serp,positive_serp,company
 2025-09-30,Neil Hunn,9,3,0,6,3,Roper Technologies
 2025-09-30,Neil M Ashe,10,3,0,6,4,Acuity Inc
 2025-09-30,Nicholas I Fink,10,4,1,4,5,Fortune Brands Innovations
-2025-09-30,Nicholas R Lower,10,4,3,2,5,Federated Mutual Insurance
+2025-09-30,Nicholas R Lower,10,4,1,4,5,Federated Mutual Insurance
 2025-09-30,Nicholas T Pinchuk,10,1,0,7,3,Snap-on
 2025-09-30,Nick DeIuliis,10,4,0,6,4,CNX Resources
 2025-09-30,Nick Jeffery,10,3,1,5,4,Frontier Communications
@@ -759,10 +759,10 @@ date,ceo,total,controlled,negative_serp,neutral_serp,positive_serp,company
 2025-09-30,Rick Lanoha,9,0,0,8,1,Peter Kiewit Sons'
 2025-09-30,Rick McKenney,10,2,0,7,3,Unum Group
 2025-09-30,Rick Wurster,8,4,0,1,7,Charles Schwab
-2025-09-30,Rob Katz,10,4,4,2,4,Vail Resorts
-2025-09-30,Rob Saltiel,10,4,2,3,5,MRC Global
-2025-09-30,Rob Sharps,10,5,2,1,7,T Rowe Price
-2025-09-30,Rob Vitale,10,6,2,2,6,Post Holdings
+2025-09-30,Rob Katz,10,4,0,5,5,Vail Resorts
+2025-09-30,Rob Saltiel,10,4,0,5,5,MRC Global
+2025-09-30,Rob Sharps,10,5,0,3,7,T Rowe Price
+2025-09-30,Rob Vitale,10,6,0,4,6,Post Holdings
 2025-09-30,Robert A Bruggeworth,10,3,0,7,3,Qorvo
 2025-09-30,Robert Antokol,10,2,0,8,2,Playtika Holding
 2025-09-30,Robert Berkley,10,3,0,5,5,WR Berkley
@@ -770,10 +770,10 @@ date,ceo,total,controlled,negative_serp,neutral_serp,positive_serp,company
 2025-09-30,Robert Bradway,10,5,0,3,7,Amgen
 2025-09-30,Robert D Lawler,10,1,0,9,1,Continental Resources
 2025-09-30,Robert E Price,11,4,0,7,4,PriceSmart
-2025-09-30,Robert Fauber,10,2,2,6,2,Moodys Corporation
+2025-09-30,Robert Fauber,10,2,0,8,2,Moodys Corporation
 2025-09-30,Robert Ford,8,3,0,3,5,Abbott Laboratories
 2025-09-30,Robert Frenzel,10,4,0,4,6,Xcel Energy
-2025-09-30,Robert G Painter,10,5,2,3,5,Trimble
+2025-09-30,Robert G Painter,10,5,0,5,5,Trimble
 2025-09-30,Robert Goldstein,10,3,0,7,3,Las Vegas Sands
 2025-09-30,Robert Greenberg,11,0,0,11,0,Skechers USA
 2025-09-30,Robert H Schottenstein,10,2,0,7,3,M/I Homes
@@ -782,7 +782,7 @@ date,ceo,total,controlled,negative_serp,neutral_serp,positive_serp,company
 2025-09-30,Robert Kyncl,12,5,0,5,7,Warner Music Group
 2025-09-30,Robert L Reffkin,10,4,0,5,5,Compass Group
 2025-09-30,Robert M Buck,9,3,0,6,3,TopBuild
-2025-09-30,Robert M Davis,10,3,3,4,3,Merck
+2025-09-30,Robert M Davis,10,3,0,6,4,Merck
 2025-09-30,Robert Martin,10,4,0,5,5,THOR Industries
 2025-09-30,Robert Mauch,9,5,0,4,5,Cencora
 2025-09-30,Robert Sanchez,10,3,0,6,4,Ryder System
