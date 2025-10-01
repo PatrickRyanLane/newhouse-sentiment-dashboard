@@ -75,7 +75,27 @@ UNCONTROLLED_DOMAINS = {
     "wikipedia.org", "youtube.com", "youtu.be", "tiktok.com"
 }
 
+# Words/phrases to ignore for title-based sentiment (intent) classification
+NEUTRALIZE_TITLE_TERMS = [
+    r"\bflees\b",
+    r"\bsavage\b",
+    r"\brob\b",
+    r"\bnicholas\s+lower\b",
+    r"\bmad\s+money\b",
+]
+NEUTRALIZE_TITLE_RE = re.compile("|".join(NEUTRALIZE_TITLE_TERMS), flags=re.IGNORECASE)
+
 # ------------------------ Small helpers -----------------------
+
+def strip_neutral_terms_from_title(title: str) -> str:
+    """
+    Remove specific words/phrases from titles so they don't drive sentiment.
+    If removal empties the title, caller should treat the result as neutral.
+    """
+    s = str(title or "")
+    s = NEUTRALIZE_TITLE_RE.sub(" ", s)
+    s = re.sub(r"\s+", " ", s).strip()
+    return s
 
 def norm(s: str) -> str:
     s = str(s or "").lower().strip()
@@ -261,8 +281,9 @@ def classify_control(url: str, position, company: str, controlled_domains: set[s
 
 def vader_label(analyzer: SentimentIntensityAnalyzer, row) -> str:
     # Only calculate sentiment on TITLE (ignore snippet)
-    text = (row.get("title") or "").strip()
-    if not text:
+    raw_text = (row.get("title") or "").strip()
+    text = strip_neutral_terms_from_title(raw_text)
+    if not text:  # if title is empty after stripping, treat as neutral
         return "neutral"
     score = analyzer.polarity_scores(text)["compound"]
     if score >= 0.05:
