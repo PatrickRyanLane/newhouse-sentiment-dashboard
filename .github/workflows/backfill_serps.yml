@@ -1,4 +1,4 @@
-name: Backfill Brand SERPs
+name: Backfill Brand & CEO SERPs
 
 on:
   workflow_dispatch:
@@ -22,7 +22,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0  # needed for rebase operations
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -36,7 +35,7 @@ jobs:
           if [ -f requirements.txt ]; then
             python -m pip install -r requirements.txt
           else
-            # minimal deps for brand script
+            # minimal deps for both brand & CEO scripts
             python -m pip install pandas requests vaderSentiment
           fi
 
@@ -48,25 +47,31 @@ jobs:
         run: |
           set -euo pipefail
           python - <<'PY'
-          import os, sys, subprocess
-          import datetime as dt
-
-          start = os.environ.get("START")
+          import os, sys, subprocess, datetime as dt
+          start = os.environ["START"]
           end   = os.environ.get("ENDIN") or dt.date.today().isoformat()
-      
           d = dt.date.fromisoformat(start)
           end_d = dt.date.fromisoformat(end)
-
           while d <= end_d:
             s = d.isoformat()
-            print(f"Processing {s}…")
+            print(f"[brand] {s}")
             rc = subprocess.call([sys.executable, "scripts/process_serps_brands.py", "--date", s])
             if rc != 0:
-              # Treat as a SKIP so the workflow keeps going when S3 is missing
-              print(f"[skip] {s} (no raw SERP on S3 or non-fatal error)")
+              print(f"[brand][skip] {s} (no raw SERP or non-fatal error)")
             d += dt.timedelta(days=1)
           PY
 
+      - name: Backfill CEO SERPs
+        shell: bash
+        env:
+          START: ${{ github.event.inputs.start }}
+          ENDIN: ${{ github.event.inputs.end }}
+        run: |
+          set -euo pipefail
+          END_DATE="${ENDIN:-$(date -u +%F)}"
+          echo "Backfilling CEO SERPs from ${START} to ${END_DATE}"
+          # Your script supports inclusive range via --backfill START END
+          python scripts/process_serps.py --backfill "${START}" "${END_DATE}"
 
       - name: Commit outputs
         shell: bash
@@ -75,18 +80,14 @@ jobs:
           END_IN:   ${{ github.event.inputs.end }}
         run: |
           set -euo pipefail
-
-          # Git identity + trust this checkout
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
-          # Rebase-safe pull even with local changes created by the backfill step
           git fetch origin main
           git checkout main
           git pull --rebase --autostash origin main
 
-          # Stage & commit
           git add -A
           if git diff --cached --quiet; then
             echo "No data changes to commit."
@@ -95,9 +96,8 @@ jobs:
 
           START_DATE="${START_IN:-manual}"
           DATE_LABEL="${END_IN:-$(date -u +%F)}"
-          git commit -m "brand SERPs: backfill ${START_DATE}..${DATE_LABEL}"
+          git commit -m "SERPs backfill (brand + CEO): ${START_DATE}..${DATE_LABEL}"
 
-          # Push; if remote moved in the meantime, rebase once and retry
           if ! git push origin HEAD:main; then
             echo "Push rejected; rebasing once…"
             git pull --rebase --autostash origin main
