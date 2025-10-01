@@ -298,6 +298,14 @@ def process_one_date(date_str: str, alias_map, ceo_to_company):
 
     # Sentiment + Control per row
     analyzer = SentimentIntensityAnalyzer()
+
+# Neutralize specific terms that should not count as negative
+for term in [
+    "savage", "flees", "rob", "cancer",
+    "nicholas lower", "mad money"
+]:
+    analyzer.lexicon[term.lower()] = 0.0
+
     controlled_domains = load_controlled_domains_from_roster()
 
     mapped["sentiment"] = mapped.apply(lambda r: vader_label(analyzer, r), axis=1)
