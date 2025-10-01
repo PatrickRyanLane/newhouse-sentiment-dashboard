@@ -6,7 +6,7 @@ on:
   workflow_dispatch: {}
   push:
     paths:
-      - 'news_sentiment_roc.py'
+      - 'scripts/news_sentiment_roc.py'
       - 'requirements.txt'
       - 'roc_aliases.csv'
       - 'roc.txt'
@@ -51,7 +51,7 @@ jobs:
         run: mkdir -p data_roc/articles
 
       - name: Run daily ROC sentiment
-        run: python news_sentiment_roc.py
+        run: python scripts/news_sentiment_roc.py
 
       - name: Commit & push changes (if any)
         run: |
