@@ -263,7 +263,7 @@ def vader_label(analyzer: SentimentIntensityAnalyzer, text: str) -> str:
     if not text or not str(text).strip():
         return "neutral"
     score = analyzer.polarity_scores(str(text))["compound"]
-    if score >= 0.05:
+    if score >= 0.25:
         return "positive"
     if score <= -0.05:
         return "negative"
