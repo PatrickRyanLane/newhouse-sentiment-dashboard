@@ -259,11 +259,13 @@ def classify_control(url: str, position, company: str, controlled_domains: set[s
 
     return False
 
-def vader_label(analyzer: SentimentIntensityAnalyzer, text: str) -> str:
-    if not text or not str(text).strip():
+def vader_label(analyzer: SentimentIntensityAnalyzer, row) -> str:
+    # Only calculate sentiment on TITLE (ignore snippet)
+    text = (row.get("title") or "").strip()
+    if not text:
         return "neutral"
-    score = analyzer.polarity_scores(str(text))["compound"]
-    if score >= 0.25:
+    score = analyzer.polarity_scores(text)["compound"]
+    if score >= 0.05:
         return "positive"
     if score <= -0.05:
         return "negative"
@@ -298,7 +300,7 @@ def process_one_date(date_str: str, alias_map, ceo_to_company):
     analyzer = SentimentIntensityAnalyzer()
     controlled_domains = load_controlled_domains_from_roster()
 
-    mapped["sentiment"]  = mapped.apply(lambda r: vader_label(analyzer, r["snippet"] or r["title"]), axis=1)
+    mapped["sentiment"] = mapped.apply(lambda r: vader_label(analyzer, r), axis=1)
     mapped["controlled"] = mapped.apply(lambda r: classify_control(r["url"], r["position"], r["company"], controlled_domains), axis=1)
 
     # Controlled -> positive (override)
