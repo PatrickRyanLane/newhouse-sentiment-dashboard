@@ -463,12 +463,16 @@ async function loadSerpDaily(){
 }
 
 /********************** Risk **********************/
+// Rules:
+// High   = negPct > 0
+// Medium = negPct === 0 AND ctrlPct < 0.35
+// Low    = everything else
 function computeRisk(negPct, ctrlPct){
-  const n = (negPct ?? 0)*100, c = (ctrlPct ?? 0)*100;
-  if (negPct==null || ctrlPct==null) return 'N/A';
-  if (n >= 40 || c < 25) return 'High';
-  if (n >= 25 || c < 50) return 'Medium';
-  return 'Low';
+  if (negPct == null || isNaN(negPct)) return 'N/A';
+  if (negPct > 0) return 'High';
+  // negPct is exactly zero; control needed to decide
+  if (ctrlPct == null || isNaN(ctrlPct)) return 'N/A';
+  return (ctrlPct < 0.35) ? 'Medium' : 'Low';
 }
 
 /********************** NEW: per-date table sources **********************/
