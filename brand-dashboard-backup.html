@@ -402,13 +402,14 @@ async function init(){
   document.getElementById('nextBtn').onclick = ()=>{ const totalPages = Math.max(1, Math.ceil(filteredRows.length/PAGE_SIZE)); if (currentPage<totalPages){ currentPage++; renderTable(); } };
 
   document.querySelectorAll('thead th[data-key]').forEach(th=>{
-    th.style.cursor='pointer';
-    th.addEventListener('click', ()=>{
-      const k = th.getAttribute('data-key');
-      if (currentSort.key===k) currentSort.dir*=-1; else { currentSort.key=k; currentSort.dir=1; }
-      renderTable();
-    });
+  th.style.cursor='pointer';
+  th.addEventListener('click', ()=>{
+    const k = th.getAttribute('data-key');
+    if (currentSort.key===k) currentSort.dir*=-1; else { currentSort.key=k; currentSort.dir=1; }
+    currentPage = 1;         // <-- go back to first page on new sort
+    renderTable();
   });
+});
 
   renderAll();
 
@@ -458,21 +459,42 @@ async function renderAll(){
   renderTable();
   renderCharts();
 }
+function sortRowsInPlace(){
+  if (!currentSort.key) return;
+  const key = currentSort.key, dir = currentSort.dir;
+
+  // Rank for Risk sorting (High > Medium > Low > N/A)
+  const riskRank = { High: 3, Medium: 2, Low: 1, 'N/A': 0, null: 0, undefined: 0 };
+
+  filteredRows.sort((a,b)=>{
+    let ka = a[key], kb = b[key];
+
+    // Custom ordering for Risk
+    if (key === 'risk'){
+      return dir * ((riskRank[ka] ?? 0) - (riskRank[kb] ?? 0));
+    }
+
+    // Try numeric compare first
+    const na = (ka == null) ? NaN : +ka;
+    const nb = (kb == null) ? NaN : +kb;
+    if (Number.isFinite(na) && Number.isFinite(nb)){
+      return dir * (na - nb);
+    }
+
+    // Fallback to string compare
+    return dir * String(ka ?? '').localeCompare(String(kb ?? ''));
+  });
+}
 
 function renderTable(){
   const tbody = document.getElementById('tbody');
-  let rows = [...filteredRows];
 
-  if (currentSort.key){
-    rows.sort((a,b)=>{
-      const ka=a[currentSort.key], kb=b[currentSort.key];
-      if (typeof ka==='string') return currentSort.dir*ka.localeCompare(kb);
-      return currentSort.dir*((ka??-1)-(kb??-1));
-    });
-  }
+  // Sort ALL rows, not just the current page
+  sortRowsInPlace();
 
   const start = (currentPage-1)*PAGE_SIZE;
-  const pageRows = rows.slice(start, start+PAGE_SIZE);
+  const pageRows = filteredRows.slice(start, start+PAGE_SIZE);
+
   tbody.innerHTML = pageRows.map(r=>{
     const checked = (selectedCompany && selectedCompany===r.company) ? 'checked' : '';
     return `<tr>
