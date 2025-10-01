@@ -5,7 +5,7 @@ on:
     paths:
       - 'data/roster.csv'
       - 'scripts/sync_brands_from_roster.py'
-      - 'sync_ceo_lists.py'
+      - 'scripts/sync_ceo_lists.py'
   workflow_dispatch: {}
 
 permissions:
@@ -63,7 +63,7 @@ jobs:
           python-version: '3.11'
 
       - name: Generate CEO lists
-        run: python sync_ceo_lists.py
+        run: python scripts/sync_ceo_lists.py
 
       - name: Commit & push if changed (ceo)
         run: |

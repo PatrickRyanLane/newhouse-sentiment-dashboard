@@ -65,12 +65,12 @@ jobs:
           ARTICLES_SLEEP_SEC: "0.35"
           # ARTICLES_DATE: "YYYY-MM-DD"  # optional for backfills
         run: |
-          python news_articles_ceos.py
+          python scripts/news_articles_ceos.py
 
       # Normalize daily counts and write both data_ceos/<date>.csv and daily_counts.csv
       - name: Run daily CEO sentiment (counts)
         run: |
-          python news_sentiment_ceos.py \
+          python scripts/news_sentiment_ceos.py \
             --aliases data/ceo_aliases.csv \
             --articles-dir data_ceos/articles \
             --daily-dir data_ceos \
