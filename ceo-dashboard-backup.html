@@ -625,6 +625,12 @@ renderTable();
 renderCharts(); // charts keep using existing aggregated sources
 
 }
+function riskRank(risk) {
+  if (risk === 'High') return 3;
+  if (risk === 'Medium') return 2;
+  if (risk === 'Low') return 1;
+  return 0; // for 'N/A'
+}
 
 function renderTable(){
   const tbody = document.getElementById('tbody');
@@ -632,12 +638,19 @@ function renderTable(){
 
   // sorting
   if (currentSort.key){
-    rows.sort((a,b)=>{
-      const ka = a[currentSort.key], kb = b[currentSort.key];
-      if (typeof ka === 'string') return currentSort.dir * ka.localeCompare(kb);
-      return currentSort.dir * ((ka ?? -1) - (kb ?? -1));
-    });
-  }
+  rows.sort((a,b)=>{
+    const ka = a[currentSort.key], kb = b[currentSort.key];
+
+    if (currentSort.key === 'risk') {
+      return currentSort.dir * (riskRank(ka) - riskRank(kb));
+    }
+
+    if (typeof ka === 'string') {
+      return currentSort.dir * ka.localeCompare(kb);
+    }
+    return currentSort.dir * ((ka ?? -1) - (kb ?? -1));
+  });
+}
 
   const start = (currentPage-1)*PAGE_SIZE;
   const pageRows = rows.slice(start, start+PAGE_SIZE);
