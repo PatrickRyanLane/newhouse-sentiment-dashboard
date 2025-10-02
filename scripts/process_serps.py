@@ -49,7 +49,7 @@ from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 S3_TEMPLATE = "https://tk-public-data.s3.us-east-1.amazonaws.com/serp_files/{date}-ceo-serps.csv"
 
-# First day you said CEO SERPs exist
+# First day CEO SERPs exist
 FIRST_AVAILABLE_DATE = dt.date(2025, 9, 15)
 
 # Updated to use consolidated roster
@@ -74,7 +74,7 @@ UNCONTROLLED_DOMAINS = {
     "wikipedia.org", "youtube.com", "youtu.be", "tiktok.com"
 }
 
-# Words/phrases to ignore for title-based sentiment (intent) classification
+# Words/phrases to ignore for title-based sentiment classification
 NEUTRALIZE_TITLE_TERMS = [
     r"\bflees\b",
     r"\bsavage\b",
@@ -87,10 +87,6 @@ NEUTRALIZE_TITLE_RE = re.compile("|".join(NEUTRALIZE_TITLE_TERMS), flags=re.IGNO
 # ------------------------ Small helpers -----------------------
 
 def strip_neutral_terms_from_title(title: str) -> str:
-    """
-    Remove specific words/phrases from titles so they don't drive sentiment.
-    If removal empties the title, caller should treat the result as neutral.
-    """
     s = str(title or "")
     s = NEUTRALIZE_TITLE_RE.sub(" ", s)
     s = re.sub(r"\s+", " ", s).strip()
@@ -128,7 +124,6 @@ def fetch_csv_text(url: str, timeout=30):
     return r.text
 
 def load_roster_data():
-    """Load from rosters/main-roster.csv"""
     if not MAIN_ROSTER_PATH.exists():
         raise FileNotFoundError(f"Main roster not found: {MAIN_ROSTER_PATH}")
 
@@ -190,14 +185,6 @@ def load_roster_data():
 # -------------------- Normalization & rules --------------------
 
 def normalize_raw_columns(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Standardize raw fields:
-      query_alias  <- raw 'company' (alias text: 'Tim Cook Apple')
-      title        <- 'title'/'page_title'/'result'
-      url          <- 'url'/'link'
-      position     <- 'position'/'rank'/'pos'
-      snippet      <- 'snippet'/'description'
-    """
     cols = {c.lower(): c for c in df.columns}
     q_c   = cols.get("company") or cols.get("query") or cols.get("search")
     t_c   = cols.get("title") or cols.get("page_title") or cols.get("result")
@@ -213,12 +200,11 @@ def normalize_raw_columns(df: pd.DataFrame) -> pd.DataFrame:
     out["snippet"]     = df[sn_c].astype(str).str.strip() if sn_c else ""
     return out
 
-def resolve_ceo_company(query_alias: str, alias_map: dict[str, tuple[str,str]], ceo_to_company: dict[str,str]) -> tuple[str,str]:
+def resolve_ceo_company(query_alias: str, alias_map, ceo_to_company):
     qn = norm(query_alias)
     if qn in alias_map:
         return alias_map[qn]
 
-    # Fallback: CEO + simplified company tokens all present in alias
     best = None
     best_score = 0
     for ceo, comp in ceo_to_company.items():
@@ -230,15 +216,7 @@ def resolve_ceo_company(query_alias: str, alias_map: dict[str, tuple[str,str]], 
                 best_score = score
     return best if best else ("", "")
 
-def classify_control(url: str, position, company: str, controlled_domains: set[str]) -> bool:
-    """
-    Return True if URL is 'controlled' by the brand:
-      - Host is in controlled_domains (from roster)
-      - Company name appears within the hostname (simplified)
-      - Known controlled social (FB/LI/IG/Twitter/X)
-      - Governance/about-like paths
-    Always uncontrolled if host is in UNCONTROLLED_DOMAINS (Wikipedia, YouTube, TikTok).
-    """
+def classify_control(url: str, position, company: str, controlled_domains):
     try:
         parsed = urlparse(url or "")
         domain = (parsed.netloc or "").lower().replace("www.", "")
@@ -246,34 +224,28 @@ def classify_control(url: str, position, company: str, controlled_domains: set[s
     except Exception:
         domain, path = "", ""
 
-    # Always uncontrolled
     if any(d in domain for d in UNCONTROLLED_DOMAINS):
         return False
 
-    # Domain from roster
     if domain in controlled_domains:
         return True
 
-    # Company in domain (simplified)
     comp_simple = simplify_company(company)
     if comp_simple and comp_simple.replace(" ", "") in domain.replace(".", ""):
         return True
 
-    # Controlled social
     if any(s in domain for s in CONTROLLED_SOCIAL_DOMAINS):
         return True
 
-    # Controlled paths
     if any(k in path for k in CONTROLLED_PATH_KEYWORDS):
         return True
 
     return False
 
-def vader_label(analyzer: SentimentIntensityAnalyzer, row) -> str:
-    # Only calculate sentiment on TITLE (ignore snippet)
+def vader_label(analyzer, row):
     raw_text = (row.get("title") or "").strip()
     text = strip_neutral_terms_from_title(raw_text)
-    if not text:  # if title is empty after stripping, treat as neutral
+    if not text:
         return "neutral"
     score = analyzer.polarity_scores(text)["compound"]
     if score >= 0.05:
@@ -300,23 +272,19 @@ def process_one_date(date_str: str, alias_map, ceo_to_company, controlled_domain
     raw = read_csv_safely(text)
     base = normalize_raw_columns(raw)
 
-    # Map alias -> (CEO, Company)
     mapped = base.copy()
     mapped[["ceo", "company"]] = mapped.apply(
         lambda r: pd.Series(resolve_ceo_company(r["query_alias"], alias_map, ceo_to_company)),
         axis=1,
     )
 
-    # Sentiment + Control per row
     analyzer = SentimentIntensityAnalyzer()
 
     mapped["sentiment"] = mapped.apply(lambda r: vader_label(analyzer, r), axis=1)
     mapped["controlled"] = mapped.apply(lambda r: classify_control(r["url"], r["position"], r["company"], controlled_domains), axis=1)
 
-    # Controlled -> positive (override)
     mapped.loc[mapped["controlled"] == True, "sentiment"] = "positive"
 
-    # ---- Row-level output (for modal) ----
     rows_df = pd.DataFrame({
         "date":      date_str,
         "ceo":       mapped["ceo"],
@@ -332,9 +300,7 @@ def process_one_date(date_str: str, alias_map, ceo_to_company, controlled_domain
     rows_df.to_csv(rows_path, index=False)
     print(f"[write] {rows_path}")
 
-    # ---- Per-CEO aggregate for the day ----
-    # Choose the most frequent non-empty company name per CEO for display
-    def majority_company(series: pd.Series) -> str:
+    def majority_company(series):
         s = pd.Series(series).replace("", pd.NA).dropna()
         if s.empty:
             return ""
@@ -350,12 +316,10 @@ def process_one_date(date_str: str, alias_map, ceo_to_company, controlled_domain
     ).reset_index()
     ag.insert(0, "date", date_str)
 
-    # Save per-day aggregate
     day_path = OUT_DIR_DAILY / f"{date_str}-ceo-serps-processed.csv"
     ag.to_csv(day_path, index=False)
     print(f"[write] {day_path}")
 
-    # ---- Update rolling index ----
     if INDEX_PATH.exists():
         idx = read_csv_safely(INDEX_PATH)
         idx = idx[idx["date"] != date_str]
@@ -381,10 +345,8 @@ def backfill(start: str, end: str, alias_map, ceo_to_company, controlled_domains
         process_one_date(d.isoformat(), alias_map, ceo_to_company, controlled_domains)
         d += dt.timedelta(days=1)
 
-# ---------------------------- CLI ----------------------------
-
 def main():
-    ap = argparse.ArgumentParser(description="Process CEO SERPs with sentiment/control and write index + row-level outputs.")
+    ap = argparse.ArgumentParser(description="Process CEO SERPs with sentiment/control.")
     ap.add_argument("--date", help="Process a single date (YYYY-MM-DD).")
     ap.add_argument("--backfill", nargs=2, metavar=("START", "END"),
                     help="Process an inclusive date range (YYYY-MM-DD YYYY-MM-DD).")
