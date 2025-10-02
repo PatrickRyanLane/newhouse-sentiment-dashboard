@@ -15,7 +15,7 @@ Process daily BRAND SERP data:
 Outputs:
   1) Row-level processed SERPs:       data/processed_serps/{date}-brand-serps-modal.csv
   2) Per-company daily aggregate:     data/processed_serps/{date}-brand-serps-table.csv
-  3) Rolling daily index:             daily_counts/brand-serps-daily-counts-chart.csv
+  3) Rolling daily index:             data/daily_counts/brand-serps-daily-counts-chart.csv
 """
 
 from __future__ import annotations
@@ -45,7 +45,7 @@ MAIN_ROSTER_PATH = "rosters/main-roster.csv"
 # Updated paths - consolidated in data/processed_serps
 OUT_ROWS_DIR = "data/processed_serps"
 OUT_DAILY_DIR = "data/processed_serps"
-OUT_ROLLUP = "daily_counts/brand-serps-daily-counts-chart.csv"
+OUT_ROLLUP = "data/daily_counts/brand-serps-daily-counts-chart.csv"
 
 FORCE_POSITIVE_IF_CONTROLLED = True
 

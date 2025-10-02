@@ -23,7 +23,7 @@ Per-CEO daily aggregate:
   data/processed_serps/{date}-ceo-serps-table.csv
 
 Rolling index (dashboard table & SERP trend):
-  daily_counts/ceo-serps-daily-counts-chart.csv
+  data/daily_counts/ceo-serps-daily-counts-chart.csv
 
 Usage
 -----
@@ -58,7 +58,7 @@ MAIN_ROSTER_PATH = Path("rosters/main-roster.csv")
 # Updated paths - all CEO SERP files consolidated in data/processed_serps
 OUT_DIR_ROWS = Path("data/processed_serps")
 OUT_DIR_DAILY = Path("data/processed_serps")
-INDEX_DIR = Path("daily_counts")
+INDEX_DIR = Path("data/daily_counts")
 INDEX_PATH = INDEX_DIR / "ceo-serps-daily-counts-chart.csv"
 
 for p in (OUT_DIR_ROWS, OUT_DIR_DAILY, INDEX_DIR):

@@ -10,7 +10,7 @@ WHAT THIS DOES
 - Reads today's headline articles (if present) and aggregates per-CEO counts.
 - Writes BOTH of the legacy artifacts the dashboard expects:
     1) Per-day file:        data/processed_articles/YYYY-MM-DD-ceo-articles-table.csv
-    2) Master index file:   daily_counts/ceo-articles-daily-counts-chart.csv   (append/replace rows for that date)
+    2) Master index file:   data/daily_counts/ceo-articles-daily-counts-chart.csv   (append/replace rows for that date)
 
 BEHAVIOR WHEN THERE ARE NO ARTICLES
 -----------------------------------
@@ -29,7 +29,7 @@ python news_sentiment_ceos.py \
   --roster rosters/main-roster.csv \
   --articles-dir data/processed_articles \
   --daily-dir data/processed_articles \
-  --out daily_counts/ceo-articles-daily-counts-chart.csv
+  --out data/daily_counts/ceo-articles-daily-counts-chart.csv
 """
 
 from __future__ import annotations
@@ -47,7 +47,7 @@ import pandas as pd
 DEFAULT_ROSTER = "rosters/main-roster.csv"
 DEFAULT_ARTICLES_DIR = "data/processed_articles"
 DEFAULT_DAILY_DIR = "data/processed_articles"
-DEFAULT_OUT = "daily_counts/ceo-articles-daily-counts-chart.csv"
+DEFAULT_OUT = "data/daily_counts/ceo-articles-daily-counts-chart.csv"
 
 
 # ---------------------- Helpers ---------------------------- #
@@ -178,7 +178,7 @@ def write_daily_file(daily_dir: Path, date_str: str, daily_rows: pd.DataFrame) -
 
 def upsert_master_index(out_path: Path, date_str: str, daily_rows: pd.DataFrame) -> Path:
     """
-    Replaces rows for date_str in daily_counts/ceo-articles-daily-counts-chart.csv with daily_rows;
+    Replaces rows for date_str in data/daily_counts/ceo-articles-daily-counts-chart.csv with daily_rows;
     creates the file if missing.
     """
     out_path.parent.mkdir(parents=True, exist_ok=True)

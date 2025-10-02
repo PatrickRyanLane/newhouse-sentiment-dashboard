@@ -67,14 +67,10 @@ jobs:
         run: |
           python scripts/news_articles_ceos.py
 
-      # Normalize daily counts and write both data_ceos/<date>.csv and daily_counts.csv
+      # Normalize daily counts and write both data_ceos/<date>.csv and data/daily_counts/
       - name: Run daily CEO sentiment (counts)
         run: |
-          python scripts/news_sentiment_ceos.py \
-            --aliases data/ceo_aliases.csv \
-            --articles-dir data_ceos/articles \
-            --daily-dir data_ceos \
-            --out data_ceos/daily_counts.csv
+          python scripts/news_sentiment_ceos.py
 
       - name: Commit & push changes (if any)
         run: |

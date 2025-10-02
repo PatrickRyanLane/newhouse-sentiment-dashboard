@@ -7,7 +7,7 @@ from datetime import date, timedelta
 ARTICLES_DIR = Path("data/processed_articles")
 OUT_DIR      = Path("data/processed_articles")
 OUT_DIR.mkdir(parents=True, exist_ok=True)
-DAILY_INDEX  = Path("daily_counts") / "brand-articles-daily-counts-chart.csv"
+DAILY_INDEX  = Path("data/daily_counts") / "brand-articles-daily-counts-chart.csv"
 
 # Columns we will ALWAYS write for the daily index
 INDEX_FIELDS = ["date","company","positive","neutral","negative","total","neg_pct"]
