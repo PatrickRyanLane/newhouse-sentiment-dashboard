@@ -44,24 +44,24 @@ def find_files_to_migrate():
     
     return files_to_move
 
-def preview_migration(files):
+def preview_migration(files_to_move):
     """Show what would be moved"""
     print(f"\n{'='*80}")
     print(f"MIGRATION PREVIEW")
     print(f"{'='*80}\n")
-    print(f"Found {len(files)} files to migrate:\n")
+    print(f"Found {len(files_to_move)} files to migrate:\n")
     
-    for old_path, new_path in files:
+    for old_path, new_path in files_to_move:
         print(f"  {old_path}")
         print(f"  → {new_path}")
         print()
     
     print(f"{'='*80}")
-    print(f"Total: {len(files)} files")
+    print(f"Total: {len(files_to_move)} files")
     print(f"{'='*80}\n")
     print("Run with --apply to execute the migration")
 
-def execute_migration(files):
+def execute_migration(files_to_move):
     """Actually move and rename the files"""
     NEW_DIR.mkdir(parents=True, exist_ok=True)
     
@@ -72,7 +72,7 @@ def execute_migration(files):
     print(f"EXECUTING MIGRATION")
     print(f"{'='*80}\n")
     
-    for old_path, new_path in files:
+    for old_path, new_path in files_to_move:
         try:
             # Use rename (move) operation
             old_path.rename(new_path)
@@ -113,7 +113,7 @@ def main():
     if args.apply:
         execute_migration(files_to_move)
     else:
-        preview_migration(files)
+        preview_migration(files_to_move)
 
 if __name__ == "__main__":
     main()
