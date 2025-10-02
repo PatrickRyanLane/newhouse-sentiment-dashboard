@@ -7,7 +7,7 @@ Process daily BRAND SERP data:
 - Classify CONTROL using three rules:
     (1) Always-controlled platforms (and their subdomains):
         facebook.com, instagram.com, twitter.com, x.com, linkedin.com, play.google.com, apps.apple.com
-    (2) Any domain (or its subdomains) present in data/roster.csv
+    (2) Any domain (or its subdomains) present in rosters/main-roster.csv (Website column)
     (3) Domain contains the normalized brand token (e.g., "capitalone" matches capitalone.com, capitalonetravel.com, ir.capitalone.com)
 
 - If CONTROLLED and FORCE_POSITIVE_IF_CONTROLLED = True -> sentiment is forced to "positive"
@@ -48,7 +48,8 @@ S3_URL_TEMPLATE = (
     "https://tk-public-data.s3.us-east-1.amazonaws.com/serp_files/{date}-brand-serps.csv"
 )
 
-ROSTER_PATH = "data/roster.csv"   # single authoritative roster
+# Updated to use consolidated roster
+MAIN_ROSTER_PATH = "rosters/main-roster.csv"
 
 OUT_ROWS_DIR = "data/serp_rows"
 OUT_DAILY_DIR = "data/processed_serps"
@@ -123,13 +124,11 @@ def _norm_domain_for_name_match(host: str) -> str:
 # -----------------------
 # Roster loading
 # -----------------------
-def load_roster_domains(path: str = ROSTER_PATH) -> Set[str]:
+def load_roster_domains(path: str = MAIN_ROSTER_PATH) -> Set[str]:
     """
-    Read domains from data/roster.csv and return a set of hostnames treated as controlled.
-    Accept case-insensitive columns: domain, website, url, site, homepage.
+    Read domains from rosters/main-roster.csv (Website column) and return a set of hostnames treated as controlled.
     Accepts either plain domains (e.g., capitalone.com) or full URLs.
     """
-    wanted_cols = {"domain", "website", "url", "site", "homepage"}
     domains: Set[str] = set()
 
     if not os.path.exists(path):
@@ -137,20 +136,32 @@ def load_roster_domains(path: str = ROSTER_PATH) -> Set[str]:
         return domains
 
     try:
-        with open(path, newline="", encoding="utf-8") as f:
-            rdr = csv.DictReader(f)
-            for row in rdr:
-                if not row:
-                    continue
-                for k, v in row.items():
-                    if not k:
-                        continue
-                    if k.strip().lower() in wanted_cols and v:
-                        val = str(v).strip()
-                        url = val if val.startswith(("http://", "https://")) else "http://" + val
-                        host = _hostname(url)
-                        if host:
-                            domains.add(host)
+        df = pd.read_csv(path, encoding="utf-8-sig")
+        
+        # Normalize column names
+        cols = {c.strip().lower(): c for c in df.columns}
+        
+        # Look for Website column (or similar)
+        website_col = None
+        for key in ["website", "domain", "url", "site", "homepage"]:
+            if key in cols:
+                website_col = cols[key]
+                break
+        
+        if not website_col:
+            print(f"[WARN] No website/domain column found in {path}")
+            return domains
+        
+        for val in df[website_col].dropna().astype(str):
+            val = val.strip()
+            if val and val != "nan":
+                # Handle both URLs and plain domains
+                if not val.startswith(("http://", "https://")):
+                    val = f"http://{val}"
+                host = _hostname(val)
+                if host and "." in host:
+                    domains.add(host)
+                    
     except Exception as e:
         print(f"[WARN] failed reading roster at {path}: {e}")
 
