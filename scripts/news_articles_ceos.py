@@ -3,7 +3,7 @@
 
 """
 Builds daily CEO articles from Google News RSS and saves:
-  data_ceos/articles/YYYY-MM-DD-articles.csv
+  data/processed_articles/YYYY-MM-DD-ceo-articles-modal.csv
 
 Inputs:
 - rosters/main-roster.csv  (must include: CEO, Company, CEO Alias)
@@ -28,10 +28,10 @@ import feedparser
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 
-# Updated BASE to use rosters/main-roster.csv
+# Updated paths - consolidated with brand articles
 BASE = Path(__file__).parent.parent
 MAIN_ROSTER = BASE / "rosters" / "main-roster.csv"
-OUT_DIR = BASE / "data_ceos" / "articles"
+OUT_DIR = BASE / "data" / "processed_articles"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 USER_AGENT = "Mozilla/5.0 (compatible; CEO-NewsBot/1.0; +https://example.com/bot)"
@@ -157,7 +157,8 @@ def build_articles_for_alias(alias: str, ceo: str, company: str, analyzer) -> li
 
 def main() -> int:
     out_date = target_date()
-    out_path = OUT_DIR / f"{out_date}-articles.csv"
+    # Updated to use new naming convention
+    out_path = OUT_DIR / f"{out_date}-ceo-articles-modal.csv"
     print(f"Building articles for {out_date} → {out_path}")
 
     try:
