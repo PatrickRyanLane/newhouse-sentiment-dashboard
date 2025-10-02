@@ -199,9 +199,9 @@ def vader_label_on_title(analyzer: SentimentIntensityAnalyzer, title: str) -> Tu
     """
     s = analyzer.polarity_scores(title or "")
     c = s.get("compound", 0.0)
-    if c >= 0.25:
+    if c >= 0.2:
         lab = "positive"
-    elif c <= -0.05:
+    elif c <= -0.1:
         lab = "negative"
     else:
         lab = "neutral"
