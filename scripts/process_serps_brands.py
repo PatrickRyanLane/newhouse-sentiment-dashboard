@@ -13,7 +13,7 @@ Process daily BRAND SERP data:
 - If CONTROLLED and FORCE_POSITIVE_IF_CONTROLLED = True -> sentiment is forced to "positive"
 
 Outputs:
-  1) Row-level processed SERPs:       data/serp_rows/{date}-brand-serps-rows.csv
+  1) Row-level processed SERPs:       data/processed_serps/{date}-brand-serps-modal.csv
   2) Per-company daily aggregate:     data/processed_serps/{date}-brand-serps-processed.csv
   3) Rolling daily index:             data/serps/brand_serps_daily.csv
 """
@@ -42,7 +42,8 @@ S3_URL_TEMPLATE = (
 # Updated to use consolidated roster
 MAIN_ROSTER_PATH = "rosters/main-roster.csv"
 
-OUT_ROWS_DIR = "data/serp_rows"
+# Updated paths - consolidated in data/processed_serps
+OUT_ROWS_DIR = "data/processed_serps"
 OUT_DAILY_DIR = "data/processed_serps"
 OUT_ROLLUP = "data/serps/brand_serps_daily.csv"
 
@@ -244,7 +245,8 @@ def process_for_date(target_date: str) -> None:
         return
 
     rows_df = pd.DataFrame(processed_rows)
-    row_out_path = os.path.join(OUT_ROWS_DIR, f"{target_date}-brand-serps-rows.csv")
+    # Updated filename pattern
+    row_out_path = os.path.join(OUT_ROWS_DIR, f"{target_date}-brand-serps-modal.csv")
     rows_df.to_csv(row_out_path, index=False)
     print(f"[OK] Wrote row-level SERPs → {row_out_path}")
 
