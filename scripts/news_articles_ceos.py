@@ -6,7 +6,7 @@ Builds daily CEO articles from Google News RSS and saves:
   data_ceos/articles/YYYY-MM-DD-articles.csv
 
 Inputs:
-- data/ceo_aliases.csv  (must include: alias, ceo, company — case-insensitive)
+- rosters/main-roster.csv  (must include: CEO, Company, CEO Alias)
 
 Output columns:
   ceo, company, title, url, source, sentiment  (sentiment ∈ {positive, neutral, negative})
@@ -28,9 +28,9 @@ import feedparser
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 
-# Updated BASE to go up one directory since file is now in scripts/
+# Updated BASE to use rosters/main-roster.csv
 BASE = Path(__file__).parent.parent
-ALIASES_CSV = BASE / "data" / "ceo_aliases.csv"
+MAIN_ROSTER = BASE / "rosters" / "main-roster.csv"
 OUT_DIR = BASE / "data_ceos" / "articles"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -53,27 +53,43 @@ def target_date() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
 
-def read_aliases(path: Path) -> pd.DataFrame:
+def read_roster(path: Path) -> pd.DataFrame:
+    """
+    Reads rosters/main-roster.csv
+    Expected columns: CEO, Company, CEO Alias (case-insensitive)
+    Returns DataFrame with columns: alias, ceo, company
+    """
     if not path.exists():
-        raise FileNotFoundError(f"Missing aliases file: {path}")
-    df = pd.read_csv(path)
-    cols = {c.lower(): c for c in df.columns}
+        raise FileNotFoundError(f"Missing roster file: {path}")
+    
+    df = pd.read_csv(path, encoding="utf-8-sig")
+    
+    # Normalize column names to lowercase for matching
+    cols = {c.strip().lower(): c for c in df.columns}
 
     def col(name: str) -> str:
+        """Find column by case-insensitive name"""
         for k, v in cols.items():
-            if k == name:
+            if k == name.lower():
                 return v
         raise KeyError(f"Expected column '{name}' in {path.name}")
 
-    # normalize & keep required columns
-    out = df[[col("alias"), col("ceo"), col("company")]].copy()
+    # Get the columns we need
+    ceo_col = col("ceo")
+    company_col = col("company")
+    alias_col = col("ceo alias")
+
+    # Create output dataframe
+    out = df[[alias_col, ceo_col, company_col]].copy()
     out.columns = ["alias", "ceo", "company"]
     out["alias"] = out["alias"].astype(str).str.strip()
     out["ceo"] = out["ceo"].astype(str).str.strip()
     out["company"] = out["company"].astype(str).str.strip()
-    out = out[(out["alias"] != "") & (out["ceo"] != "")]
+    
+    # Filter out empty rows
+    out = out[(out["alias"] != "") & (out["ceo"] != "") & (out["alias"] != "nan")]
     if out.empty:
-        raise ValueError("No alias rows after normalization.")
+        raise ValueError("No valid CEO rows after normalization.")
     return out.drop_duplicates()
 
 
@@ -145,7 +161,7 @@ def main() -> int:
     print(f"Building articles for {out_date} → {out_path}")
 
     try:
-        aliases = read_aliases(ALIASES_CSV)
+        roster = read_roster(MAIN_ROSTER)
     except Exception as e:
         print(f"FATAL: {e}")
         # Still write an empty file so the UI is predictable
@@ -155,13 +171,13 @@ def main() -> int:
     analyzer = SentimentIntensityAnalyzer()
     all_rows: list[dict] = []
 
-    for i, row in aliases.iterrows():
+    for i, row in roster.iterrows():
         alias = row["alias"]
         ceo = row["ceo"]
         company = row["company"]
         if not alias:
             continue
-        print(f"[{i+1}/{len(aliases)}] {alias}")
+        print(f"[{i+1}/{len(roster)}] {alias}")
         rows = build_articles_for_alias(alias, ceo, company, analyzer)
         all_rows.extend(rows)
         time.sleep(SLEEP_SEC)

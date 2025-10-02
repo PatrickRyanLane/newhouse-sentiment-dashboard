@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
 import csv, os, re, sys, time, math, urllib.parse, requests
 from datetime import datetime, timezone
+from pathlib import Path
 from bs4 import BeautifulSoup
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
+# Updated paths to use rosters/main-roster.csv
+BASE = Path(__file__).parent.parent
+MAIN_ROSTER = BASE / "rosters" / "main-roster.csv"
+OUT_DIR = BASE / "data" / "articles"
+OUT_DIR.mkdir(parents=True, exist_ok=True)
+
 DATE = (datetime.now(timezone.utc)).strftime("%Y-%m-%d")
-BRANDS_TXT = "brands.txt"
-OUT_DIR = "data/articles"
-OUT_FILE = os.path.join(OUT_DIR, f"{DATE}-articles.csv")
+OUT_FILE = OUT_DIR / f"{DATE}-articles.csv"
 
 # Tunables (env overrides)
 MAX_PER_ALIAS = int(os.getenv("ARTICLES_MAX_PER_ALIAS", "50"))
@@ -51,11 +56,42 @@ def fetch_one(brand, analyzer, pause=1.2):
     time.sleep(pause)  # be respectful
     return out[:MAX_PER_ALIAS]  # cap results
 
+def load_companies_from_roster():
+    """Load unique company names from rosters/main-roster.csv"""
+    if not MAIN_ROSTER.exists():
+        raise FileNotFoundError(f"Main roster not found: {MAIN_ROSTER}")
+    
+    companies = set()
+    with MAIN_ROSTER.open("r", newline="", encoding="utf-8-sig") as f:
+        reader = csv.DictReader(f)
+        # Normalize header keys
+        headers = {h.strip().lower(): h for h in (reader.fieldnames or [])}
+        
+        # Look for Company column (case-insensitive)
+        company_col = None
+        for key in ["company"]:
+            if key in headers:
+                company_col = headers[key]
+                break
+        
+        if not company_col:
+            raise ValueError("No 'Company' column found in main-roster.csv")
+        
+        for row in reader:
+            company = (row.get(company_col) or "").strip()
+            if company:
+                companies.add(company)
+    
+    return sorted(companies)
+
 def main():
-    os.makedirs(OUT_DIR, exist_ok=True)
-    if not os.path.exists(BRANDS_TXT):
-        print("brands.txt not found", file=sys.stderr); sys.exit(1)
-    brands = [b.strip() for b in open(BRANDS_TXT) if b.strip()]
+    if not MAIN_ROSTER.exists():
+        print(f"ERROR: {MAIN_ROSTER} not found", file=sys.stderr)
+        sys.exit(1)
+    
+    brands = load_companies_from_roster()
+    print(f"Loaded {len(brands)} companies from {MAIN_ROSTER}")
+    
     analyzer = SentimentIntensityAnalyzer()
 
     rows = []
@@ -65,7 +101,7 @@ def main():
         except Exception as e:
             print(f"[WARN] {b}: {e}", file=sys.stderr)
 
-    with open(OUT_FILE, "w", newline="", encoding="utf-8") as f:
+    with OUT_FILE.open("w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=["company","title","url","source","date","sentiment"])
         w.writeheader()
         w.writerows(rows)
