@@ -60,7 +60,7 @@ def write_daily(dstr: str, agg: dict):
     Per-day file. We include neg_pct so downstream readers can use it directly
     (still fine if they recompute from counts).
     """
-    out = OUT_DIR / f"{dstr}.csv"
+    out = OUT_DIR / f"{dstr}-brand-articles-table.csv"
     with out.open("w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh)
         w.writerow(["date","company","positive","neutral","negative","total","neg_pct"])
