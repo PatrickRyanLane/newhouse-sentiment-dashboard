@@ -19,6 +19,8 @@ This directory contains the consolidated roster files that serve as the single s
 - `scripts/news_articles_brands.py` - Extracts company names for brand news tracking
 - `scripts/news_articles_ceos.py` - Uses CEO, Company, and CEO Alias for CEO news tracking
 - `scripts/news_sentiment_ceos.py` - Aggregates sentiment data by CEO
+- `scripts/process_serps.py` - CEO SERP processing
+- `scripts/process_serps_brands.py` - Brand SERP processing
 
 ### `boards-roster.csv`
 **Board members roster** for tracking board-level news and sentiment.

@@ -3,7 +3,8 @@ import argparse, csv, sys
 from pathlib import Path
 from datetime import date, timedelta
 
-ARTICLES_DIR = Path("data/articles")
+# Updated to use new directory and naming convention
+ARTICLES_DIR = Path("data/processed_articles")
 OUT_DIR      = Path("data/processed_articles")
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 DAILY_INDEX  = OUT_DIR / "daily_counts.csv"
@@ -23,13 +24,13 @@ def iter_dates(from_str: str, to_str: str):
         d += one
 
 def read_articles(dstr: str):
-    f = ARTICLES_DIR / f"{dstr}-articles.csv"
+    # Updated to use new filename pattern: YYYY-MM-DD-brand-articles-modal.csv
+    f = ARTICLES_DIR / f"{dstr}-brand-articles-modal.csv"
     if not f.exists():
         print(f"[INFO] No headline file for {dstr} at {f}; nothing to aggregate.", flush=True)
         return []
 
     rows = []
-    # ✅ Open the file and pass the handle to DictReader
     with f.open("r", newline="", encoding="utf-8") as fh:
         reader = csv.DictReader(fh)
         for row in reader:
