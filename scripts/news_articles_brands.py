@@ -5,14 +5,15 @@ from pathlib import Path
 from bs4 import BeautifulSoup
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
-# Updated paths to use rosters/main-roster.csv
+# Updated paths to use rosters/main-roster.csv and new output directory
 BASE = Path(__file__).parent.parent
 MAIN_ROSTER = BASE / "rosters" / "main-roster.csv"
-OUT_DIR = BASE / "data" / "articles"
+OUT_DIR = BASE / "data" / "processed_articles"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 DATE = (datetime.now(timezone.utc)).strftime("%Y-%m-%d")
-OUT_FILE = OUT_DIR / f"{DATE}-articles.csv"
+# Updated output filename to use new naming convention
+OUT_FILE = OUT_DIR / f"{DATE}-brand-articles-modal.csv"
 
 # Tunables (env overrides)
 MAX_PER_ALIAS = int(os.getenv("ARTICLES_MAX_PER_ALIAS", "50"))
