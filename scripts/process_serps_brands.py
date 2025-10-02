@@ -14,7 +14,7 @@ Process daily BRAND SERP data:
 
 Outputs:
   1) Row-level processed SERPs:       data/processed_serps/{date}-brand-serps-modal.csv
-  2) Per-company daily aggregate:     data/processed_serps/{date}-brand-serps-processed.csv
+  2) Per-company daily aggregate:     data/processed_serps/{date}-brand-serps-table.csv
   3) Rolling daily index:             data/serps/brand_serps_daily.csv
 """
 
@@ -245,7 +245,6 @@ def process_for_date(target_date: str) -> None:
         return
 
     rows_df = pd.DataFrame(processed_rows)
-    # Updated filename pattern
     row_out_path = os.path.join(OUT_ROWS_DIR, f"{target_date}-brand-serps-modal.csv")
     rows_df.to_csv(row_out_path, index=False)
     print(f"[OK] Wrote row-level SERPs → {row_out_path}")
@@ -262,7 +261,8 @@ def process_for_date(target_date: str) -> None:
     )
     agg.insert(0, "date", target_date)
 
-    daily_out_path = os.path.join(OUT_DAILY_DIR, f"{target_date}-brand-serps-processed.csv")
+    # Updated filename pattern to use -table.csv
+    daily_out_path = os.path.join(OUT_DAILY_DIR, f"{target_date}-brand-serps-table.csv")
     agg.to_csv(daily_out_path, index=False)
     print(f"[OK] Wrote daily aggregate → {daily_out_path}")
 
