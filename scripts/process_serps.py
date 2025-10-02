@@ -12,8 +12,7 @@ Raw S3 CSV per day:
         (e.g., "Tim Cook Apple"), not the canonical company.
 
 Local maps:
-  data/ceo_aliases.csv             (alias, ceo, company)  -> primary
-  data/roster.csv or data/ceo_companies.csv (ceo, company [+ optional domain/website/url]) -> fallback + controlled domains
+  rosters/main-roster.csv (CEO, Company, CEO Alias, Website) -> primary source
 
 Outputs
 -------
@@ -53,8 +52,8 @@ S3_TEMPLATE = "https://tk-public-data.s3.us-east-1.amazonaws.com/serp_files/{dat
 # First day you said CEO SERPs exist
 FIRST_AVAILABLE_DATE = dt.date(2025, 9, 15)
 
-ALIASES_PATH = Path("data/ceo_aliases.csv")            # columns: alias, ceo, company
-ROSTER_CANDIDATES = [Path("data/roster.csv"), Path("data/ceo_companies.csv")]
+# Updated to use consolidated roster
+MAIN_ROSTER_PATH = Path("rosters/main-roster.csv")
 
 OUT_DIR_ROWS = Path("data_ceos/serp_rows")
 OUT_DIR_DAILY = Path("data_ceos/processed_serps")
@@ -114,11 +113,11 @@ def read_csv_safely(text_or_path):
     try:
         if isinstance(text_or_path, str) and "\n" in text_or_path:
             return pd.read_csv(io.StringIO(text_or_path))
-        return pd.read_csv(text_or_path)
+        return pd.read_csv(text_or_path, encoding="utf-8-sig")
     except Exception:
         if isinstance(text_or_path, str) and "\n" in text_or_path:
             return pd.read_csv(io.StringIO(text_or_path), engine="python")
-        return pd.read_csv(text_or_path, engine="python")
+        return pd.read_csv(text_or_path, engine="python", encoding="utf-8-sig")
 
 def fetch_csv_text(url: str, timeout=30):
     r = requests.get(url, timeout=timeout)
@@ -128,74 +127,65 @@ def fetch_csv_text(url: str, timeout=30):
     r.encoding = r.apparent_encoding or "utf-8"
     return r.text
 
-def load_roster_map() -> dict[str, str]:
-    """Return {CEO -> Company} from the first roster-like file we can read."""
-    for p in ROSTER_CANDIDATES:
-        if p.exists():
-            df = read_csv_safely(p)
-            cols = {c.lower(): c for c in df.columns}
-            ceo_c = next((cols[c] for c in cols if c in ("ceo", "name", "person")), None)
-            comp_c = next((cols[c] for c in cols if c in ("company", "brand", "org", "employer")), None)
-            if ceo_c and comp_c:
-                return {str(r[ceo_c]).strip(): str(r[comp_c]).strip() for _, r in df.iterrows()}
-    return {}
+def load_roster_data():
+    """Load from rosters/main-roster.csv"""
+    if not MAIN_ROSTER_PATH.exists():
+        raise FileNotFoundError(f"Main roster not found: {MAIN_ROSTER_PATH}")
 
-def load_alias_index():
-    """Build alias map {alias_norm -> (CEO, Company)} and CEO->Company map."""
-    alias_map: dict[str, tuple[str, str]] = {}
-    ceo_to_company = load_roster_map()
+    df = read_csv_safely(MAIN_ROSTER_PATH)
+    cols = {c.strip().lower(): c for c in df.columns}
+    
+    def col(*names):
+        for name in names:
+            for k, v in cols.items():
+                if k == name.lower():
+                    return v
+        return None
 
-    if ALIASES_PATH.exists():
-        a = read_csv_safely(ALIASES_PATH)
-        need = {"alias", "ceo", "company"}
-        have = {c.lower() for c in a.columns}
-        if not need.issubset(have):
-            raise SystemExit("data/ceo_aliases.csv must have headers: alias, ceo, company")
-        cols = {c.lower(): c for c in a.columns}
-        for _, r in a.iterrows():
-            alias = str(r[cols["alias"]]).strip()
-            ceo = str(r[cols["ceo"]]).strip()
-            comp = str(r[cols["company"]]).strip()
-            if alias:
-                alias_map[norm(alias)] = (ceo, comp)
+    ceo_col = col("ceo")
+    company_col = col("company")
+    alias_col = col("ceo alias", "alias")
+    website_col = col("website", "domain", "url")
 
-    # Ensure basic "ceo + company" aliases exist
+    if not (ceo_col and company_col):
+        raise ValueError("Main roster must have CEO and Company columns")
+
+    ceo_to_company = {}
+    for _, row in df.iterrows():
+        ceo = str(row[ceo_col]).strip()
+        company = str(row[company_col]).strip()
+        if ceo and company and ceo != "nan" and company != "nan":
+            ceo_to_company[ceo] = company
+
+    alias_map = {}
+    if alias_col:
+        for _, row in df.iterrows():
+            alias = str(row[alias_col]).strip()
+            ceo = str(row[ceo_col]).strip()
+            company = str(row[company_col]).strip()
+            if alias and ceo and company and alias != "nan":
+                alias_map[norm(alias)] = (ceo, company)
+
     for ceo, comp in ceo_to_company.items():
         alias_map.setdefault(norm(f"{ceo} {comp}"), (ceo, comp))
 
-    return alias_map, ceo_to_company
-
-def load_controlled_domains_from_roster() -> set[str]:
-    """
-    Read domains from roster files and return hostnames treated as controlled.
-    Accept columns like: domain, website, url, site, homepage.
-    """
-    candidates = ROSTER_CANDIDATES
-    domains: set[str] = set()
-
-    def norm_host(val: str) -> str:
-        try:
-            u = urlparse(val if val.startswith("http") else f"https://{val}")
-            host = (u.netloc or u.path or "").lower().strip()
-            host = host.replace("www.", "")
-            return host
-        except Exception:
-            return ""
-
-    for p in candidates:
-        if not p.exists():
-            continue
-        df = read_csv_safely(p)
-        cols = {c.lower(): c for c in df.columns}
-        for hdr in ("domain", "website", "url", "site", "homepage"):
-            if hdr in cols:
-                for v in df[cols[hdr]].dropna().astype(str):
-                    host = norm_host(v.strip())
+    controlled_domains = set()
+    if website_col:
+        for val in df[website_col].dropna().astype(str):
+            val = val.strip()
+            if val and val != "nan":
+                try:
+                    if not val.startswith(("http://", "https://")):
+                        val = f"https://{val}"
+                    parsed = urlparse(val)
+                    host = (parsed.netloc or parsed.path or "").lower().strip()
+                    host = host.replace("www.", "")
                     if host and "." in host:
-                        domains.add(host)
-                break  # only use the first matching column
+                        controlled_domains.add(host)
+                except Exception:
+                    pass
 
-    return domains
+    return alias_map, ceo_to_company, controlled_domains
 
 # -------------------- Normalization & rules --------------------
 
@@ -294,7 +284,7 @@ def vader_label(analyzer: SentimentIntensityAnalyzer, row) -> str:
 
 # ---------------------------- Core ----------------------------
 
-def process_one_date(date_str: str, alias_map, ceo_to_company):
+def process_one_date(date_str: str, alias_map, ceo_to_company, controlled_domains):
     day = dt.date.fromisoformat(date_str)
     if day < FIRST_AVAILABLE_DATE:
         print(f"[skip] {date_str} < first available ({FIRST_AVAILABLE_DATE})")
@@ -319,7 +309,6 @@ def process_one_date(date_str: str, alias_map, ceo_to_company):
 
     # Sentiment + Control per row
     analyzer = SentimentIntensityAnalyzer()
-    controlled_domains = load_controlled_domains_from_roster()
 
     mapped["sentiment"] = mapped.apply(lambda r: vader_label(analyzer, r), axis=1)
     mapped["controlled"] = mapped.apply(lambda r: classify_control(r["url"], r["position"], r["company"], controlled_domains), axis=1)
@@ -382,14 +371,14 @@ def process_one_date(date_str: str, alias_map, ceo_to_company):
 
     return day_path
 
-def backfill(start: str, end: str, alias_map, ceo_to_company):
+def backfill(start: str, end: str, alias_map, ceo_to_company, controlled_domains):
     d0 = dt.date.fromisoformat(start)
     d1 = dt.date.fromisoformat(end)
     if d0 > d1:
         d0, d1 = d1, d0
     d = d0
     while d <= d1:
-        process_one_date(d.isoformat(), alias_map, ceo_to_company)
+        process_one_date(d.isoformat(), alias_map, ceo_to_company, controlled_domains)
         d += dt.timedelta(days=1)
 
 # ---------------------------- CLI ----------------------------
@@ -401,16 +390,16 @@ def main():
                     help="Process an inclusive date range (YYYY-MM-DD YYYY-MM-DD).")
     args = ap.parse_args()
 
-    alias_map, ceo_to_company = load_alias_index()
+    alias_map, ceo_to_company, controlled_domains = load_roster_data()
 
     if args.date:
-        process_one_date(args.date, alias_map, ceo_to_company)
+        process_one_date(args.date, alias_map, ceo_to_company, controlled_domains)
     elif args.backfill:
-        backfill(args.backfill[0], args.backfill[1], alias_map, ceo_to_company)
+        backfill(args.backfill[0], args.backfill[1], alias_map, ceo_to_company, controlled_domains)
     else:
         today = dt.date.today()
         for cand in (today, today - dt.timedelta(days=1)):
-            if process_one_date(cand.isoformat(), alias_map, ceo_to_company):
+            if process_one_date(cand.isoformat(), alias_map, ceo_to_company, controlled_domains):
                 break
 
 if __name__ == "__main__":
