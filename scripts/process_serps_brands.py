@@ -15,7 +15,7 @@ Process daily BRAND SERP data:
 Outputs:
   1) Row-level processed SERPs:       data/processed_serps/{date}-brand-serps-modal.csv
   2) Per-company daily aggregate:     data/processed_serps/{date}-brand-serps-table.csv
-  3) Rolling daily index:             data/serps/brand_serps_daily.csv
+  3) Rolling daily index:             daily_counts/brand-serps-daily-counts-chart.csv
 """
 
 from __future__ import annotations
@@ -45,7 +45,7 @@ MAIN_ROSTER_PATH = "rosters/main-roster.csv"
 # Updated paths - consolidated in data/processed_serps
 OUT_ROWS_DIR = "data/processed_serps"
 OUT_DAILY_DIR = "data/processed_serps"
-OUT_ROLLUP = "data/serps/brand_serps_daily.csv"
+OUT_ROLLUP = "daily_counts/brand-serps-daily-counts-chart.csv"
 
 FORCE_POSITIVE_IF_CONTROLLED = True
 
@@ -261,7 +261,6 @@ def process_for_date(target_date: str) -> None:
     )
     agg.insert(0, "date", target_date)
 
-    # Updated filename pattern to use -table.csv
     daily_out_path = os.path.join(OUT_DAILY_DIR, f"{target_date}-brand-serps-table.csv")
     agg.to_csv(daily_out_path, index=False)
     print(f"[OK] Wrote daily aggregate → {daily_out_path}")
