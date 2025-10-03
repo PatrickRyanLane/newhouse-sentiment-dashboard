@@ -1,4 +1,4 @@
-name: Daily ROC News Sentiment
+name: Daily ROC Pipeline
 
 on:
   schedule:
