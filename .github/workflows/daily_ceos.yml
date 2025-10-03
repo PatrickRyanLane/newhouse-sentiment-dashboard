@@ -67,8 +67,8 @@ jobs:
           python scripts/news_sentiment_ceos.py
 
       # Process CEO SERPs
-      # - data/processed_serps/{date}-ceo-serps-processed.csv
-      # - data/processed_serps/{date}-ceo-serps-rows.csv
+      # - data/processed_serps/{date}-ceo-serps-table.csv
+      # - data/processed_serps/{date}-ceo-serps-modal.csv
       # - data/daily_counts/ceo-serps-daily-counts-chart.csv
       - name: Process CEO SERPs
         shell: bash
@@ -77,7 +77,7 @@ jobs:
         run: |
           set -euo pipefail
           DATE="${DATE_IN:-$(date -u +%F)}"
-          ROW="data/processed_serps/${DATE}-ceo-serps-rows.csv"
+          ROW="data/processed_serps/${DATE}-ceo-serps-modal.csv"
       
           # Optional idempotence – skip if we already wrote this date
           if [ -s "$ROW" ]; then
