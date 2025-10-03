@@ -43,21 +43,6 @@ jobs:
           mkdir -p data/processed_serps
           mkdir -p rosters
 
-      # Make sure aliases exist at rosters location
-      - name: Ensure ceo_aliases at rosters/ceo_aliases.csv
-        run: |
-          if [ -f "rosters/ceo_aliases.csv" ]; then
-            echo "Aliases already present at rosters/ceo_aliases.csv"
-          elif [ -f "data/ceo_aliases.csv" ]; then
-            cp -f "data/ceo_aliases.csv" "rosters/ceo_aliases.csv"
-            echo "Copied data/ceo_aliases.csv -> rosters/ceo_aliases.csv"
-          elif [ -f "ceo_aliases.csv" ]; then
-            cp -f "ceo_aliases.csv" "rosters/ceo_aliases.csv"
-            echo "Copied ceo_aliases.csv -> rosters/ceo_aliases.csv"
-          else
-            echo "WARNING: ceo_aliases.csv not found"
-          fi
-
       # Build today's articles → data/processed_articles/YYYY-MM-DD-ceo-articles-modal.csv
       - name: Build daily CEO articles (Google News RSS)
         env:
