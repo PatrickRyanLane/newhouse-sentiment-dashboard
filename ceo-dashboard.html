@@ -291,16 +291,15 @@ tbody td:first-child{
 /********************** Config **********************/
 const COUNTS_CANDIDATES = ['data/daily_counts/ceo-articles-daily-counts-chart.csv'];
 const ROSTER_CANDIDATES = [
-  'rosters/main_roster.csv',
-  'rosters/roster.csv'
+  'rosters/main_roster.csv'
 ];
 const SERPS_DAILY_CSV = 'data/daily_counts/ceo-serps-daily-counts-chart.csv';
-const BOARDS_CSV = 'rosters/boards-roster.csv';
-const SERP_ROWS_PATH = d => `data/processed_serps/${d}-ceo-serps-rows.csv`;
+const BOARDS_CSV = 'rosters/boards_roster.csv';
+const SERP_ROWS_PATH = d => 'data/processed_serps/${d}-ceo-serps-modal.csv';
 
 // NEW: authoritative per-date sources for the table
-const ARTICLES_DAILY_PATH = d => `data/processed_articles/${d}-ceo-articles-table.csv`;
-const SERP_PROCESSED_PATH = d => `data/processed_serps/${d}-ceo-serps-processed.csv`;
+const ARTICLES_DAILY_PATH = d => 'data/processed_articles/${d}-ceo-articles-table.csv';
+const SERP_PROCESSED_PATH = d => 'data/processed_serps/${d}-ceo-serps-table.csv';
 
 /********************** Runtime **********************/
 let rosterMap = new Map();        // CEO -> Company
@@ -507,7 +506,7 @@ async function getArticlesForDate(d){
   return map;
 }
 
-// data/processed_serps/<DATE>-ceo-serps-processed.csv -> Map(ceo -> {total, neg_serp, controlled})
+// data/processed_serps/<DATE>-ceo-serps-table.csv -> Map(ceo -> {total, neg_serp, controlled})
 async function getSerpAggForDate(d){
   if (_serpAggCache.has(d)) return _serpAggCache.get(d);
   let map = new Map();
