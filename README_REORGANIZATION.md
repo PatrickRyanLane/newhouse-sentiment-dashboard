@@ -31,7 +31,7 @@ news-sentiment-dashboard/
     ├── news_articles_ceos.py        ✅ UPDATED
     ├── news_sentiment_brands.py     ✅ UPDATED
     ├── news_sentiment_ceos.py       ✅ UPDATED
-    ├── process_serps.py             ✅ UPDATED
+    ├── process_serps_ceos.py        ✅ UPDATED (renamed from process_serps.py)
     ├── process_serps_brands.py      ✅ UPDATED
     └── migrate_brand_articles.py    🆕 NEW
 ```
@@ -56,7 +56,7 @@ All scripts have been updated and committed to this branch:
 4. ✅ `scripts/news_sentiment_ceos.py`
    - Now reads from: `rosters/main-roster.csv`
 
-5. ✅ `scripts/process_serps.py`
+5. ✅ `scripts/process_serps_ceos.py` (renamed from process_serps.py)
    - Now reads from: `rosters/main-roster.csv`
    - Uses Website column for controlled domain detection
 
@@ -129,7 +129,7 @@ python scripts/news_articles_ceos.py
 python scripts/news_sentiment_ceos.py
 
 # Test SERP processing (if S3 data available)
-python scripts/process_serps.py
+python scripts/process_serps_ceos.py
 python scripts/process_serps_brands.py
 ```
 
@@ -174,12 +174,14 @@ ceo_companies.csv             →  CEO to company mapping
 data/roster.csv               →  Main roster
 data/articles/*.csv           →  Brand articles
 scripts/sync_*.py             →  Sync scripts
+scripts/process_serps.py      →  CEO SERP processing
 ```
 
 ### After ✅
 ```
 rosters/main-roster.csv       →  Everything in one place!
 data/processed_articles/*.csv →  Brand articles (clearer naming)
+scripts/process_serps_ceos.py →  CEO SERP processing (consistent naming)
 (sync scripts deleted)        →  No longer needed!
 ```
 
@@ -189,6 +191,7 @@ data/processed_articles/*.csv →  Brand articles (clearer naming)
 
 ### Files Moved/Renamed
 - 27 brand article CSV files will be moved and renamed
+- 1 script renamed for consistency (process_serps.py → process_serps_ceos.py)
 
 ### Scripts Updated
 - 6 Python scripts updated to use new structure
@@ -203,6 +206,7 @@ data/processed_articles/*.csv →  Brand articles (clearer naming)
 - **Clearer:** Better naming conventions
 - **Easier:** No sync scripts to maintain
 - **Organized:** Logical directory structure
+- **Consistent:** All scripts follow same naming pattern
 
 ---
 

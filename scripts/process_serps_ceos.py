@@ -27,8 +27,8 @@ Rolling index (dashboard table & SERP trend):
 
 Usage
 -----
-python scripts/process_serps.py --date 2025-09-17
-python scripts/process_serps.py --backfill 2025-09-15 2025-09-30
+python scripts/process_serps_ceos.py --date 2025-09-17
+python scripts/process_serps_ceos.py --backfill 2025-09-15 2025-09-30
 (no args) -> tries today, then yesterday (skips if before FIRST_AVAILABLE_DATE)
 """
 
