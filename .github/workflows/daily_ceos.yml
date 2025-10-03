@@ -36,29 +36,29 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install pandas requests feedparser vaderSentiment
 
-      - name: Ensure folders
+      - name: Ensure folders (NEW STRUCTURE)
         run: |
-          mkdir -p data
-          mkdir -p data_ceos
-          mkdir -p data_ceos/articles
-          mkdir -p data_ceos/serp_rows
+          mkdir -p data/daily_counts
+          mkdir -p data/processed_articles
+          mkdir -p data/processed_serps
+          mkdir -p rosters
 
-      # Make sure aliases exist at data/ceo_aliases.csv
-      - name: Ensure ceo_aliases at data/ceo_aliases.csv
+      # Make sure aliases exist at rosters location
+      - name: Ensure ceo_aliases at rosters/ceo_aliases.csv
         run: |
-          if [ -f "data/ceo_aliases.csv" ]; then
-            echo "Aliases already present."
-          elif [ -f "data/serps/ceo_aliases.csv" ]; then
-            cp -f "data/serps/ceo_aliases.csv" "data/ceo_aliases.csv"
-            echo "Copied data/serps/ceo_aliases.csv -> data/ceo_aliases.csv"
+          if [ -f "rosters/ceo_aliases.csv" ]; then
+            echo "Aliases already present at rosters/ceo_aliases.csv"
+          elif [ -f "data/ceo_aliases.csv" ]; then
+            cp -f "data/ceo_aliases.csv" "rosters/ceo_aliases.csv"
+            echo "Copied data/ceo_aliases.csv -> rosters/ceo_aliases.csv"
           elif [ -f "ceo_aliases.csv" ]; then
-            cp -f "ceo_aliases.csv" "data/ceo_aliases.csv"
-            echo "Copied ceo_aliases.csv -> data/ceo_aliases.csv"
+            cp -f "ceo_aliases.csv" "rosters/ceo_aliases.csv"
+            echo "Copied ceo_aliases.csv -> rosters/ceo_aliases.csv"
           else
             echo "WARNING: ceo_aliases.csv not found"
           fi
 
-      # Build today's articles → data_ceos/articles/YYYY-MM-DD-articles.csv
+      # Build today's articles → data/processed_articles/YYYY-MM-DD-ceo-articles-modal.csv
       - name: Build daily CEO articles (Google News RSS)
         env:
           ARTICLES_MAX_PER_ALIAS: "25"
@@ -67,7 +67,9 @@ jobs:
         run: |
           python scripts/news_articles_ceos.py
 
-      # Normalize daily counts and write both data_ceos/<date>.csv and data/daily_counts/
+      # Normalize daily counts and write to:
+      # - data/processed_articles/{date}-ceo-articles-table.csv
+      # - data/daily_counts/ceo-articles-daily-counts-chart.csv
       - name: Run daily CEO sentiment (counts)
         run: |
           python scripts/news_sentiment_ceos.py
@@ -82,7 +84,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "No changes to commit."
           else
-            git commit -m "chore(data_ceos): update CEO counts & articles for $(date -u +%F)"
+            git commit -m "chore(ceos): update CEO counts & articles for $(date -u +%F)"
             git pull --rebase --autostash || true
             git push
           fi
