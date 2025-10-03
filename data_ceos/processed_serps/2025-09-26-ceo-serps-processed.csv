@@ -1,5 +1,5 @@
 date,ceo,total,controlled,negative_serp,neutral_serp,positive_serp,company
-2025-09-26,,1,0,1,0,0,
+2025-09-26,,10,0,10,0,0,
 2025-09-26,AJ Jim Teague,1,0,1,0,0,Enterprise Products Partners
 2025-09-26,Aaron P Jagdfeld,1,0,1,0,0,Generac
 2025-09-26,Adaire Fox-Martin,1,0,1,0,0,Equinix
@@ -25,7 +25,6 @@ date,ceo,total,controlled,negative_serp,neutral_serp,positive_serp,company
 2025-09-26,Andi Owen,1,0,1,0,0,MillerKnoll
 2025-09-26,Andrew Anagnost,1,0,1,0,0,Autodesk
 2025-09-26,Andrew Clyde,1,0,1,0,0,Murphy USA
-2025-09-26,Andrew Jassy,1,0,1,0,0,Amazon
 2025-09-26,Andrew Marsh,1,0,1,0,0,Entergy
 2025-09-26,Andrew McMahon,1,0,1,0,0,Guardian Life insurance
 2025-09-26,Andrew Rees,1,0,1,0,0,Crocs
@@ -98,8 +97,7 @@ date,ceo,total,controlled,negative_serp,neutral_serp,positive_serp,company
 2025-09-26,Brian Roberts,1,0,1,0,0,Comcast
 2025-09-26,Brian Tierney,1,0,1,0,0,FirstEnergy
 2025-09-26,Brian Tyler,1,0,1,0,0,McKesson
-2025-09-26,Bruce Bodine,1,0,1,0,0,Mosaic
-2025-09-26,Bruce Fleming,1,0,1,0,0,Calumet
+2025-09-26,Bruce Fleming,1,0,1,0,0,Calumet Inc
 2025-09-26,Bruce L Caswell,1,0,1,0,0,Maximus
 2025-09-26,Bruce Van Saun,1,0,1,0,0,Citizens Financial Group
 2025-09-26,Bryan DeBoer,1,0,1,0,0,Lithia Motors
@@ -204,7 +202,6 @@ date,ceo,total,controlled,negative_serp,neutral_serp,positive_serp,company
 2025-09-26,David Hult,1,0,1,0,0,Asbury Automotive Group
 2025-09-26,David Joyner,1,0,1,0,0,CVS Health
 2025-09-26,David L Yowan,1,0,1,0,0,Navient
-2025-09-26,David M Foulkes,1,0,1,0,0,Brunswick
 2025-09-26,David M Maura,1,0,1,0,0,Spectrum Brands
 2025-09-26,David M O'Malley,1,0,1,0,0,Penn Mutual Life Insurance
 2025-09-26,David M Overton,1,0,1,0,0,Cheesecake Factory
@@ -249,7 +246,7 @@ date,ceo,total,controlled,negative_serp,neutral_serp,positive_serp,company
 2025-09-26,Edward B Pitoniak,1,0,1,0,0,VICI Properties
 2025-09-26,Edward J Lehner,1,0,1,0,0,Ryerson Holding
 2025-09-26,Edward Pesicka,1,0,1,0,0,Owens & Minor
-2025-09-26,Ellen Cooper,1,0,1,0,0,LIncoln National
+2025-09-26,Ellen Cooper,1,0,1,0,0,Lincoln National
 2025-09-26,Elliott Hill,1,0,1,0,0,Nike
 2025-09-26,Elon Musk,1,0,1,0,0,Tesla
 2025-09-26,Emmanuel Ligner,1,0,1,0,0,Avantor
@@ -398,7 +395,7 @@ date,ceo,total,controlled,negative_serp,neutral_serp,positive_serp,company
 2025-09-26,Jennifer F Scanlon,1,0,1,0,0,UL Solutions
 2025-09-26,Jennifer Johnson,1,0,1,0,0,Franklin Resources
 2025-09-26,Jennifer Parmentier,1,0,1,0,0,Parker-Hannifin
-2025-09-26,Jennifer Rumsey,1,0,1,0,0,Cummins
+2025-09-26,Jennifer Rumsey,1,0,1,0,0,Cummins Inc
 2025-09-26,Jennifer Witz,1,0,1,0,0,Sirius XM
 2025-09-26,Jensen Huang,1,0,1,0,0,Nvidia
 2025-09-26,Jeremy Wensinger,1,0,1,0,0,V2X
@@ -468,7 +465,6 @@ date,ceo,total,controlled,negative_serp,neutral_serp,positive_serp,company
 2025-09-26,Joseph M Hogan,1,0,1,0,0,Align Technology
 2025-09-26,Joseph M Otting,1,0,1,0,0,Flagstar Financial
 2025-09-26,Joseph Nolan,1,0,1,0,0,Eversource Energy
-2025-09-26,Joseph P Lacher Jr,1,0,1,0,0,Kemper
 2025-09-26,Joseph Wm Foran,1,0,1,0,0,Matador Resources
 2025-09-26,Joshua G Silverman,1,0,1,0,0,Etsy
 2025-09-26,José Mas,1,0,1,0,0,MasTec
@@ -551,7 +547,6 @@ date,ceo,total,controlled,negative_serp,neutral_serp,positive_serp,company
 2025-09-26,Lorenzo Simonelli,1,0,1,0,0,Baker Hughes
 2025-09-26,Lori Flees,1,0,1,0,0,Valvoline Inc
 2025-09-26,Lori Koch,1,0,1,0,0,DuPont
-2025-09-26,Lorie L Tekorius,1,0,1,0,0,Greenbrier
 2025-09-26,Louis V Pinkham,1,0,1,0,0,Regal Rexnord
 2025-09-26,Lourenco Goncalves,1,0,1,0,0,Cleveland-Cliffs
 2025-09-26,Luca Savi,1,0,1,0,0,ITT
@@ -624,7 +619,6 @@ date,ceo,total,controlled,negative_serp,neutral_serp,positive_serp,company
 2025-09-26,Michael Dell,1,0,1,0,0,Dell Technologies
 2025-09-26,Michael Doss,1,0,1,0,0,Graphic Packaging
 2025-09-26,Michael E Reed,1,0,1,0,0,Gannett
-2025-09-26,Michael Fiddelke,1,0,1,0,0,Target
 2025-09-26,Michael Hsu,1,0,1,0,0,Kimberly-Clark
 2025-09-26,Michael Hutchins,1,0,1,0,0,Freddie Mac
 2025-09-26,Michael J Brown,1,0,1,0,0,Euronet Worldwide
@@ -773,7 +767,7 @@ date,ceo,total,controlled,negative_serp,neutral_serp,positive_serp,company
 2025-09-26,Robert Fauber,1,0,1,0,0,Moodys Corporation
 2025-09-26,Robert Ford,1,0,1,0,0,Abbott Laboratories
 2025-09-26,Robert Frenzel,1,0,1,0,0,Xcel Energy
-2025-09-26,Robert G Painter,1,0,1,0,0,Trimble
+2025-09-26,Robert G Painter,1,0,1,0,0,Trimble Inc
 2025-09-26,Robert Goldstein,1,0,1,0,0,Las Vegas Sands
 2025-09-26,Robert Greenberg,1,0,1,0,0,Skechers USA
 2025-09-26,Robert H Schottenstein,1,0,1,0,0,M/I Homes
@@ -812,9 +806,8 @@ date,ceo,total,controlled,negative_serp,neutral_serp,positive_serp,company
 2025-09-26,Ryan Lance,1,0,1,0,0,ConocoPhillips
 2025-09-26,Ryan M. Schneider,1,0,1,0,0,Anywhere Real Estate Inc
 2025-09-26,Ryan Marshall,1,0,1,0,0,PulteGroup
-2025-09-26,Ryan McInerney,1,0,1,0,0,Visa
+2025-09-26,Ryan McInerney,1,0,1,0,0,Visa Inc
 2025-09-26,Sachin S Lawande,1,0,1,0,0,Visteon
-2025-09-26,Safra Catz,1,0,1,0,0,Oracle
 2025-09-26,Samuel Hazen,1,0,1,0,0,HCA Healthcare
 2025-09-26,Sandy Douglas,1,0,1,0,0,United Natural Foods
 2025-09-26,Sanjay Mehrotra,1,0,1,0,0,Micron Technology
@@ -938,7 +931,7 @@ date,ceo,total,controlled,negative_serp,neutral_serp,positive_serp,company
 2025-09-26,Timothy Spence,1,0,1,0,0,Fifth Third Bancorp
 2025-09-26,Toby Rice,1,0,1,0,0,EQT
 2025-09-26,Tod Carpenter,1,0,1,0,0,Donaldson Company
-2025-09-26,Todd Kelsey,1,0,1,0,0,Plexus
+2025-09-26,Todd Kelsey,1,0,1,0,0,Plexus Corp
 2025-09-26,Todd Schneider,1,0,1,0,0,Cintas
 2025-09-26,Todd Vasos,1,0,1,0,0,Dollar General
 2025-09-26,Tom Leighton,1,0,1,0,0,Akamai Technologies
@@ -958,7 +951,6 @@ date,ceo,total,controlled,negative_serp,neutral_serp,positive_serp,company
 2025-09-26,Vimal Kapur,1,0,1,0,0,Honeywell
 2025-09-26,Vincent Pilette,1,0,1,0,0,Gen Digital
 2025-09-26,Vincent Roche,1,0,1,0,0,Analog Devices
-2025-09-26,Vincent Sorgi,1,0,1,0,0,PPL
 2025-09-26,W Anthony Will,1,0,1,0,0,CF Industries
 2025-09-26,W Bradley Southern,1,0,1,0,0,Louisiana-Pacific Corporation
 2025-09-26,Wade Davis,1,0,1,0,0,TelevisaUnivision
@@ -977,7 +969,6 @@ date,ceo,total,controlled,negative_serp,neutral_serp,positive_serp,company
 2025-09-26,William J Christensen,1,0,1,0,0,JELD-WEN Holding
 2025-09-26,William Krueger,1,0,1,0,0,The Andersons Inc
 2025-09-26,William L Meaney,1,0,1,0,0,Iron Mountain
-2025-09-26,William M Brown,1,0,1,0,0,3M
 2025-09-26,William McDermott,1,0,1,0,0,ServiceNow
 2025-09-26,William Monteleone,1,0,1,0,0,Par Pacific
 2025-09-26,William Nash,1,0,1,0,0,CarMax
