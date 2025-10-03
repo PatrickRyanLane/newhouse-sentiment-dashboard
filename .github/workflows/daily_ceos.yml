@@ -1,4 +1,4 @@
-name: Daily CEO News Sentiment
+name: Daily CEO Pipeline
 
 on:
   schedule:
