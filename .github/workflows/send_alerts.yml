@@ -1,4 +1,4 @@
-name: Send Sentiment Alerts (pipeline, API, or manual)
+name: Send Alerts
 
 on:
   workflow_run:
