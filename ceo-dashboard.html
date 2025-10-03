@@ -289,19 +289,18 @@ tbody td:first-child{
 
 <script>
 /********************** Config **********************/
-const COUNTS_CANDIDATES = ['data_ceos/daily_counts.csv'];
+const COUNTS_CANDIDATES = ['data/daily_counts/ceo-articles-daily-counts-chart.csv'];
 const ROSTER_CANDIDATES = [
-  'data/serps/roster.csv',
-  'data/roster.csv',
-  'data/ceo_companies.csv'
+  'rosters/main_roster.csv',
+  'rosters/roster.csv'
 ];
-const SERPS_DAILY_CSV = 'data/serps/ceo_serps_daily.csv';
-const BOARDS_CSV = 'data_ceos/ceo_boards.csv';
-const SERP_ROWS_PATH = d => `data_ceos/serp_rows/${d}-ceo-serps-rows.csv`;
+const SERPS_DAILY_CSV = 'data/daily_counts/ceo-serps-daily-counts-chart.csv';
+const BOARDS_CSV = 'rosters/boards_roster.csv';
+const SERP_ROWS_PATH = d => `data/processed_serps/${d}-ceo-serps-rows.csv`;
 
 // NEW: authoritative per-date sources for the table
-const ARTICLES_DAILY_PATH = d => `data_ceos/${d}.csv`;
-const SERP_PROCESSED_PATH = d => `data_ceos/processed_serps/${d}-ceo-serps-processed.csv`;
+const ARTICLES_DAILY_PATH = d => `data/processed_articles/${d}-ceo-articles-table.csv`;
+const SERP_PROCESSED_PATH = d => `data/processed_serps/${d}-ceo-serps-processed.csv`;
 
 /********************** Runtime **********************/
 let rosterMap = new Map();        // CEO -> Company
@@ -413,7 +412,7 @@ async function loadRoster(){
 async function loadBoards(){
   boardsByCeo = new Map();
   try{
-    const rows = await fetchCsv(BOARDS_CSV); // 'data_ceos/ceo_boards.csv'
+    const rows = await fetchCsv(BOARDS_CSV);
     rows.forEach(r => {
       const ceoRaw = (r.ceo || '').trim();
       const url = (r.url || '').trim();
@@ -483,7 +482,7 @@ function toPct01(x){
   return n > 1 ? n/100 : n;
 }
 
-// data_ceos/<DATE>.csv  ->  Map(ceo -> {company, theme, neg_pct})
+// data/processed_articles/<DATE>-ceo-articles-table.csv -> Map(ceo -> {company, theme, neg_pct})
 async function getArticlesForDate(d){
   if (_articlesCache.has(d)) return _articlesCache.get(d);
   let map = new Map();
@@ -508,7 +507,7 @@ async function getArticlesForDate(d){
   return map;
 }
 
-// data_ceos/processed_serps/<DATE>-ceo-serps-processed.csv -> Map(ceo -> {total, neg_serp, controlled})
+// data/processed_serps/<DATE>-ceo-serps-processed.csv -> Map(ceo -> {total, neg_serp, controlled})
 async function getSerpAggForDate(d){
   if (_serpAggCache.has(d)) return _serpAggCache.get(d);
   let map = new Map();
@@ -920,7 +919,7 @@ function showBoards(ceo){
 /********************** Headlines modal (styled like SERP cards) **********************/
 async function showHeadlines({ ceo }) {
   const d = document.getElementById('dateSelect').value;
-  const file = `data_ceos/articles/${d}-articles.csv`;
+  const file = `data/processed_articles/${d}-ceo-articles-modal.csv`;
 
   let rows = [];
   try {
@@ -968,7 +967,7 @@ async function showHeadlines({ ceo }) {
 }
 
 
-/********************** SERP modal (reads data_ceos/serp_rows) **********************/
+/********************** SERP modal (reads data/processed_serps) **********************/
 async function showSerp(row){
   const d = document.getElementById('dateSelect').value;
   const path = SERP_ROWS_PATH(d);
