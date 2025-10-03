@@ -9,12 +9,12 @@ WHAT THIS DOES
 - Reads CEO/company/alias data from rosters/main-roster.csv.
 - Reads today's headline articles (if present) and aggregates per-CEO counts.
 - Writes BOTH of the legacy artifacts the dashboard expects:
-    1) Per-day file:        data_ceos/YYYY-MM-DD.csv
-    2) Master index file:   data_ceos/daily_counts.csv   (append/replace rows for that date)
+    1) Per-day file:        data/processed_articles/YYYY-MM-DD-ceo-articles-table.csv
+    2) Master index file:   data/daily_counts/ceo-articles-daily-counts-chart.csv   (append/replace rows for that date)
 
 BEHAVIOR WHEN THERE ARE NO ARTICLES
 -----------------------------------
-- If `data_ceos/articles/YYYY-MM-DD-articles.csv` is missing or empty,
+- If `data/processed_articles/YYYY-MM-DD-ceo-articles-modal.csv` is missing or empty,
   we still create rows (0 positive / 0 neutral / 0 negative) for every CEO
   in the roster, so the date appears in the dashboard date picker.
 
@@ -27,9 +27,9 @@ USAGE (optional flags)
 python news_sentiment_ceos.py \
   --date 2025-09-18 \
   --roster rosters/main-roster.csv \
-  --articles-dir data_ceos/articles \
-  --daily-dir data_ceos \
-  --out data_ceos/daily_counts.csv
+  --articles-dir data/processed_articles \
+  --daily-dir data/processed_articles \
+  --out data/daily_counts/ceo-articles-daily-counts-chart.csv
 """
 
 from __future__ import annotations
@@ -45,9 +45,9 @@ import pandas as pd
 
 # -------- Defaults (can be overridden by CLI flags) -------- #
 DEFAULT_ROSTER = "rosters/main-roster.csv"
-DEFAULT_ARTICLES_DIR = "data_ceos/articles"
-DEFAULT_DAILY_DIR = "data_ceos"
-DEFAULT_OUT = "data_ceos/daily_counts.csv"
+DEFAULT_ARTICLES_DIR = "data/processed_articles"
+DEFAULT_DAILY_DIR = "data/processed_articles"
+DEFAULT_OUT = "data/daily_counts/ceo-articles-daily-counts-chart.csv"
 
 
 # ---------------------- Helpers ---------------------------- #
@@ -97,11 +97,12 @@ def load_roster(path: Path) -> pd.DataFrame:
 
 def load_articles(articles_dir: Path, date_str: str) -> pd.DataFrame:
     """
-    Reads data_ceos/articles/YYYY-MM-DD-articles.csv if present.
+    Reads data/processed_articles/YYYY-MM-DD-ceo-articles-modal.csv if present.
     Expected columns (case-insensitive): ceo, company, title, url, source, sentiment
     Returns empty DataFrame (with expected columns) if file missing/empty.
     """
-    f = articles_dir / f"{date_str}-articles.csv"
+    # Updated to use new filename pattern
+    f = articles_dir / f"{date_str}-ceo-articles-modal.csv"
     cols = ["ceo", "company", "title", "url", "source", "sentiment"]
     if not f.exists():
         return pd.DataFrame(columns=cols)
@@ -166,17 +167,18 @@ def aggregate_counts(roster: pd.DataFrame, articles: pd.DataFrame, date_str: str
 
 def write_daily_file(daily_dir: Path, date_str: str, daily_rows: pd.DataFrame) -> Path:
     """
-    Writes data_ceos/YYYY-MM-DD.csv
+    Writes data/processed_articles/YYYY-MM-DD-ceo-articles-table.csv
     """
     daily_dir.mkdir(parents=True, exist_ok=True)
-    path = daily_dir / f"{date_str}.csv"
+    # Updated to use new naming convention
+    path = daily_dir / f"{date_str}-ceo-articles-table.csv"
     daily_rows.to_csv(path, index=False)
     return path
 
 
 def upsert_master_index(out_path: Path, date_str: str, daily_rows: pd.DataFrame) -> Path:
     """
-    Replaces rows for date_str in data_ceos/daily_counts.csv with daily_rows;
+    Replaces rows for date_str in data/daily_counts/ceo-articles-daily-counts-chart.csv with daily_rows;
     creates the file if missing.
     """
     out_path.parent.mkdir(parents=True, exist_ok=True)

@@ -7,7 +7,7 @@ from datetime import date, timedelta
 ARTICLES_DIR = Path("data/processed_articles")
 OUT_DIR      = Path("data/processed_articles")
 OUT_DIR.mkdir(parents=True, exist_ok=True)
-DAILY_INDEX  = OUT_DIR / "daily_counts.csv"
+DAILY_INDEX  = Path("data/daily_counts") / "brand-articles-daily-counts-chart.csv"
 
 # Columns we will ALWAYS write for the daily index
 INDEX_FIELDS = ["date","company","positive","neutral","negative","total","neg_pct"]
@@ -41,7 +41,7 @@ def read_articles(dstr: str):
     return rows
 
 def aggregate(rows):
-    # counts per company {company: {"positive": n, "neutral": n, "negative": n, "total": n}}
+    # counts per company {"company": {"positive": n, "neutral": n, "negative": n, "total": n}}
     agg = {}
     for r in rows:
         company = r["company"]
@@ -60,7 +60,7 @@ def write_daily(dstr: str, agg: dict):
     Per-day file. We include neg_pct so downstream readers can use it directly
     (still fine if they recompute from counts).
     """
-    out = OUT_DIR / f"{dstr}.csv"
+    out = OUT_DIR / f"{dstr}-brand-articles-table.csv"
     with out.open("w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh)
         w.writerow(["date","company","positive","neutral","negative","total","neg_pct"])
@@ -75,6 +75,9 @@ def upsert_daily_index(dstr: str, agg: dict):
     Append/replace rows for a given date in the rolling index.
     We ALWAYS write with INDEX_FIELDS (includes neg_pct) to avoid fieldname mismatches.
     """
+    # Ensure directory exists
+    DAILY_INDEX.parent.mkdir(parents=True, exist_ok=True)
+    
     # load any existing rows (we'll ignore extra keys when we rebuild)
     rows = []
     if DAILY_INDEX.exists():

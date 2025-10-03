@@ -17,13 +17,13 @@ Local maps:
 Outputs
 -------
 Row-level processed SERPs (modal):
-  data_ceos/serp_rows/{date}-ceo-serps-rows.csv
+  data/processed_serps/{date}-ceo-serps-modal.csv
 
 Per-CEO daily aggregate:
-  data_ceos/processed_serps/{date}-ceo-serps-processed.csv
+  data/processed_serps/{date}-ceo-serps-table.csv
 
 Rolling index (dashboard table & SERP trend):
-  data/serps/ceo_serps_daily.csv
+  data/daily_counts/ceo-serps-daily-counts-chart.csv
 
 Usage
 -----
@@ -55,10 +55,11 @@ FIRST_AVAILABLE_DATE = dt.date(2025, 9, 15)
 # Updated to use consolidated roster
 MAIN_ROSTER_PATH = Path("rosters/main-roster.csv")
 
-OUT_DIR_ROWS = Path("data_ceos/serp_rows")
-OUT_DIR_DAILY = Path("data_ceos/processed_serps")
-INDEX_DIR = Path("data/serps")
-INDEX_PATH = INDEX_DIR / "ceo_serps_daily.csv"
+# Updated paths - all CEO SERP files consolidated in data/processed_serps
+OUT_DIR_ROWS = Path("data/processed_serps")
+OUT_DIR_DAILY = Path("data/processed_serps")
+INDEX_DIR = Path("data/daily_counts")
+INDEX_PATH = INDEX_DIR / "ceo-serps-daily-counts-chart.csv"
 
 for p in (OUT_DIR_ROWS, OUT_DIR_DAILY, INDEX_DIR):
     p.mkdir(parents=True, exist_ok=True)
@@ -296,7 +297,7 @@ def process_one_date(date_str: str, alias_map, ceo_to_company, controlled_domain
         "sentiment": mapped["sentiment"],
         "controlled":mapped["controlled"],
     })
-    rows_path = OUT_DIR_ROWS / f"{date_str}-ceo-serps-rows.csv"
+    rows_path = OUT_DIR_ROWS / f"{date_str}-ceo-serps-modal.csv"
     rows_df.to_csv(rows_path, index=False)
     print(f"[write] {rows_path}")
 
@@ -316,7 +317,7 @@ def process_one_date(date_str: str, alias_map, ceo_to_company, controlled_domain
     ).reset_index()
     ag.insert(0, "date", date_str)
 
-    day_path = OUT_DIR_DAILY / f"{date_str}-ceo-serps-processed.csv"
+    day_path = OUT_DIR_DAILY / f"{date_str}-ceo-serps-table.csv"
     ag.to_csv(day_path, index=False)
     print(f"[write] {day_path}")
 
