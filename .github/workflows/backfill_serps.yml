@@ -77,7 +77,7 @@ jobs:
           END_DATE="${ENDIN:-$(date -u +%F)}"
           echo "Backfilling CEO SERPs from ${START} to ${END_DATE}"
           # Your script supports inclusive range via --backfill START END
-          python scripts/process_serps.py --backfill "${START}" "${END_DATE}"
+          python scripts/process_serps_ceos.py --backfill "${START}" "${END_DATE}"
 
       - name: Commit outputs
         shell: bash
