@@ -295,7 +295,7 @@ const ROSTER_CANDIDATES = [
   'rosters/roster.csv'
 ];
 const SERPS_DAILY_CSV = 'data/daily_counts/ceo-serps-daily-counts-chart.csv';
-const BOARDS_CSV = 'rosters/boards_roster.csv';
+const BOARDS_CSV = 'rosters/boards-roster.csv';
 const SERP_ROWS_PATH = d => `data/processed_serps/${d}-ceo-serps-rows.csv`;
 
 // NEW: authoritative per-date sources for the table
@@ -414,8 +414,8 @@ async function loadBoards(){
   try{
     const rows = await fetchCsv(BOARDS_CSV);
     rows.forEach(r => {
-      const ceoRaw = (r.ceo || '').trim();
-      const url = (r.url || '').trim();
+      const ceoRaw = (r.ceo || r.Name || '').trim();
+      const url = (r.url || r.Website || '').trim();
       let domain = (r.domain || '').trim();
 
       if (!ceoRaw || !url) return; // need both
