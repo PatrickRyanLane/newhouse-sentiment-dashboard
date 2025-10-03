@@ -295,11 +295,11 @@ const ROSTER_CANDIDATES = [
 ];
 const SERPS_DAILY_CSV = 'data/daily_counts/ceo-serps-daily-counts-chart.csv';
 const BOARDS_CSV = 'rosters/boards_roster.csv';
-const SERP_ROWS_PATH = d => `data/processed_serps/${d}-ceo-serps-modal.csv`;
+const SERP_ROWS_PATH = d => 'data/processed_serps/${d}-ceo-serps-modal.csv';
 
 // NEW: authoritative per-date sources for the table
-const ARTICLES_DAILY_PATH = d => `data/processed_articles/${d}-ceo-articles-table.csv`;
-const SERP_PROCESSED_PATH = d => `data/processed_serps/${d}-ceo-serps-table.csv`;
+const ARTICLES_DAILY_PATH = d => 'data/processed_articles/${d}-ceo-articles-table.csv';
+const SERP_PROCESSED_PATH = d => 'data/processed_serps/${d}-ceo-serps-table.csv';
 
 /********************** Runtime **********************/
 let rosterMap = new Map();        // CEO -> Company
