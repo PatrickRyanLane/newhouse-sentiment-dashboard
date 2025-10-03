@@ -43,8 +43,8 @@ This repository uses GitHub Actions workflows to automate daily data collection,
 
 ---
 
-### 2. **daily_ceos.yml** - Daily CEO News Pipeline
-**Purpose**: Collects and analyzes news sentiment for Fortune 1000 CEOs
+### 2. **daily_ceos.yml** - Daily CEO News & SERP Pipeline
+**Purpose**: Collects and analyzes news sentiment and search results for Fortune 1000 CEOs
 
 **Schedule**: Daily at 12:00 UTC (~8am ET)
 
@@ -56,11 +56,17 @@ This repository uses GitHub Actions workflows to automate daily data collection,
 2. Aggregate CEO news sentiment
    ↓ outputs: data/processed_articles/{date}-ceo-articles-table.csv
    ↓ updates: data/daily_counts/ceo-articles-daily-counts-chart.csv
+
+3. Process CEO SERPs (search results analysis)
+   ↓ outputs: data/processed_serps/{date}-ceo-serps-processed.csv
+   ↓ outputs: data/processed_serps/{date}-ceo-serps-rows.csv
+   ↓ updates: data/daily_counts/ceo-serps-daily-counts-chart.csv
 ```
 
 **Scripts Used**:
 - `scripts/news_articles_ceos.py` - Fetches CEO articles
 - `scripts/news_sentiment_ceos.py` - Analyzes sentiment and themes
+- `scripts/process_serps_ceos.py` - Processes CEO SERP data
 
 **Configuration**:
 - `ARTICLES_MAX_PER_ALIAS: 25` - Max articles per CEO
@@ -70,7 +76,10 @@ This repository uses GitHub Actions workflows to automate daily data collection,
 - `rosters/ceo_aliases.csv` - CEO name variations for searching
 - `rosters/main_roster.csv` - CEO to company mappings
 
-**Note**: CEO SERP processing is handled separately by the SERP workflows
+**Features**:
+- Idempotent SERP processing (skips if data exists)
+- Manual trigger with optional date override
+- Complete daily processing (articles + sentiment + SERPs)
 
 ---
 
@@ -120,7 +129,7 @@ For each date in range:
 
 **Scripts Used**:
 - `scripts/process_serps_brands.py --date {date}` - Per-date brand processing
-- `scripts/process_serps.py --backfill {start} {end}` - Batch CEO processing
+- `scripts/process_serps_ceos.py --backfill {start} {end}` - Batch CEO processing
 
 **Input Parameters**:
 - `start`: Start date (YYYY-MM-DD) - default: 2025-09-15
@@ -195,7 +204,7 @@ All configuration values can be overridden when manually triggering
 **Status**: ⚠️ **DISABLED AND DEPRECATED**
 
 **Reason for Deprecation**:
-- Overlaps with SERP processing in `daily_brands.yml`
+- Overlaps with SERP processing in `daily_brands.yml` and `daily_ceos.yml`
 - Uses outdated data paths
 - Creates potential for duplicate processing and data conflicts
 
@@ -217,7 +226,7 @@ All configuration values can be overridden when manually triggering
     
 12:00 UTC - daily_ceos.yml starts  
 12:00 UTC - daily_roc.yml starts (parallel)
-    ↓ (CEO articles + sentiment)
+    ↓ (CEO articles + sentiment + SERPs)
     ↓ (ROC sentiment)
     
 On completion - send_alerts.yml triggers
@@ -321,20 +330,16 @@ All workflows support manual triggering via GitHub Actions UI:
    - Combine `daily_brands.yml` and `daily_ceos.yml` into single workflow
    - Use matrix strategy for parallel processing
 
-2. **Add CEO SERP processing**:
-   - Currently missing from daily CEO workflow
-   - Should run `process_serps.py` for daily CEO SERP data
-
-3. **Improve error handling**:
+2. **Improve error handling**:
    - Add Slack/email notifications on workflow failures
    - Implement retry logic for transient API failures
 
-4. **Performance optimization**:
+3. **Performance optimization**:
    - Cache Python dependencies across runs
    - Use artifacts to share data between jobs
    - Parallel processing where possible
 
-5. **Monitoring**:
+4. **Monitoring**:
    - Add workflow status badges to README
    - Track processing times and success rates
    - Alert on stale data (missed runs)
@@ -373,7 +378,7 @@ Workflows monitor these files and auto-trigger on changes:
 | Workflow | Frequency | Purpose | Outputs |
 |----------|-----------|---------|---------|
 | daily_brands.yml | Daily 09:10 UTC | Brand news & SERPs | Brand articles, sentiment, SERP metrics |
-| daily_ceos.yml | Daily 12:00 UTC | CEO news | CEO articles, sentiment, themes |
+| daily_ceos.yml | Daily 12:00 UTC | CEO news & SERPs | CEO articles, sentiment, SERP metrics |
 | daily_roc.yml | Daily 12:00 UTC | Roc Nation news | ROC sentiment data |
 | backfill_serps.yml | Manual | Historical SERP processing | Backfilled SERP data |
 | send_alerts.yml | After pipelines | Email notifications | Alerts for high-risk entities |
