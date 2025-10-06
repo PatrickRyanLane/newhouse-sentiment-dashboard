@@ -59,9 +59,13 @@ jobs:
           python scripts/news_articles_brands.py --date "${DATE_TO_RUN}"
 
       - name: Aggregate brand news sentiment
+        env:
+          RUN_DATE: ${{ github.event.inputs.date || '' }}
         run: |
           set -euo pipefail
-          python scripts/news_sentiment_brands.py
+          DATE_TO_RUN="${RUN_DATE:-$(date -u +%F)}"
+          echo "Running news_sentiment_brands.py for ${DATE_TO_RUN}"
+          python scripts/news_sentiment_brands.py --date "${DATE_TO_RUN}"
 
       - name: Process brand SERPs
         shell: bash
