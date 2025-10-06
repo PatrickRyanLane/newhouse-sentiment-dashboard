@@ -3,8 +3,8 @@ name: Send Alerts
 on:
   workflow_run:
     workflows:
-      - "Daily Data Pipeline"
-      - "Sentiment ETL"
+      - "Daily Brands Pipeline"
+      - "Daily CEOs Pipeline"
     types: [completed]
   repository_dispatch:
     types: [send_alerts]
