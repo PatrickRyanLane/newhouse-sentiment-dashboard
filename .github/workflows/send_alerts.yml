@@ -84,10 +84,10 @@ jobs:
           python -m scripts.send_alerts
           
       - name: Upload cooldown state
-        if: success() && hashFiles('data/last_alert_dates.json') != ''
+        if: success() && hashFiles('data/email_alerts/last_alert_dates.json') != ''
         uses: actions/upload-artifact@v4
         with:
           name: cooldown-state
-          path: data/last_alert_dates.json
+          path: data/email_alerts/last_alert_dates.json
           if-no-files-found: warn
           retention-days: 365
