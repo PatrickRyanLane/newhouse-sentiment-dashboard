@@ -4,7 +4,7 @@ on:
   workflow_run:
     workflows:
       - "Daily Brands Pipeline"
-      - "Daily CEOs Pipeline"
+      - "Daily CEO Pipeline"
     types: [completed]
   repository_dispatch:
     types: [send_alerts]
