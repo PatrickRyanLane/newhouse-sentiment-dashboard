@@ -57,14 +57,18 @@ jobs:
         run: |
           DATE_TO_RUN="${RUN_DATE:-$(date -u +%F)}"
           echo "Running news_articles_ceos.py for ${DATE_TO_RUN}"
-          python scripts/news_articles_ceos.py
+          ARTICLES_DATE="${DATE_TO_RUN}" python scripts/news_articles_ceos.py
 
       # Normalize daily counts and write to:
       # - data/processed_articles/{date}-ceo-articles-table.csv
       # - data/daily_counts/ceo-articles-daily-counts-chart.csv
       - name: Run daily CEO sentiment (counts)
+        env:
+          RUN_DATE: ${{ github.event.inputs.date || '' }}
         run: |
-          python scripts/news_sentiment_ceos.py
+          DATE_TO_RUN="${RUN_DATE:-$(date -u +%F)}"
+          echo "Running news_sentiment_ceos.py for ${DATE_TO_RUN}"
+          python scripts/news_sentiment_ceos.py --date "${DATE_TO_RUN}"
 
       # Process CEO SERPs
       # - data/processed_serps/{date}-ceo-serps-processed.csv
