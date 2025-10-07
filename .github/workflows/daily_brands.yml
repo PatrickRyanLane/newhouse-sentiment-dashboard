@@ -10,7 +10,7 @@ on:
         type: string
   # Scheduled run — adjust as you like
   schedule:
-    - cron: "10 9 * * *"   # 09:10 UTC daily
+    - cron: "10 9 * * *"   # 05:10 ET daily
 
 # allow the workflow to push commits back to the repo
 permissions:
