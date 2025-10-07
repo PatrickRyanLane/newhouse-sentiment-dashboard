@@ -2,7 +2,7 @@ name: Daily CEO Pipeline
 
 on:
   schedule:
-    - cron: "0 12 * * *"   # ~8am ET
+    - cron: "10 10 * * *"   # 10:10 UTC (one hour after brands at 09:10)
   workflow_dispatch:
     inputs:
       date:
