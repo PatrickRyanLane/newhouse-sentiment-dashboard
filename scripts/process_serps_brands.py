@@ -7,24 +7,15 @@ Process daily BRAND SERP data:
 - Classify CONTROL using three rules:
     (1) Always-controlled platforms (and their subdomains):
         facebook.com, instagram.com, twitter.com, x.com, linkedin.com, play.google.com, apps.apple.com
-    (2) Any domain (or its subdomains) present in data/roster.csv
-    (3) Domain contains the normalized brand token (e.g., "capitalone" matches capitalone.com, capitalonetravel.com, ir.capitalone.com)
+    (2) Any domain (or its subdomains) present in rosters/main-roster.csv (Website column)
+    (3) Domain contains the normalized brand token
 
 - If CONTROLLED and FORCE_POSITIVE_IF_CONTROLLED = True -> sentiment is forced to "positive"
 
 Outputs:
-  1) Row-level processed SERPs:       data/serp_rows/{date}-brand-serps-rows.csv
-  2) Per-company daily aggregate:     data/processed_serps/{date}-brand-serps-processed.csv
-  3) Rolling daily index (append/replace date): data/serps/brand_serps_daily.csv
-
-Raw input headings expected (brand SERPs):
-    prompt, company, position, title, link, displayed_link, snippet, thumbnail, favicon, redirect_link, rich_snippet, error_status
-
-Row-level output columns:
-    date, company, title, url, position, snippet, sentiment, controlled
-
-Per-company aggregate columns:
-    date, company, total, controlled, negative_serp, neutral_serp, positive_serp
+  1) Row-level processed SERPs:       data/processed_serps/{date}-brand-serps-modal.csv
+  2) Per-company daily aggregate:     data/processed_serps/{date}-brand-serps-table.csv
+  3) Rolling daily index:             data/daily_counts/brand-serps-daily-counts-chart.csv
 """
 
 from __future__ import annotations
@@ -48,16 +39,16 @@ S3_URL_TEMPLATE = (
     "https://tk-public-data.s3.us-east-1.amazonaws.com/serp_files/{date}-brand-serps.csv"
 )
 
-ROSTER_PATH = "data/roster.csv"   # single authoritative roster
+# Updated to use consolidated roster
+MAIN_ROSTER_PATH = "rosters/main-roster.csv"
 
-OUT_ROWS_DIR = "data/serp_rows"
+# Updated paths - consolidated in data/processed_serps
+OUT_ROWS_DIR = "data/processed_serps"
 OUT_DAILY_DIR = "data/processed_serps"
-OUT_ROLLUP = "data/serps/brand_serps_daily.csv"
+OUT_ROLLUP = "data/daily_counts/brand-serps-daily-counts-chart.csv"
 
-# If controlled, force sentiment to positive
 FORCE_POSITIVE_IF_CONTROLLED = True
 
-# Domains explicitly CONTROLLED (social + app stores)
 ALWAYS_CONTROLLED_DOMAINS: Set[str] = {
     "facebook.com",
     "instagram.com",
@@ -113,23 +104,15 @@ def _hostname(url: str) -> str:
         return ""
 
 def _norm_token(s: str) -> str:
-    # alphanumeric only, lowercase (for brand name matching in host)
     return "".join(ch for ch in (s or "").lower() if ch.isalnum())
 
 def _norm_domain_for_name_match(host: str) -> str:
-    # strip dots, dashes, etc. (simple heuristic)
     return "".join(ch for ch in (host or "") if ch.isalnum())
 
 # -----------------------
 # Roster loading
 # -----------------------
-def load_roster_domains(path: str = ROSTER_PATH) -> Set[str]:
-    """
-    Read domains from data/roster.csv and return a set of hostnames treated as controlled.
-    Accept case-insensitive columns: domain, website, url, site, homepage.
-    Accepts either plain domains (e.g., capitalone.com) or full URLs.
-    """
-    wanted_cols = {"domain", "website", "url", "site", "homepage"}
+def load_roster_domains(path: str = MAIN_ROSTER_PATH) -> Set[str]:
     domains: Set[str] = set()
 
     if not os.path.exists(path):
@@ -137,20 +120,28 @@ def load_roster_domains(path: str = ROSTER_PATH) -> Set[str]:
         return domains
 
     try:
-        with open(path, newline="", encoding="utf-8") as f:
-            rdr = csv.DictReader(f)
-            for row in rdr:
-                if not row:
-                    continue
-                for k, v in row.items():
-                    if not k:
-                        continue
-                    if k.strip().lower() in wanted_cols and v:
-                        val = str(v).strip()
-                        url = val if val.startswith(("http://", "https://")) else "http://" + val
-                        host = _hostname(url)
-                        if host:
-                            domains.add(host)
+        df = pd.read_csv(path, encoding="utf-8-sig")
+        cols = {c.strip().lower(): c for c in df.columns}
+        
+        website_col = None
+        for key in ["website", "domain", "url", "site", "homepage"]:
+            if key in cols:
+                website_col = cols[key]
+                break
+        
+        if not website_col:
+            print(f"[WARN] No website/domain column found in {path}")
+            return domains
+        
+        for val in df[website_col].dropna().astype(str):
+            val = val.strip()
+            if val and val != "nan":
+                if not val.startswith(("http://", "https://")):
+                    val = f"http://{val}"
+                host = _hostname(val)
+                if host and "." in host:
+                    domains.add(host)
+                    
     except Exception as e:
         print(f"[WARN] failed reading roster at {path}: {e}")
 
@@ -160,27 +151,18 @@ def load_roster_domains(path: str = ROSTER_PATH) -> Set[str]:
 # Control classification
 # -----------------------
 def classify_control(company: str, url: str, roster_domains: Set[str]) -> bool:
-    """
-    Controlled if:
-      (1) Host equals / endswith an ALWAYS_CONTROLLED_DOMAIN
-      (2) Host equals / endswith a roster domain
-      (3) Host token contains normalized brand token
-    """
     host = _hostname(url)
     if not host:
         return False
 
-    # (1) Always-controlled platforms
     for good in ALWAYS_CONTROLLED_DOMAINS:
         if host == good or host.endswith("." + good):
             return True
 
-    # (2) Controlled via roster (allow subdomains)
     for rd in roster_domains:
         if host == rd or host.endswith("." + rd):
             return True
 
-    # (3) Brand token appears anywhere in the host token
     brand_token = _norm_token(company)
     if brand_token:
         host_token = _norm_domain_for_name_match(host)
@@ -193,10 +175,6 @@ def classify_control(company: str, url: str, roster_domains: Set[str]) -> bool:
 # Sentiment
 # -----------------------
 def vader_label_on_title(analyzer: SentimentIntensityAnalyzer, title: str) -> Tuple[float, str]:
-    """
-    Return (compound, label) where label in {'positive','neutral','negative'}.
-    Uses VADER on the TITLE ONLY.
-    """
     s = analyzer.polarity_scores(title or "")
     c = s.get("compound", 0.0)
     if c >= 0.2:
@@ -216,23 +194,19 @@ def process_for_date(target_date: str) -> None:
 
     roster_domains = load_roster_domains()
 
-    # Fetch raw SERPs from S3
     url = S3_URL_TEMPLATE.format(date=target_date)
     raw = fetch_csv_from_s3(url)
     if raw is None or raw.empty:
         print(f"[WARN] No raw brand SERP data available for {target_date}. Nothing to write.")
         return
 
-    # Normalize columns that we rely on
     expected = ["company", "position", "title", "link", "snippet"]
     for col in expected:
         if col not in raw.columns:
             raw[col] = ""
 
-    # Sentiment analyzer
     analyzer = SentimentIntensityAnalyzer()
 
-    # Row-level processing
     processed_rows = []
     for _, row in raw.iterrows():
         company = str(row.get("company", "") or "").strip()
@@ -243,7 +217,6 @@ def process_for_date(target_date: str) -> None:
         url = str(row.get("link", "") or "").strip()
         snippet = str(row.get("snippet", "") or "").strip()
 
-        # position may be float in the raw
         pos_val = row.get("position", 0)
         try:
             position = int(float(pos_val) if pos_val not in (None, "") else 0)
@@ -252,35 +225,30 @@ def process_for_date(target_date: str) -> None:
 
         controlled = classify_control(company, url, roster_domains)
 
-        # Sentiment: TITLE ONLY
         _, label = vader_label_on_title(analyzer, title)
         if FORCE_POSITIVE_IF_CONTROLLED and controlled:
             label = "positive"
 
-        processed_rows.append(
-            {
-                "date": target_date,
-                "company": company,
-                "title": title,
-                "url": url,
-                "position": position,
-                "snippet": snippet,      # kept for completeness; not used for sentiment
-                "sentiment": label,
-                "controlled": controlled,
-            }
-        )
+        processed_rows.append({
+            "date": target_date,
+            "company": company,
+            "title": title,
+            "url": url,
+            "position": position,
+            "snippet": snippet,
+            "sentiment": label,
+            "controlled": controlled,
+        })
 
     if not processed_rows:
         print(f"[WARN] No processed rows for {target_date}.")
         return
 
-    # Save row-level
     rows_df = pd.DataFrame(processed_rows)
-    row_out_path = os.path.join(OUT_ROWS_DIR, f"{target_date}-brand-serps-rows.csv")
+    row_out_path = os.path.join(OUT_ROWS_DIR, f"{target_date}-brand-serps-modal.csv")
     rows_df.to_csv(row_out_path, index=False)
     print(f"[OK] Wrote row-level SERPs → {row_out_path}")
 
-    # Aggregate per company
     agg = (
         rows_df.groupby("company", as_index=False)
         .agg(
@@ -293,12 +261,10 @@ def process_for_date(target_date: str) -> None:
     )
     agg.insert(0, "date", target_date)
 
-    # Save daily aggregate
-    daily_out_path = os.path.join(OUT_DAILY_DIR, f"{target_date}-brand-serps-processed.csv")
+    daily_out_path = os.path.join(OUT_DAILY_DIR, f"{target_date}-brand-serps-table.csv")
     agg.to_csv(daily_out_path, index=False)
     print(f"[OK] Wrote daily aggregate → {daily_out_path}")
 
-    # Update rolling index (replace rows for this date, then append new)
     if os.path.exists(OUT_ROLLUP):
         roll = pd.read_csv(OUT_ROLLUP)
         roll = roll[roll["date"] != target_date]

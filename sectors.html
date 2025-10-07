@@ -158,24 +158,23 @@ tbody tr td:last-child{border-right:1px solid #0f1831;border-radius:0 10px 10px 
 
 <script>
 /* ================= Config & Runtime ================= */
-const COUNTS_CANDIDATES = [ 'data/processed_articles/daily_counts.csv' ];                  // brand-level article counts by day
-const SERPS_DAILY_CSV   = 'data/serps/brand_serps_daily.csv';           // brand-level SERP aggregates by day
-const ROSTER_CANDIDATES = [ 'data/roster.csv' ]; // brand->sector mapping
+const COUNTS_CANDIDATES = [ 'data/daily_counts/brand-articles-daily-counts-chart.csv' ];
+const SERPS_DAILY_CSV   = 'data/daily_counts/brand-serps-daily-counts-chart.csv';
+const ROSTER_CANDIDATES = [ 'rosters/main-roster.csv' ];
 
-let allCountsRows = [];            // [{date, company, pos, neu, neg}, ...]
-let serpsDaily = [];               // [{date, company, total, neg_serp, ctrl}, ...]
-let sectorFromBrand = new Map();   // brand -> sector
-let brandsBySector = new Map();    // sector -> Set(brands)
+let allCountsRows = [];
+let serpsDaily = [];
+let sectorFromBrand = new Map();
+let brandsBySector = new Map();
 
-let filteredRows = [];             // table rows (sectors) after filter
-let selectedSector = null;         // current sector selection
+let filteredRows = [];
+let selectedSector = null;
 let currentSort = { key:null, dir:1 };
 let currentPage = 1;
 const PAGE_SIZE = 25;
 
 let newsChart, serpChart;
 
-/* Chart windowing (synced across both charts) */
 const DATE_WINDOW_SIZE = 30;
 let dateWindowStart = null;
 
@@ -184,7 +183,6 @@ const isISODate = s => /^\d{4}-\d{2}-\d{2}$/.test(String(s||'').trim());
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const fmtPct = v => (v==null) ? 'N/A' : (Math.round(v*100) + '%');
 
-// Canonicalize brand/company names so maps line up across CSVs
 const canonBrand = s => String(s || '').toLowerCase().replace(/\s+/g,' ').trim();
 
 function clampDateStart(total){
@@ -271,10 +269,7 @@ async function loadSerpDaily(){
 }
 
 async function loadRosterSectors() {
-  const rows = await fetchCsvAny([
-    'data/serps/roster.csv',
-    'data/roster.csv'
-  ]);
+  const rows = await fetchCsvAny(ROSTER_CANDIDATES);
 
   sectorFromBrand.clear();
   brandsBySector.clear();
@@ -296,7 +291,6 @@ async function loadRosterSectors() {
 async function init(){
   await Promise.all([loadRosterSectors(), loadCounts(), loadSerpDaily()]);
 
-  // Date options from available series
   const dateSet = new Set([
     ...allCountsRows.map(r => r.date),
     ...serpsDaily.map(r => r.date)
@@ -313,7 +307,6 @@ async function init(){
   document.getElementById('prevBtn').onclick = ()=>{ if (currentPage>1){ currentPage--; renderTable(); } };
   document.getElementById('nextBtn').onclick = ()=>{ const totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE)); if (currentPage<totalPages){ currentPage++; renderTable(); } };
 
-  // Header sorting
   document.querySelectorAll('thead th[data-key]').forEach(th=>{
     th.style.cursor='pointer';
     th.addEventListener('click', ()=>{
@@ -323,7 +316,6 @@ async function init(){
     });
   });
 
-  // Charts resize with their cards
   const ro = new ResizeObserver(() => {
     if (newsChart) newsChart.resize();
     if (serpChart) serpChart.resize();
@@ -335,8 +327,7 @@ async function init(){
 
 /* ================= Sector rows ================= */
 async function buildSectorRowsForDate(d) {
-  // Build brand -> news counts for this date (pos/neu/neg)
-  const newsByBrand = new Map();  // canon(brand) -> {pos, neu, neg}
+  const newsByBrand = new Map();
   for (const r of allCountsRows) {
     if (r.date !== d) continue;
     const b = canonBrand(r.company || r.brand || r.ceo || '');
@@ -348,8 +339,7 @@ async function buildSectorRowsForDate(d) {
     newsByBrand.set(b, cur);
   }
 
-  // Build brand -> SERP counts for this date (total/neg/ctrl)
-  const serpByBrand = new Map();  // canon(brand) -> {total, neg, ctrl}
+  const serpByBrand = new Map();
   for (const r of serpsDaily) {
     if (r.date !== d) continue;
     const b = canonBrand(r.company || r.brand || '');
@@ -361,7 +351,6 @@ async function buildSectorRowsForDate(d) {
     serpByBrand.set(b, cur);
   }
 
-  // Aggregate to sectors (weighted by underlying counts)
   const sectors = [];
   brandsBySector.forEach((brandSet, sectorName) => {
     let nPos=0, nNeu=0, nNeg=0, sTot=0, sNeg=0, sCtrl=0;
@@ -375,18 +364,15 @@ async function buildSectorRowsForDate(d) {
 
     const newsTot = nPos + nNeu + nNeg;
 
-    // Percentages: if we have any counts, compute weighted %; else leave null
     const neg_news = newsTot ? (nNeg / newsTot) : null;
     const neg_serp = sTot    ? (sNeg / sTot)    : null;
     const ctrl_pct = sTot    ? (sCtrl / sTot)   : null;
 
-    // Only include sectors that have some data for the day (news OR SERP)
     if (newsTot || sTot) {
       sectors.push({ sector: sectorName, neg_news, neg_serp, ctrl_pct });
     }
   });
 
-  // Consistent order
   sectors.sort((a,b) => a.sector.localeCompare(b.sector));
   return sectors;
 }
@@ -404,7 +390,6 @@ async function renderAll(){
   filteredRows = rows;
   currentPage = 1;
 
-  // Auto-select when only one row remains
   if (rows.length === 1){
     selectedSector = rows[0].sector;
   } else if (selectedSector && !rows.some(r => r.sector === selectedSector)){
@@ -441,7 +426,6 @@ function renderTable(){
     </tr>`;
   }).join('');
 
-  // Single-select behavior
   tbody.querySelectorAll('.sectorCheck').forEach(cb=>{
     cb.addEventListener('change', (e)=>{
       const sec = e.target.getAttribute('data-sector');
@@ -459,14 +443,13 @@ function renderTable(){
   document.getElementById('pageTotal').textContent = String(Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE)));
 }
 
-/* Build date series for charts (index average or chosen sector) */
 function getDateSeries(){
-  let allowed = null; // null => all brands (index)
+  let allowed = null;
   if (selectedSector && brandsBySector.has(selectedSector)){
-    allowed = brandsBySector.get(selectedSector); // Set of canon(brand)
+    allowed = brandsBySector.get(selectedSector);
   }
 
-  const byDate = new Map();       // date -> {pos,neu,neg}
+  const byDate = new Map();
   allCountsRows.forEach(r=>{
     const brandKey = canonBrand(r.company || r.brand || '');
     if (allowed && !allowed.has(brandKey)) return;
@@ -478,7 +461,7 @@ function getDateSeries(){
     bucket.neg += +r.neg||0;
   });
 
-  const serpByDate = new Map();   // date -> {total,neg,ctrl}
+  const serpByDate = new Map();
   serpsDaily.forEach(r=>{
     const brandKey = canonBrand(r.company || r.brand || '');
     if (allowed && !allowed.has(brandKey)) return;
@@ -513,7 +496,6 @@ function getDateSeries(){
 function renderCharts(){
   const {dates, newsPos, newsNeu, newsNeg, serpNegPct, serpCtrlPct} = getDateSeries();
 
-  // Initialize default window to the last 30 points
   if (dateWindowStart === null){
     dateWindowStart = Math.max(0, dates.length - DATE_WINDOW_SIZE);
   }
@@ -555,7 +537,6 @@ function renderCharts(){
     }
   };
 
-  // NEWS stacked bar
   const nh = document.getElementById('newsChart').getContext('2d');
   if (newsChart) newsChart.destroy();
   newsChart = new Chart(nh, {
@@ -571,7 +552,6 @@ function renderCharts(){
     options: { ...commonOpts }
   });
 
-  // SERP lines
   const sh = document.getElementById('serpChart').getContext('2d');
   if (serpChart) serpChart.destroy();
   serpChart = new Chart(sh, {

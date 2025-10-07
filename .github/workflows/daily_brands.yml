@@ -42,6 +42,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Ensure folders (NEW STRUCTURE)
+        run: |
+          mkdir -p data/daily_counts
+          mkdir -p data/processed_articles
+          mkdir -p data/processed_serps
+          mkdir -p rosters
+
       - name: Build brand articles
         env:
           RUN_DATE: ${{ github.event.inputs.date || '' }}
@@ -52,18 +59,13 @@ jobs:
           python scripts/news_articles_brands.py --date "${DATE_TO_RUN}"
 
       - name: Aggregate brand news sentiment
+        env:
+          RUN_DATE: ${{ github.event.inputs.date || '' }}
         run: |
           set -euo pipefail
-          python scripts/news_sentiment_brands.py
-
-      - name: Install deps
-        run: |
-          python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then
-            python -m pip install -r requirements.txt
-          else
-            python -m pip install pandas requests vaderSentiment
-          fi
+          DATE_TO_RUN="${RUN_DATE:-$(date -u +%F)}"
+          echo "Running news_sentiment_brands.py for ${DATE_TO_RUN}"
+          python scripts/news_sentiment_brands.py --date "${DATE_TO_RUN}"
 
       - name: Process brand SERPs
         shell: bash
@@ -72,7 +74,7 @@ jobs:
         run: |
           set -euo pipefail
           DATE="${DATE_IN:-$(date -u +%F)}"
-          ROW="data/serp_rows/${DATE}-brand-serps-rows.csv"
+          ROW="data/processed_serps/${DATE}-brand-serps-modal.csv"
       
           # Optional idempotence – skip if we already wrote this date
           if [ -s "$ROW" ]; then
