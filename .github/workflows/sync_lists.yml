@@ -70,7 +70,7 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           if [[ -n "$(git status --porcelain)" ]]; then
-            git add ceo_companies.csv ceo_aliases.csv
+            git add ceo_companies.csv data/ceo_aliases.csv
             git commit -m "chore(ceo-lists): sync from data/roster.csv"
             git pull --rebase --autostash origin main || true
             git push origin HEAD:main
