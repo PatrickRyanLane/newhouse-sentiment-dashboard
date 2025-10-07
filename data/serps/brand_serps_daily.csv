@@ -1,5 +1,5 @@
 date,company,total,controlled,negative_serp,neutral_serp,positive_serp
-2025-09-15,3M Company,6,4,0,2,4
+2025-09-15,3M,6,4,0,2,4
 2025-09-15,A O Smith,7,4,0,3,4
 2025-09-15,A-Mark Precious Metals,7,2,0,0,7
 2025-09-15,ABM Industries,7,3,0,4,3
@@ -15,7 +15,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-15,APA,10,3,0,6,4
 2025-09-15,APi Group,6,3,0,3,3
 2025-09-15,ARKO,97,36,0,58,39
-2025-09-15,ASGN,97,9,1,73,23
+2025-09-15,ASGN,97,9,1,72,24
 2025-09-15,AT&T,7,5,0,2,5
 2025-09-15,ATI Inc,10,5,0,4,6
 2025-09-15,AbbVie,7,5,0,2,5
@@ -35,7 +35,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-15,Aflac,7,5,0,2,5
 2025-09-15,Agilent Technologies,7,3,0,4,3
 2025-09-15,Agilon Health,6,2,0,2,4
-2025-09-15,Air Lease,9,1,0,7,2
+2025-09-15,Air Lease,9,1,0,6,3
 2025-09-15,Air Products & Chemicals,7,2,0,5,2
 2025-09-15,Airbnb,7,5,0,2,5
 2025-09-15,Akamai Technologies,5,3,0,2,3
@@ -147,7 +147,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-15,Broadcom,5,2,0,3,2
 2025-09-15,Broadridge Financial Solutions,6,1,0,5,1
 2025-09-15,Brookdale Senior Living,6,5,0,1,5
-2025-09-15,Brown & Brown,8,2,1,5,2
+2025-09-15,Brown & Brown,8,4,0,4,4
 2025-09-15,Brown-Forman,6,2,0,4,2
 2025-09-15,Bruker,7,4,0,3,4
 2025-09-15,Brunswick,11,10,0,1,10
@@ -226,7 +226,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-15,Colgate-Palmolive,7,2,0,4,3
 2025-09-15,Columbia Banking System,6,1,0,5,1
 2025-09-15,Columbia Sportswear,7,5,0,2,5
-2025-09-15,Comcast,5,2,1,2,2
+2025-09-15,Comcast,5,2,0,3,2
 2025-09-15,Comerica,7,4,0,3,4
 2025-09-15,Comfort Systems USA,7,2,0,0,7
 2025-09-15,CommScope,7,5,0,2,5
@@ -420,7 +420,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-15,Greenbrier,7,5,0,2,5
 2025-09-15,Greif,6,4,0,2,4
 2025-09-15,Griffon Corporation,6,2,0,4,2
-2025-09-15,Grocery Outlet Holding,7,2,0,5,2
+2025-09-15,Grocery Outlet Holding,7,2,0,4,3
 2025-09-15,Group 1 Automotive,7,2,0,5,2
 2025-09-15,Guardian Life insurance,7,1,0,6,1
 2025-09-15,Guess Inc,12,6,0,6,6
@@ -744,7 +744,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-15,RXO Inc,7,3,0,3,4
 2025-09-15,Rackspace Technology,6,4,0,2,4
 2025-09-15,Radius Recycling,7,2,0,5,2
-2025-09-15,Ralph Lauren,9,5,0,4,5
+2025-09-15,Ralph Lauren,9,5,0,3,6
 2025-09-15,Range Resources,6,2,0,3,3
 2025-09-15,Raymond James Financial,7,3,0,4,3
 2025-09-15,Realty Income,6,1,0,4,2
@@ -807,7 +807,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-15,Skyworks Solutions,6,3,0,3,3
 2025-09-15,Smurfit Westrock,7,3,0,4,3
 2025-09-15,Snap Inc,7,3,0,4,3
-2025-09-15,Snap-on,9,5,0,3,6
+2025-09-15,Snap-on,9,5,0,2,7
 2025-09-15,Snowflake Inc,6,2,0,4,2
 2025-09-15,Solventum,7,5,0,2,5
 2025-09-15,Sonic Automotive,7,3,0,3,4
@@ -844,7 +844,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-15,Sysco,6,4,0,1,5
 2025-09-15,T Rowe Price,6,3,0,2,4
 2025-09-15,TD Synnex,9,4,0,5,4
-2025-09-15,TEGNA,6,1,0,5,1
+2025-09-15,TEGNA,6,1,0,4,2
 2025-09-15,THOR Industries,6,2,0,4,2
 2025-09-15,TIAA,7,5,0,1,6
 2025-09-15,TJX,7,4,0,3,4
@@ -918,7 +918,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-15,Urban Outfitters,10,7,0,3,7
 2025-09-15,V2X,7,2,0,4,3
 2025-09-15,VF Corporation,6,3,0,3,3
-2025-09-15,VICI Properties,95,7,2,64,29
+2025-09-15,VICI Properties,95,7,2,63,30
 2025-09-15,Vail Resorts,6,2,0,4,2
 2025-09-15,Valero Energy,6,1,0,1,5
 2025-09-15,Valley National Bancorp,6,2,0,4,2
@@ -940,7 +940,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-15,Vontier,7,2,0,5,2
 2025-09-15,Voya Financial,7,3,0,4,3
 2025-09-15,Vulcan Materials,5,1,0,4,1
-2025-09-15,WEC Energy,6,2,0,1,5
+2025-09-15,WEC Energy,6,2,0,0,6
 2025-09-15,WESCO International,7,4,0,3,4
 2025-09-15,WEX,8,7,0,1,7
 2025-09-15,WR Berkley,5,2,0,3,2
@@ -976,7 +976,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-15,Workday,8,4,0,2,6
 2025-09-15,World Kinect,6,2,0,4,2
 2025-09-15,Worthington Enterprises,7,4,0,3,4
-2025-09-15,Wynn Resorts,95,11,5,74,16
+2025-09-15,Wynn Resorts,95,11,5,73,17
 2025-09-15,XPO,6,3,0,3,3
 2025-09-15,Xcel Energy,6,5,0,0,6
 2025-09-15,Xerox,4,3,0,1,3
@@ -1006,7 +1006,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-17,APA,10,2,0,6,4
 2025-09-17,APi Group,6,3,0,3,3
 2025-09-17,ARKO,97,35,3,55,39
-2025-09-17,ASGN,97,8,1,69,27
+2025-09-17,ASGN,97,8,1,68,28
 2025-09-17,AT&T,7,5,0,2,5
 2025-09-17,ATI Inc,7,4,0,2,5
 2025-09-17,AbbVie,7,4,0,3,4
@@ -1138,7 +1138,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-17,Broadcom,7,3,1,3,3
 2025-09-17,Broadridge Financial Solutions,6,2,0,4,2
 2025-09-17,Brookdale Senior Living,7,6,0,1,6
-2025-09-17,Brown & Brown,6,1,1,4,1
+2025-09-17,Brown & Brown,6,3,0,3,3
 2025-09-17,Brown-Forman,4,2,0,2,2
 2025-09-17,Bruker,7,4,0,3,4
 2025-09-17,Brunswick,10,10,0,0,10
@@ -1167,14 +1167,14 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-17,Campbell Soup,5,2,0,3,2
 2025-09-17,Camping World,7,2,0,3,4
 2025-09-17,Capital One,7,6,0,1,6
-2025-09-17,CarMax,6,3,1,2,3
+2025-09-17,CarMax,6,3,1,1,4
 2025-09-17,Cardinal Health,6,4,0,2,4
 2025-09-17,Carlisle Companies,6,2,0,4,2
 2025-09-17,Carlyle Group,5,2,0,2,3
 2025-09-17,Carpenter Technology,6,2,0,4,2
 2025-09-17,Carrier Global,8,4,0,4,4
 2025-09-17,Carters Inc,7,3,0,4,3
-2025-09-17,Carvana,5,2,0,3,2
+2025-09-17,Carvana,5,2,0,2,3
 2025-09-17,Caseys General Stores,7,3,0,4,3
 2025-09-17,Catalent,6,2,1,3,2
 2025-09-17,Caterpillar,7,3,0,3,4
@@ -1270,7 +1270,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-17,Dell Technologies,9,5,0,4,5
 2025-09-17,Delta Air Lines,6,4,1,1,4
 2025-09-17,Dentsply Sirona,8,4,0,4,4
-2025-09-17,Designer Brands,10,2,0,8,2
+2025-09-17,Designer Brands,10,2,0,7,3
 2025-09-17,Devon Energy,6,3,0,0,6
 2025-09-17,DexCom,6,3,0,3,3
 2025-09-17,Diamondback Energy,7,4,0,0,7
@@ -1411,7 +1411,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-17,Greenbrier,6,5,0,1,5
 2025-09-17,Greif,5,3,0,2,3
 2025-09-17,Griffon Corporation,7,2,0,5,2
-2025-09-17,Grocery Outlet Holding,6,2,0,4,2
+2025-09-17,Grocery Outlet Holding,6,2,0,3,3
 2025-09-17,Group 1 Automotive,7,2,0,5,2
 2025-09-17,Guardian Life insurance,7,1,0,6,1
 2025-09-17,Guess Inc,10,3,0,7,3
@@ -1723,7 +1723,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-17,PulteGroup,6,2,0,4,2
 2025-09-17,Pure Storage,6,4,0,2,4
 2025-09-17,QVC Group,6,2,0,4,2
-2025-09-17,QXO Building Products,7,1,0,6,1
+2025-09-17,QXO Building Products,7,1,0,5,2
 2025-09-17,Qorvo,6,2,0,4,2
 2025-09-17,Qualcomm,5,3,0,2,3
 2025-09-17,Quanta Services,6,3,0,3,3
@@ -1735,7 +1735,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-17,RXO Inc,6,3,0,3,3
 2025-09-17,Rackspace Technology,7,4,0,3,4
 2025-09-17,Radius Recycling,7,2,0,5,2
-2025-09-17,Ralph Lauren,10,5,0,5,5
+2025-09-17,Ralph Lauren,10,5,0,4,6
 2025-09-17,Range Resources,6,3,0,3,3
 2025-09-17,Raymond James Financial,6,3,0,3,3
 2025-09-17,Realty Income,6,1,0,3,3
@@ -1750,7 +1750,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-17,Restoration Hardware,7,4,0,3,4
 2025-09-17,Revvity,6,3,0,3,3
 2025-09-17,Rite Aid,7,6,0,1,6
-2025-09-17,Rithm Capital,7,2,0,4,3
+2025-09-17,Rithm Capital,7,2,0,3,4
 2025-09-17,Rivian Automotive,6,1,0,5,1
 2025-09-17,Robert Half,6,5,0,1,5
 2025-09-17,Roblox,7,6,0,1,6
@@ -1835,7 +1835,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-17,Sysco,7,4,0,3,4
 2025-09-17,T Rowe Price,6,4,0,2,4
 2025-09-17,TD Synnex,8,4,0,4,4
-2025-09-17,TEGNA,7,1,0,6,1
+2025-09-17,TEGNA,7,1,0,5,2
 2025-09-17,THOR Industries,6,1,0,5,1
 2025-09-17,TIAA,6,4,0,1,5
 2025-09-17,TJX,7,4,0,3,4
@@ -1931,7 +1931,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-17,Vontier,6,3,0,3,3
 2025-09-17,Voya Financial,7,2,0,5,2
 2025-09-17,Vulcan Materials,6,2,0,4,2
-2025-09-17,WEC Energy,6,2,0,1,5
+2025-09-17,WEC Energy,6,2,0,0,6
 2025-09-17,WESCO International,7,4,0,3,4
 2025-09-17,WEX,10,6,0,4,6
 2025-09-17,WR Berkley,6,2,0,3,3
@@ -1967,7 +1967,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-17,Workday,8,5,0,2,6
 2025-09-17,World Kinect,5,2,0,3,2
 2025-09-17,Worthington Enterprises,7,4,0,3,4
-2025-09-17,Wynn Resorts,95,11,6,72,17
+2025-09-17,Wynn Resorts,95,11,6,71,18
 2025-09-17,XPO,6,3,0,3,3
 2025-09-17,Xcel Energy,7,5,0,0,7
 2025-09-17,Xerox,7,4,0,2,5
@@ -2129,7 +2129,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-18,Broadcom,7,3,1,3,3
 2025-09-18,Broadridge Financial Solutions,6,1,0,5,1
 2025-09-18,Brookdale Senior Living,7,5,0,2,5
-2025-09-18,Brown & Brown,6,1,1,4,1
+2025-09-18,Brown & Brown,6,3,0,3,3
 2025-09-18,Brown-Forman,4,2,0,2,2
 2025-09-18,Bruker,6,3,0,3,3
 2025-09-18,Brunswick,10,9,0,0,10
@@ -2158,14 +2158,14 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-18,Campbell Soup,6,2,0,4,2
 2025-09-18,Camping World,7,3,0,3,4
 2025-09-18,Capital One,7,6,0,1,6
-2025-09-18,CarMax,6,4,0,2,4
+2025-09-18,CarMax,6,4,0,1,5
 2025-09-18,Cardinal Health,7,5,0,2,5
 2025-09-18,Carlisle Companies,6,2,0,4,2
 2025-09-18,Carlyle Group,5,3,0,2,3
 2025-09-18,Carpenter Technology,6,2,0,4,2
 2025-09-18,Carrier Global,6,4,0,2,4
 2025-09-18,Carters Inc,7,3,0,4,3
-2025-09-18,Carvana,5,2,0,3,2
+2025-09-18,Carvana,5,2,0,2,3
 2025-09-18,Caseys General Stores,6,2,0,4,2
 2025-09-18,Catalent,7,2,0,5,2
 2025-09-18,Caterpillar,8,3,0,4,4
@@ -2259,11 +2259,11 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-18,Deere,6,3,0,3,3
 2025-09-18,Delek US,9,6,0,3,6
 2025-09-18,Dell Technologies,9,4,0,5,4
-2025-09-18,Delta Air Lines,6,3,0,3,3
+2025-09-18,Delta Air Lines,6,3,0,2,4
 2025-09-18,Dentsply Sirona,8,4,0,4,4
-2025-09-18,Designer Brands,10,1,0,9,1
+2025-09-18,Designer Brands,10,1,0,8,2
 2025-09-18,Devon Energy,6,3,0,0,6
-2025-09-18,DexCom,8,3,1,4,3
+2025-09-18,DexCom,8,3,0,5,3
 2025-09-18,Diamondback Energy,7,4,0,0,7
 2025-09-18,Dicks Sporting Goods,9,5,0,4,5
 2025-09-18,Diebold Nixdorf,7,4,0,3,4
@@ -2402,7 +2402,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-18,Greenbrier,7,5,0,2,5
 2025-09-18,Greif,6,2,0,4,2
 2025-09-18,Griffon Corporation,7,2,0,5,2
-2025-09-18,Grocery Outlet Holding,6,2,0,4,2
+2025-09-18,Grocery Outlet Holding,6,2,0,3,3
 2025-09-18,Group 1 Automotive,7,2,0,5,2
 2025-09-18,Guardian Life insurance,7,1,0,6,1
 2025-09-18,Guess Inc,6,3,0,3,3
@@ -2519,7 +2519,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-18,Lear Corporation,6,4,0,2,4
 2025-09-18,Leggett & Platt,7,2,0,5,2
 2025-09-18,Leidos,6,4,0,2,4
-2025-09-18,Lennar,6,3,0,3,3
+2025-09-18,Lennar,6,3,0,2,4
 2025-09-18,Lennox International,5,2,0,2,3
 2025-09-18,Levi Strauss,12,6,0,6,6
 2025-09-18,Liberty Energy,6,2,0,0,6
@@ -2618,7 +2618,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-18,Nexstar Media Group,5,3,0,2,3
 2025-09-18,NextEra Energy,6,3,0,0,6
 2025-09-18,NiSource,7,3,0,4,3
-2025-09-18,Nike,8,4,0,3,5
+2025-09-18,Nike,8,4,0,2,6
 2025-09-18,Nordson,6,4,0,2,4
 2025-09-18,Nordstrom,9,6,0,3,6
 2025-09-18,Norfolk Southern,5,3,0,2,3
@@ -2741,7 +2741,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-18,Restoration Hardware,5,3,0,2,3
 2025-09-18,Revvity,6,4,0,2,4
 2025-09-18,Rite Aid,7,6,0,1,6
-2025-09-18,Rithm Capital,7,2,0,5,2
+2025-09-18,Rithm Capital,7,2,0,4,3
 2025-09-18,Rivian Automotive,8,2,0,6,2
 2025-09-18,Robert Half,6,5,0,1,5
 2025-09-18,Roblox,7,6,0,1,6
@@ -2826,7 +2826,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-18,Sysco,6,4,0,1,5
 2025-09-18,T Rowe Price,6,4,0,2,4
 2025-09-18,TD Synnex,8,4,0,4,4
-2025-09-18,TEGNA,6,2,0,4,2
+2025-09-18,TEGNA,6,2,0,3,3
 2025-09-18,THOR Industries,6,1,0,5,1
 2025-09-18,TIAA,7,4,0,1,6
 2025-09-18,TJX,7,4,0,3,4
@@ -2922,7 +2922,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-18,Vontier,7,3,0,4,3
 2025-09-18,Voya Financial,7,2,0,5,2
 2025-09-18,Vulcan Materials,6,2,0,4,2
-2025-09-18,WEC Energy,6,2,0,2,4
+2025-09-18,WEC Energy,6,2,0,1,5
 2025-09-18,WESCO International,7,4,0,3,4
 2025-09-18,WEX,7,4,0,3,4
 2025-09-18,WR Berkley,6,2,0,3,3
@@ -2958,7 +2958,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-18,Workday,8,5,0,2,6
 2025-09-18,World Kinect,6,2,0,4,2
 2025-09-18,Worthington Enterprises,7,4,0,3,4
-2025-09-18,Wynn Resorts,95,10,6,73,16
+2025-09-18,Wynn Resorts,95,10,6,72,17
 2025-09-18,XPO,7,4,0,3,4
 2025-09-18,Xcel Energy,6,5,0,0,6
 2025-09-18,Xerox,5,3,0,2,3
@@ -3120,7 +3120,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-19,Broadcom,7,3,0,4,3
 2025-09-19,Broadridge Financial Solutions,5,1,0,4,1
 2025-09-19,Brookdale Senior Living,7,6,0,1,6
-2025-09-19,Brown & Brown,7,2,1,4,2
+2025-09-19,Brown & Brown,7,4,0,3,4
 2025-09-19,Brown-Forman,5,2,0,3,2
 2025-09-19,Bruker,6,3,0,3,3
 2025-09-19,Brunswick,10,9,0,1,9
@@ -3156,7 +3156,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-19,Carpenter Technology,6,2,0,4,2
 2025-09-19,Carrier Global,7,4,0,3,4
 2025-09-19,Carters Inc,7,3,0,4,3
-2025-09-19,Carvana,5,2,0,3,2
+2025-09-19,Carvana,5,2,0,2,3
 2025-09-19,Caseys General Stores,6,2,0,4,2
 2025-09-19,Catalent,6,2,0,4,2
 2025-09-19,Caterpillar,7,3,0,3,4
@@ -3393,7 +3393,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-19,Greenbrier,7,5,0,2,5
 2025-09-19,Greif,7,3,0,4,3
 2025-09-19,Griffon Corporation,7,2,0,5,2
-2025-09-19,Grocery Outlet Holding,6,2,0,4,2
+2025-09-19,Grocery Outlet Holding,6,2,0,3,3
 2025-09-19,Group 1 Automotive,7,2,0,5,2
 2025-09-19,Guardian Life insurance,7,1,0,6,1
 2025-09-19,Guess Inc,7,3,0,4,3
@@ -3489,7 +3489,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-19,Kinder Morgan,6,2,0,0,6
 2025-09-19,Kirby Corporation,7,3,0,4,3
 2025-09-19,Knife River Corporation,7,3,0,4,3
-2025-09-19,Knight Swift Transportation,7,2,0,5,2
+2025-09-19,Knight Swift Transportation,7,2,0,4,3
 2025-09-19,Kohl's,6,5,0,1,5
 2025-09-19,Kontoor Brands,6,4,0,2,4
 2025-09-19,Korn Ferry,5,2,0,2,3
@@ -3623,7 +3623,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-19,ODP Business Solutions,7,2,0,5,2
 2025-09-19,OGE Energy,6,2,0,2,4
 2025-09-19,ON Semiconductor,5,1,0,4,1
-2025-09-19,Occidental Petroleum,6,1,1,4,1
+2025-09-19,Occidental Petroleum,6,1,0,5,1
 2025-09-19,Old Dominion Freight Line,6,3,0,3,3
 2025-09-19,Old National Bancorp,6,3,0,3,3
 2025-09-19,Old Republic International,7,2,0,4,3
@@ -3780,7 +3780,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-19,Skyworks Solutions,7,3,0,4,3
 2025-09-19,Smurfit Westrock,7,3,0,4,3
 2025-09-19,Snap Inc,7,3,0,4,3
-2025-09-19,Snap-on,8,5,0,3,5
+2025-09-19,Snap-on,8,5,0,2,6
 2025-09-19,Snowflake Inc,7,2,0,5,2
 2025-09-19,Solventum,6,4,0,2,4
 2025-09-19,Sonic Automotive,7,2,0,5,2
@@ -3817,7 +3817,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-19,Sysco,6,4,0,1,5
 2025-09-19,T Rowe Price,6,4,0,2,4
 2025-09-19,TD Synnex,8,4,0,4,4
-2025-09-19,TEGNA,6,1,0,5,1
+2025-09-19,TEGNA,6,1,0,4,2
 2025-09-19,THOR Industries,5,1,0,4,1
 2025-09-19,TIAA,7,5,0,1,6
 2025-09-19,TJX,7,4,0,3,4
@@ -3913,7 +3913,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-19,Vontier,7,2,0,5,2
 2025-09-19,Voya Financial,7,2,0,5,2
 2025-09-19,Vulcan Materials,6,2,0,4,2
-2025-09-19,WEC Energy,6,2,0,1,5
+2025-09-19,WEC Energy,6,2,0,0,6
 2025-09-19,WESCO International,7,4,0,3,4
 2025-09-19,WEX,7,4,0,3,4
 2025-09-19,WR Berkley,6,2,0,3,3
@@ -3949,7 +3949,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-19,Workday,7,3,0,3,4
 2025-09-19,World Kinect,5,2,0,3,2
 2025-09-19,Worthington Enterprises,7,4,0,3,4
-2025-09-19,Wynn Resorts,96,8,5,72,19
+2025-09-19,Wynn Resorts,96,8,5,70,21
 2025-09-19,XPO,5,3,0,2,3
 2025-09-19,Xcel Energy,6,4,0,0,6
 2025-09-19,Xerox,6,3,0,3,3
@@ -4111,7 +4111,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-23,Broadcom,5,2,0,3,2
 2025-09-23,Broadridge Financial Solutions,7,2,0,5,2
 2025-09-23,Brookdale Senior Living,7,6,0,1,6
-2025-09-23,Brown & Brown,7,2,2,3,2
+2025-09-23,Brown & Brown,7,4,0,3,4
 2025-09-23,Brown-Forman,6,2,0,4,2
 2025-09-23,Bruker,7,4,0,3,4
 2025-09-23,Brunswick,10,9,0,1,9
@@ -4140,14 +4140,14 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-23,Campbell Soup,6,1,0,5,1
 2025-09-23,Camping World,7,3,0,3,4
 2025-09-23,Capital One,7,6,0,1,6
-2025-09-23,CarMax,7,4,0,3,4
+2025-09-23,CarMax,7,4,0,2,5
 2025-09-23,Cardinal Health,7,5,0,2,5
 2025-09-23,Carlisle Companies,7,2,0,5,2
 2025-09-23,Carlyle Group,6,3,0,3,3
 2025-09-23,Carpenter Technology,7,2,0,5,2
 2025-09-23,Carrier Global,7,4,0,3,4
 2025-09-23,Carters Inc,7,3,0,4,3
-2025-09-23,Carvana,7,2,0,5,2
+2025-09-23,Carvana,7,2,0,4,3
 2025-09-23,Caseys General Stores,6,3,0,3,3
 2025-09-23,Catalent,5,2,0,3,2
 2025-09-23,Caterpillar,7,2,0,4,3
@@ -4243,7 +4243,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-23,Dell Technologies,8,3,0,5,3
 2025-09-23,Delta Air Lines,5,4,0,1,4
 2025-09-23,Dentsply Sirona,8,4,0,4,4
-2025-09-23,Designer Brands,10,1,0,9,1
+2025-09-23,Designer Brands,10,1,0,8,2
 2025-09-23,Devon Energy,7,2,0,0,7
 2025-09-23,DexCom,9,4,1,4,4
 2025-09-23,Diamondback Energy,6,4,0,0,6
@@ -4384,7 +4384,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-23,Greenbrier,7,5,0,2,5
 2025-09-23,Greif,7,4,0,3,4
 2025-09-23,Griffon Corporation,7,2,0,5,2
-2025-09-23,Grocery Outlet Holding,7,2,0,5,2
+2025-09-23,Grocery Outlet Holding,7,2,0,4,3
 2025-09-23,Group 1 Automotive,7,2,0,5,2
 2025-09-23,Guardian Life insurance,7,2,0,5,2
 2025-09-23,Guess Inc,6,3,0,3,3
@@ -4419,7 +4419,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-23,Howmet Aerospace,8,2,0,6,2
 2025-09-23,Hub Group,6,3,0,3,3
 2025-09-23,Hubbell,7,6,0,1,6
-2025-09-23,Humana,7,5,1,0,6
+2025-09-23,Humana,7,5,0,1,6
 2025-09-23,Huntington Bancshares,7,3,0,4,3
 2025-09-23,Huntington Ingalls Industries,5,2,0,3,2
 2025-09-23,Huntsman,7,4,1,2,4
@@ -4480,7 +4480,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-23,Kinder Morgan,6,2,0,0,6
 2025-09-23,Kirby Corporation,8,3,0,5,3
 2025-09-23,Knife River Corporation,7,3,0,4,3
-2025-09-23,Knight Swift Transportation,7,2,0,4,3
+2025-09-23,Knight Swift Transportation,7,2,0,3,4
 2025-09-23,Kohl's,8,6,0,2,6
 2025-09-23,Kontoor Brands,7,3,0,4,3
 2025-09-23,Korn Ferry,6,1,0,5,1
@@ -4771,7 +4771,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-23,Skyworks Solutions,6,3,0,3,3
 2025-09-23,Smurfit Westrock,6,2,0,4,2
 2025-09-23,Snap Inc,8,3,0,5,3
-2025-09-23,Snap-on,9,5,1,3,5
+2025-09-23,Snap-on,9,5,1,2,6
 2025-09-23,Snowflake Inc,6,2,0,4,2
 2025-09-23,Solventum,7,5,0,2,5
 2025-09-23,Sonic Automotive,7,2,0,5,2
@@ -4808,7 +4808,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-23,Sysco,6,4,0,1,5
 2025-09-23,T Rowe Price,7,2,0,5,2
 2025-09-23,TD Synnex,8,3,0,5,3
-2025-09-23,TEGNA,7,1,0,6,1
+2025-09-23,TEGNA,7,1,0,5,2
 2025-09-23,THOR Industries,6,1,0,5,1
 2025-09-23,TIAA,7,4,1,2,4
 2025-09-23,TJX,7,4,0,3,4
@@ -4882,7 +4882,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-23,Urban Outfitters,7,5,0,2,5
 2025-09-23,V2X,6,2,0,3,3
 2025-09-23,VF Corporation,6,2,0,4,2
-2025-09-23,VICI Properties,95,7,2,66,27
+2025-09-23,VICI Properties,95,7,2,64,29
 2025-09-23,Vail Resorts,6,2,0,4,2
 2025-09-23,Valero Energy,7,2,0,2,5
 2025-09-23,Valley National Bancorp,6,1,0,5,1
@@ -4904,7 +4904,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-23,Vontier,8,2,0,6,2
 2025-09-23,Voya Financial,8,3,0,5,3
 2025-09-23,Vulcan Materials,9,4,0,5,4
-2025-09-23,WEC Energy,6,2,0,1,5
+2025-09-23,WEC Energy,6,2,0,0,6
 2025-09-23,WESCO International,7,4,0,3,4
 2025-09-23,WEX,8,5,0,3,5
 2025-09-23,WR Berkley,5,2,0,3,2
@@ -4940,7 +4940,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-23,Workday,7,4,0,2,5
 2025-09-23,World Kinect,6,2,0,4,2
 2025-09-23,Worthington Enterprises,7,4,0,3,4
-2025-09-23,Wynn Resorts,96,10,4,71,21
+2025-09-23,Wynn Resorts,96,10,4,67,25
 2025-09-23,XPO,8,3,0,5,3
 2025-09-23,Xcel Energy,7,5,0,0,7
 2025-09-23,Xerox,6,3,0,2,4
@@ -7943,7 +7943,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-29,APA,10,3,0,6,4
 2025-09-29,APi Group,7,3,0,4,3
 2025-09-29,ARKO,8,6,0,2,6
-2025-09-29,ASGN,97,9,1,72,24
+2025-09-29,ASGN,97,9,1,71,25
 2025-09-29,AT&T,8,6,0,2,6
 2025-09-29,ATI Inc,7,4,0,2,5
 2025-09-29,AbbVie,6,4,0,2,4
@@ -7963,7 +7963,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-29,Aflac,6,4,0,2,4
 2025-09-29,Agilent Technologies,7,3,0,4,3
 2025-09-29,Agilon Health,7,2,0,4,3
-2025-09-29,Air Lease,7,1,0,6,1
+2025-09-29,Air Lease,7,1,0,5,2
 2025-09-29,Air Products & Chemicals,7,3,0,4,3
 2025-09-29,Airbnb,6,5,0,1,5
 2025-09-29,Akamai Technologies,7,4,0,3,4
@@ -8005,7 +8005,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-29,Analog Devices,6,3,0,3,3
 2025-09-29,Antero Resources,6,1,0,5,1
 2025-09-29,Anywhere Real Estate Inc,7,4,0,3,4
-2025-09-29,Apollo Global Management,7,3,0,4,3
+2025-09-29,Apollo Global Management,7,3,0,3,4
 2025-09-29,AppLovin,6,2,0,4,2
 2025-09-29,Apple,7,2,0,4,3
 2025-09-29,Applied Industrial Technologies,6,3,0,3,3
@@ -8075,7 +8075,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-29,Broadcom,6,2,0,4,2
 2025-09-29,Broadridge Financial Solutions,7,1,0,6,1
 2025-09-29,Brookdale Senior Living,7,5,0,2,5
-2025-09-29,Brown & Brown,7,1,2,4,1
+2025-09-29,Brown & Brown,7,3,0,4,3
 2025-09-29,Brown-Forman,6,2,0,4,2
 2025-09-29,Bruker,6,4,0,2,4
 2025-09-29,Brunswick,10,9,0,1,9
@@ -8207,7 +8207,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-29,Dell Technologies,8,3,0,5,3
 2025-09-29,Delta Air Lines,5,4,0,1,4
 2025-09-29,Dentsply Sirona,8,4,0,4,4
-2025-09-29,Designer Brands,10,1,0,9,1
+2025-09-29,Designer Brands,10,1,0,7,3
 2025-09-29,Devon Energy,6,3,0,0,6
 2025-09-29,DexCom,7,4,0,3,4
 2025-09-29,Diamondback Energy,7,4,0,0,7
@@ -8348,7 +8348,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-29,Greenbrier,7,5,0,2,5
 2025-09-29,Greif,6,3,0,3,3
 2025-09-29,Griffon Corporation,8,2,0,6,2
-2025-09-29,Grocery Outlet Holding,7,1,0,5,2
+2025-09-29,Grocery Outlet Holding,7,1,0,4,3
 2025-09-29,Group 1 Automotive,7,2,0,5,2
 2025-09-29,Guardian Life insurance,7,1,0,6,1
 2025-09-29,Guess Inc,7,3,0,4,3
@@ -8627,7 +8627,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-29,PepsiCo,7,5,0,2,5
 2025-09-29,Performance Food,6,5,0,1,5
 2025-09-29,Permian Resources,7,2,0,4,3
-2025-09-29,Petco Health and Wellness,10,6,0,2,8
+2025-09-29,Petco Health and Wellness,10,6,0,1,9
 2025-09-29,Peter Kiewit Sons',7,1,0,6,1
 2025-09-29,Pfizer,5,2,0,3,2
 2025-09-29,Philip Morris International,6,1,0,5,1
@@ -8735,7 +8735,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-29,Skyworks Solutions,6,3,0,3,3
 2025-09-29,Smurfit Westrock,8,3,0,5,3
 2025-09-29,Snap Inc,7,3,0,4,3
-2025-09-29,Snap-on,7,5,0,2,5
+2025-09-29,Snap-on,7,5,0,1,6
 2025-09-29,Snowflake Inc,7,2,0,4,3
 2025-09-29,Solventum,8,6,0,2,6
 2025-09-29,Sonic Automotive,7,3,0,4,3
@@ -8794,7 +8794,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-29,Tesla,6,2,0,4,2
 2025-09-29,Tetra Tech,6,3,0,3,3
 2025-09-29,Texas Instruments,6,3,0,3,3
-2025-09-29,Texas Roadhouse,6,2,0,4,2
+2025-09-29,Texas Roadhouse,6,2,0,3,3
 2025-09-29,Textron,6,3,0,3,3
 2025-09-29,The Andersons Inc,7,2,0,5,2
 2025-09-29,The Coca-Cola Company,6,3,0,3,3
@@ -8868,7 +8868,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-29,Vontier,7,2,0,5,2
 2025-09-29,Voya Financial,7,2,0,5,2
 2025-09-29,Vulcan Materials,6,2,0,4,2
-2025-09-29,WEC Energy,6,2,0,2,4
+2025-09-29,WEC Energy,6,2,0,1,5
 2025-09-29,WESCO International,7,4,0,3,4
 2025-09-29,WEX,8,4,0,4,4
 2025-09-29,WR Berkley,6,2,0,3,3
@@ -8904,7 +8904,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-29,Workday,8,5,0,2,6
 2025-09-29,World Kinect,6,3,0,3,3
 2025-09-29,Worthington Enterprises,7,3,0,4,3
-2025-09-29,Wynn Resorts,95,8,6,71,18
+2025-09-29,Wynn Resorts,95,8,6,70,19
 2025-09-29,XPO,6,2,0,4,2
 2025-09-29,Xcel Energy,7,5,0,0,7
 2025-09-29,Xerox,7,6,0,1,6
@@ -8934,7 +8934,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-30,APA,10,3,0,6,4
 2025-09-30,APi Group,6,3,0,3,3
 2025-09-30,ARKO,8,6,0,2,6
-2025-09-30,ASGN,97,9,1,70,26
+2025-09-30,ASGN,97,9,1,69,27
 2025-09-30,AT&T,8,7,0,1,7
 2025-09-30,ATI Inc,7,4,0,3,4
 2025-09-30,AbbVie,5,3,0,2,3
@@ -8996,7 +8996,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-30,Analog Devices,5,3,0,2,3
 2025-09-30,Antero Resources,6,1,0,4,2
 2025-09-30,Anywhere Real Estate Inc,6,4,0,2,4
-2025-09-30,Apollo Global Management,6,3,0,3,3
+2025-09-30,Apollo Global Management,6,3,0,2,4
 2025-09-30,AppLovin,6,2,0,4,2
 2025-09-30,Apple,7,2,0,4,3
 2025-09-30,Applied Industrial Technologies,6,2,0,4,2
@@ -9066,7 +9066,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-30,Broadcom,5,2,0,3,2
 2025-09-30,Broadridge Financial Solutions,6,1,0,5,1
 2025-09-30,Brookdale Senior Living,7,5,0,2,5
-2025-09-30,Brown & Brown,7,2,2,3,2
+2025-09-30,Brown & Brown,7,4,0,3,4
 2025-09-30,Brown-Forman,6,2,0,4,2
 2025-09-30,Bruker,8,4,0,4,4
 2025-09-30,Brunswick,10,9,0,1,9
@@ -9198,7 +9198,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-30,Dell Technologies,8,4,0,4,4
 2025-09-30,Delta Air Lines,5,4,0,1,4
 2025-09-30,Dentsply Sirona,8,4,0,4,4
-2025-09-30,Designer Brands,10,1,0,9,1
+2025-09-30,Designer Brands,10,1,0,8,2
 2025-09-30,Devon Energy,6,3,0,0,6
 2025-09-30,DexCom,9,5,0,4,5
 2025-09-30,Diamondback Energy,7,4,0,0,7
@@ -9339,7 +9339,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-30,Greenbrier,95,31,4,46,45
 2025-09-30,Greif,6,3,0,3,3
 2025-09-30,Griffon Corporation,7,2,0,5,2
-2025-09-30,Grocery Outlet Holding,7,1,0,5,2
+2025-09-30,Grocery Outlet Holding,7,1,0,4,3
 2025-09-30,Group 1 Automotive,7,2,0,5,2
 2025-09-30,Guardian Life insurance,7,2,0,5,2
 2025-09-30,Guess Inc,6,3,0,3,3
@@ -9564,7 +9564,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-30,Northwestern Mutual,7,4,0,2,5
 2025-09-30,Nucor,6,3,0,3,3
 2025-09-30,Nvidia,6,2,0,4,2
-2025-09-30,O'Reilly Automotive,6,3,0,3,3
+2025-09-30,O'Reilly Automotive,6,3,0,2,4
 2025-09-30,O-I Glass,6,1,0,5,1
 2025-09-30,ODP Business Solutions,9,3,0,6,3
 2025-09-30,OGE Energy,7,3,0,2,5
@@ -9623,7 +9623,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-30,Pfizer,4,3,0,1,3
 2025-09-30,Philip Morris International,5,1,0,4,1
 2025-09-30,Phillips 66,7,5,0,2,5
-2025-09-30,Pinnacle West Capital,10,6,0,4,6
+2025-09-30,Pinnacle West Capital,10,6,0,3,7
 2025-09-30,Pinterest,7,6,0,1,6
 2025-09-30,Pioneer Natural Resources,7,4,0,0,7
 2025-09-30,Pitney Bowes,8,6,1,1,6
@@ -9804,7 +9804,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-30,TransUnion,6,2,0,4,2
 2025-09-30,Travelers Insurance,7,2,1,4,2
 2025-09-30,TreeHouse Foods,9,7,0,2,7
-2025-09-30,Tri Pointe Homes,7,3,0,4,3
+2025-09-30,Tri Pointe Homes,7,3,0,3,4
 2025-09-30,TriNet Group,7,3,0,4,3
 2025-09-30,Trimble,5,3,0,2,3
 2025-09-30,Trinity Industries,8,3,0,5,3
@@ -9859,7 +9859,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-30,Vontier,8,2,0,6,2
 2025-09-30,Voya Financial,8,3,0,5,3
 2025-09-30,Vulcan Materials,6,2,0,4,2
-2025-09-30,WEC Energy,6,2,0,2,4
+2025-09-30,WEC Energy,6,2,0,1,5
 2025-09-30,WESCO International,7,4,0,3,4
 2025-09-30,WEX,8,5,0,3,5
 2025-09-30,WR Berkley,5,2,0,3,2
@@ -9895,7 +9895,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-30,Workday,8,5,0,2,6
 2025-09-30,World Kinect,7,3,0,4,3
 2025-09-30,Worthington Enterprises,7,3,0,4,3
-2025-09-30,Wynn Resorts,95,6,5,77,13
+2025-09-30,Wynn Resorts,95,6,5,76,14
 2025-09-30,XPO,7,3,0,4,3
 2025-09-30,Xcel Energy,7,6,0,0,7
 2025-09-30,Xerox,7,6,0,1,6
@@ -10057,7 +10057,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-10-01,Broadcom,5,2,0,3,2
 2025-10-01,Broadridge Financial Solutions,7,1,0,6,1
 2025-10-01,Brookdale Senior Living,7,5,0,2,5
-2025-10-01,Brown & Brown,7,2,1,4,2
+2025-10-01,Brown & Brown,7,3,0,4,3
 2025-10-01,Brown-Forman,4,2,0,2,2
 2025-10-01,Bruker,7,4,0,3,4
 2025-10-01,Brunswick,10,9,0,1,9
@@ -10093,7 +10093,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-10-01,Carpenter Technology,7,2,0,5,2
 2025-10-01,Carrier Global,6,4,0,2,4
 2025-10-01,Carters Inc,7,2,1,4,2
-2025-10-01,Carvana,6,3,0,3,3
+2025-10-01,Carvana,6,3,0,2,4
 2025-10-01,Caseys General Stores,6,3,0,3,3
 2025-10-01,Catalent,6,2,0,4,2
 2025-10-01,Caterpillar,6,2,0,3,3
@@ -10189,7 +10189,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-10-01,Dell Technologies,8,4,0,4,4
 2025-10-01,Delta Air Lines,5,4,0,1,4
 2025-10-01,Dentsply Sirona,8,4,0,4,4
-2025-10-01,Designer Brands,10,2,0,8,2
+2025-10-01,Designer Brands,10,2,0,7,3
 2025-10-01,Devon Energy,7,2,0,0,7
 2025-10-01,DexCom,9,6,0,3,6
 2025-10-01,Diamondback Energy,7,4,0,0,7
@@ -10227,7 +10227,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-10-01,Edward Jones,7,6,0,1,6
 2025-10-01,Edwards Lifesciences,8,4,0,4,4
 2025-10-01,Elanco Animal Health,6,4,0,2,4
-2025-10-01,Electronic Arts,5,2,1,2,2
+2025-10-01,Electronic Arts,5,2,0,3,2
 2025-10-01,Elevance Health,6,4,0,2,4
 2025-10-01,Eli Lilly,5,2,0,3,2
 2025-10-01,Emerson Electric,6,4,0,2,4
@@ -10330,7 +10330,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-10-01,Greenbrier,7,5,0,2,5
 2025-10-01,Greif,6,3,0,3,3
 2025-10-01,Griffon Corporation,7,2,0,4,3
-2025-10-01,Grocery Outlet Holding,7,1,0,5,2
+2025-10-01,Grocery Outlet Holding,7,1,0,4,3
 2025-10-01,Group 1 Automotive,7,2,0,5,2
 2025-10-01,Guardian Life insurance,7,1,0,6,1
 2025-10-01,Guess Inc,7,3,0,4,3
@@ -10426,7 +10426,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-10-01,Kinder Morgan,6,2,0,0,6
 2025-10-01,Kirby Corporation,7,3,0,4,3
 2025-10-01,Knife River Corporation,7,3,0,4,3
-2025-10-01,Knight Swift Transportation,7,2,0,5,2
+2025-10-01,Knight Swift Transportation,7,2,0,4,3
 2025-10-01,Kohl's,7,6,0,1,6
 2025-10-01,Kontoor Brands,7,3,0,4,3
 2025-10-01,Korn Ferry,6,1,0,4,2
@@ -10460,7 +10460,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-10-01,Lockheed Martin,5,3,0,2,3
 2025-10-01,Loews,6,5,0,1,5
 2025-10-01,Louisiana-Pacific Corporation,7,3,0,4,3
-2025-10-01,Lowe's,8,5,0,1,7
+2025-10-01,Lowe's,8,5,0,0,8
 2025-10-01,Lululemon athletica,7,3,0,4,3
 2025-10-01,Lumen Technologies,5,3,0,2,3
 2025-10-01,Lyft,5,5,0,0,5
@@ -10699,7 +10699,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-10-01,Sealed Air Corporation,7,2,0,5,2
 2025-10-01,Securian Financial,7,3,0,3,4
 2025-10-01,Select Medical Holdings,7,1,0,6,1
-2025-10-01,Selective Insurance Group,7,2,0,5,2
+2025-10-01,Selective Insurance Group,7,2,0,4,3
 2025-10-01,Sempra,7,3,0,4,3
 2025-10-01,Sentry Insurance Group,7,3,0,4,3
 2025-10-01,Service Corp International,7,2,1,4,2
@@ -10754,7 +10754,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-10-01,Sysco,7,5,0,1,6
 2025-10-01,T Rowe Price,7,4,0,2,5
 2025-10-01,TD Synnex,8,4,0,4,4
-2025-10-01,TEGNA,7,3,0,4,3
+2025-10-01,TEGNA,7,3,0,3,4
 2025-10-01,THOR Industries,8,3,0,5,3
 2025-10-01,TIAA,6,5,0,1,5
 2025-10-01,TJX,6,4,0,2,4
@@ -10850,7 +10850,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-10-01,Vontier,7,2,0,5,2
 2025-10-01,Voya Financial,6,2,0,4,2
 2025-10-01,Vulcan Materials,7,2,0,5,2
-2025-10-01,WEC Energy,6,2,0,2,4
+2025-10-01,WEC Energy,6,2,0,1,5
 2025-10-01,WESCO International,7,5,0,2,5
 2025-10-01,WEX,7,5,0,2,5
 2025-10-01,WR Berkley,8,2,0,5,3
@@ -10886,7 +10886,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-10-01,Workday,7,5,0,1,6
 2025-10-01,World Kinect,7,3,0,4,3
 2025-10-01,Worthington Enterprises,7,3,0,4,3
-2025-10-01,Wynn Resorts,98,8,4,77,17
+2025-10-01,Wynn Resorts,98,8,4,76,18
 2025-10-01,XPO,6,2,0,4,2
 2025-10-01,Xcel Energy,6,5,0,0,6
 2025-10-01,Xerox,7,5,0,2,5
@@ -11048,7 +11048,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-10-02,Broadcom,6,2,0,4,2
 2025-10-02,Broadridge Financial Solutions,6,1,0,5,1
 2025-10-02,Brookdale Senior Living,7,5,0,2,5
-2025-10-02,Brown & Brown,7,2,2,3,2
+2025-10-02,Brown & Brown,7,4,0,3,4
 2025-10-02,Brown-Forman,4,2,0,2,2
 2025-10-02,Bruker,7,4,0,3,4
 2025-10-02,Brunswick,10,9,0,1,9
@@ -11070,7 +11070,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-10-02,Cabot Corporation,6,2,0,4,2
 2025-10-02,Cadence,9,8,0,1,8
 2025-10-02,Caesars Entertainment,5,2,0,0,5
-2025-10-02,Cal-Maine Foods,6,2,0,2,4
+2025-10-02,Cal-Maine Foods,6,2,0,1,5
 2025-10-02,Caleres Inc,5,2,0,3,2
 2025-10-02,California Resources,6,2,0,3,3
 2025-10-02,Calumet,7,4,0,3,4
@@ -11084,7 +11084,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-10-02,Carpenter Technology,7,2,0,5,2
 2025-10-02,Carrier Global,7,4,0,3,4
 2025-10-02,Carters Inc,7,3,0,4,3
-2025-10-02,Carvana,5,2,0,3,2
+2025-10-02,Carvana,5,2,0,2,3
 2025-10-02,Caseys General Stores,5,1,1,3,1
 2025-10-02,Catalent,6,2,0,4,2
 2025-10-02,Caterpillar,7,2,0,4,3
@@ -11166,7 +11166,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-10-02,Cullen Frost Bankers,6,1,0,5,1
 2025-10-02,Cummins,8,6,0,2,6
 2025-10-02,Curtiss-Wright,7,3,0,3,4
-2025-10-02,DR Horton,6,1,0,5,1
+2025-10-02,DR Horton,6,1,0,4,2
 2025-10-02,DTE Energy,6,3,0,0,6
 2025-10-02,DXC Technology,7,4,0,3,4
 2025-10-02,DaVita,7,4,1,2,4
@@ -11180,7 +11180,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-10-02,Dell Technologies,7,3,0,4,3
 2025-10-02,Delta Air Lines,5,4,0,1,4
 2025-10-02,Dentsply Sirona,8,4,0,4,4
-2025-10-02,Designer Brands,10,1,0,9,1
+2025-10-02,Designer Brands,10,1,0,8,2
 2025-10-02,Devon Energy,7,3,0,0,7
 2025-10-02,DexCom,9,5,0,4,5
 2025-10-02,Diamondback Energy,7,5,0,0,7
@@ -11451,7 +11451,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-10-02,Lockheed Martin,5,3,0,2,3
 2025-10-02,Loews,6,5,0,1,5
 2025-10-02,Louisiana-Pacific Corporation,7,3,0,4,3
-2025-10-02,Lowe's,8,5,0,2,6
+2025-10-02,Lowe's,8,5,0,1,7
 2025-10-02,Lululemon athletica,7,3,0,4,3
 2025-10-02,Lumen Technologies,6,4,0,2,4
 2025-10-02,Lyft,6,4,1,1,4
@@ -11600,7 +11600,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-10-02,PepsiCo,6,5,0,1,5
 2025-10-02,Performance Food,7,5,0,2,5
 2025-10-02,Permian Resources,7,2,1,3,3
-2025-10-02,Petco Health and Wellness,10,6,0,2,8
+2025-10-02,Petco Health and Wellness,10,6,0,1,9
 2025-10-02,Peter Kiewit Sons',7,3,0,4,3
 2025-10-02,Pfizer,6,3,0,3,3
 2025-10-02,Philip Morris International,5,1,0,4,1
@@ -11719,7 +11719,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-10-02,SpartanNash,6,3,0,3,3
 2025-10-02,Spectrum Brands,7,3,0,4,3
 2025-10-02,Spire Inc,7,2,0,5,2
-2025-10-02,Spirit AeroSystems,6,3,1,2,3
+2025-10-02,Spirit AeroSystems,6,3,0,3,3
 2025-10-02,Spirit Airlines,6,2,0,4,2
 2025-10-02,Splunk,6,4,0,2,4
 2025-10-02,Sprouts Farmers Market,6,3,0,2,4
@@ -11841,7 +11841,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-10-02,Vontier,7,2,0,5,2
 2025-10-02,Voya Financial,7,2,0,5,2
 2025-10-02,Vulcan Materials,7,2,0,5,2
-2025-10-02,WEC Energy,6,2,0,1,5
+2025-10-02,WEC Energy,6,2,0,0,6
 2025-10-02,WESCO International,7,5,0,2,5
 2025-10-02,WEX,6,4,0,2,4
 2025-10-02,WR Berkley,8,2,0,5,3
@@ -11877,7 +11877,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-10-02,Workday,7,5,0,1,6
 2025-10-02,World Kinect,7,3,0,4,3
 2025-10-02,Worthington Enterprises,7,3,0,4,3
-2025-10-02,Wynn Resorts,95,7,5,77,13
+2025-10-02,Wynn Resorts,95,7,5,76,14
 2025-10-02,XPO,7,3,0,4,3
 2025-10-02,Xcel Energy,7,6,0,0,7
 2025-10-02,Xerox,7,5,0,2,5

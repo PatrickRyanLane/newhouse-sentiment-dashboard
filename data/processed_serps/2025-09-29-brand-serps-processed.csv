@@ -15,7 +15,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-29,APA,10,3,0,6,4
 2025-09-29,APi Group,7,3,0,4,3
 2025-09-29,ARKO,8,6,0,2,6
-2025-09-29,ASGN,97,9,1,72,24
+2025-09-29,ASGN,97,9,1,71,25
 2025-09-29,AT&T,8,6,0,2,6
 2025-09-29,ATI Inc,7,4,0,2,5
 2025-09-29,AbbVie,6,4,0,2,4
@@ -35,7 +35,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-29,Aflac,6,4,0,2,4
 2025-09-29,Agilent Technologies,7,3,0,4,3
 2025-09-29,Agilon Health,7,2,0,4,3
-2025-09-29,Air Lease,7,1,0,6,1
+2025-09-29,Air Lease,7,1,0,5,2
 2025-09-29,Air Products & Chemicals,7,3,0,4,3
 2025-09-29,Airbnb,6,5,0,1,5
 2025-09-29,Akamai Technologies,7,4,0,3,4
@@ -77,7 +77,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-29,Analog Devices,6,3,0,3,3
 2025-09-29,Antero Resources,6,1,0,5,1
 2025-09-29,Anywhere Real Estate Inc,7,4,0,3,4
-2025-09-29,Apollo Global Management,7,3,0,4,3
+2025-09-29,Apollo Global Management,7,3,0,3,4
 2025-09-29,AppLovin,6,2,0,4,2
 2025-09-29,Apple,7,2,0,4,3
 2025-09-29,Applied Industrial Technologies,6,3,0,3,3
@@ -147,7 +147,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-29,Broadcom,6,2,0,4,2
 2025-09-29,Broadridge Financial Solutions,7,1,0,6,1
 2025-09-29,Brookdale Senior Living,7,5,0,2,5
-2025-09-29,Brown & Brown,7,1,2,4,1
+2025-09-29,Brown & Brown,7,3,0,4,3
 2025-09-29,Brown-Forman,6,2,0,4,2
 2025-09-29,Bruker,6,4,0,2,4
 2025-09-29,Brunswick,10,9,0,1,9
@@ -279,7 +279,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-29,Dell Technologies,8,3,0,5,3
 2025-09-29,Delta Air Lines,5,4,0,1,4
 2025-09-29,Dentsply Sirona,8,4,0,4,4
-2025-09-29,Designer Brands,10,1,0,9,1
+2025-09-29,Designer Brands,10,1,0,7,3
 2025-09-29,Devon Energy,6,3,0,0,6
 2025-09-29,DexCom,7,4,0,3,4
 2025-09-29,Diamondback Energy,7,4,0,0,7
@@ -420,7 +420,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-29,Greenbrier,7,5,0,2,5
 2025-09-29,Greif,6,3,0,3,3
 2025-09-29,Griffon Corporation,8,2,0,6,2
-2025-09-29,Grocery Outlet Holding,7,1,0,5,2
+2025-09-29,Grocery Outlet Holding,7,1,0,4,3
 2025-09-29,Group 1 Automotive,7,2,0,5,2
 2025-09-29,Guardian Life insurance,7,1,0,6,1
 2025-09-29,Guess Inc,7,3,0,4,3
@@ -699,7 +699,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-29,PepsiCo,7,5,0,2,5
 2025-09-29,Performance Food,6,5,0,1,5
 2025-09-29,Permian Resources,7,2,0,4,3
-2025-09-29,Petco Health and Wellness,10,6,0,2,8
+2025-09-29,Petco Health and Wellness,10,6,0,1,9
 2025-09-29,Peter Kiewit Sons',7,1,0,6,1
 2025-09-29,Pfizer,5,2,0,3,2
 2025-09-29,Philip Morris International,6,1,0,5,1
@@ -807,7 +807,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-29,Skyworks Solutions,6,3,0,3,3
 2025-09-29,Smurfit Westrock,8,3,0,5,3
 2025-09-29,Snap Inc,7,3,0,4,3
-2025-09-29,Snap-on,7,5,0,2,5
+2025-09-29,Snap-on,7,5,0,1,6
 2025-09-29,Snowflake Inc,7,2,0,4,3
 2025-09-29,Solventum,8,6,0,2,6
 2025-09-29,Sonic Automotive,7,3,0,4,3
@@ -866,7 +866,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-29,Tesla,6,2,0,4,2
 2025-09-29,Tetra Tech,6,3,0,3,3
 2025-09-29,Texas Instruments,6,3,0,3,3
-2025-09-29,Texas Roadhouse,6,2,0,4,2
+2025-09-29,Texas Roadhouse,6,2,0,3,3
 2025-09-29,Textron,6,3,0,3,3
 2025-09-29,The Andersons Inc,7,2,0,5,2
 2025-09-29,The Coca-Cola Company,6,3,0,3,3
@@ -940,7 +940,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-29,Vontier,7,2,0,5,2
 2025-09-29,Voya Financial,7,2,0,5,2
 2025-09-29,Vulcan Materials,6,2,0,4,2
-2025-09-29,WEC Energy,6,2,0,2,4
+2025-09-29,WEC Energy,6,2,0,1,5
 2025-09-29,WESCO International,7,4,0,3,4
 2025-09-29,WEX,8,4,0,4,4
 2025-09-29,WR Berkley,6,2,0,3,3
@@ -976,7 +976,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-29,Workday,8,5,0,2,6
 2025-09-29,World Kinect,6,3,0,3,3
 2025-09-29,Worthington Enterprises,7,3,0,4,3
-2025-09-29,Wynn Resorts,95,8,6,71,18
+2025-09-29,Wynn Resorts,95,8,6,70,19
 2025-09-29,XPO,6,2,0,4,2
 2025-09-29,Xcel Energy,7,5,0,0,7
 2025-09-29,Xerox,7,6,0,1,6

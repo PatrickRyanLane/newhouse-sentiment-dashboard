@@ -15,7 +15,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-15,APA,10,3,0,6,4
 2025-09-15,APi Group,6,3,0,3,3
 2025-09-15,ARKO,97,36,0,58,39
-2025-09-15,ASGN,97,9,1,73,23
+2025-09-15,ASGN,97,9,1,72,24
 2025-09-15,AT&T,7,5,0,2,5
 2025-09-15,ATI Inc,10,5,0,4,6
 2025-09-15,AbbVie,7,5,0,2,5
@@ -35,7 +35,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-15,Aflac,7,5,0,2,5
 2025-09-15,Agilent Technologies,7,3,0,4,3
 2025-09-15,Agilon Health,6,2,0,2,4
-2025-09-15,Air Lease,9,1,0,7,2
+2025-09-15,Air Lease,9,1,0,6,3
 2025-09-15,Air Products & Chemicals,7,2,0,5,2
 2025-09-15,Airbnb,7,5,0,2,5
 2025-09-15,Akamai Technologies,5,3,0,2,3
@@ -147,7 +147,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-15,Broadcom,5,2,0,3,2
 2025-09-15,Broadridge Financial Solutions,6,1,0,5,1
 2025-09-15,Brookdale Senior Living,6,5,0,1,5
-2025-09-15,Brown & Brown,8,2,1,5,2
+2025-09-15,Brown & Brown,8,4,0,4,4
 2025-09-15,Brown-Forman,6,2,0,4,2
 2025-09-15,Bruker,7,4,0,3,4
 2025-09-15,Brunswick,11,10,0,1,10
@@ -226,7 +226,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-15,Colgate-Palmolive,7,2,0,4,3
 2025-09-15,Columbia Banking System,6,1,0,5,1
 2025-09-15,Columbia Sportswear,7,5,0,2,5
-2025-09-15,Comcast,5,2,1,2,2
+2025-09-15,Comcast,5,2,0,3,2
 2025-09-15,Comerica,7,4,0,3,4
 2025-09-15,Comfort Systems USA,7,2,0,0,7
 2025-09-15,CommScope,7,5,0,2,5
@@ -420,7 +420,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-15,Greenbrier,7,5,0,2,5
 2025-09-15,Greif,6,4,0,2,4
 2025-09-15,Griffon Corporation,6,2,0,4,2
-2025-09-15,Grocery Outlet Holding,7,2,0,5,2
+2025-09-15,Grocery Outlet Holding,7,2,0,4,3
 2025-09-15,Group 1 Automotive,7,2,0,5,2
 2025-09-15,Guardian Life insurance,7,1,0,6,1
 2025-09-15,Guess Inc,12,6,0,6,6
@@ -744,7 +744,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-15,RXO Inc,7,3,0,3,4
 2025-09-15,Rackspace Technology,6,4,0,2,4
 2025-09-15,Radius Recycling,7,2,0,5,2
-2025-09-15,Ralph Lauren,9,5,0,4,5
+2025-09-15,Ralph Lauren,9,5,0,3,6
 2025-09-15,Range Resources,6,2,0,3,3
 2025-09-15,Raymond James Financial,7,3,0,4,3
 2025-09-15,Realty Income,6,1,0,4,2
@@ -807,7 +807,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-15,Skyworks Solutions,6,3,0,3,3
 2025-09-15,Smurfit Westrock,7,3,0,4,3
 2025-09-15,Snap Inc,7,3,0,4,3
-2025-09-15,Snap-on,9,5,0,3,6
+2025-09-15,Snap-on,9,5,0,2,7
 2025-09-15,Snowflake Inc,6,2,0,4,2
 2025-09-15,Solventum,7,5,0,2,5
 2025-09-15,Sonic Automotive,7,3,0,3,4
@@ -844,7 +844,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-15,Sysco,6,4,0,1,5
 2025-09-15,T Rowe Price,6,3,0,2,4
 2025-09-15,TD Synnex,9,4,0,5,4
-2025-09-15,TEGNA,6,1,0,5,1
+2025-09-15,TEGNA,6,1,0,4,2
 2025-09-15,THOR Industries,6,2,0,4,2
 2025-09-15,TIAA,7,5,0,1,6
 2025-09-15,TJX,7,4,0,3,4
@@ -918,7 +918,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-15,Urban Outfitters,10,7,0,3,7
 2025-09-15,V2X,7,2,0,4,3
 2025-09-15,VF Corporation,6,3,0,3,3
-2025-09-15,VICI Properties,95,7,2,64,29
+2025-09-15,VICI Properties,95,7,2,63,30
 2025-09-15,Vail Resorts,6,2,0,4,2
 2025-09-15,Valero Energy,6,1,0,1,5
 2025-09-15,Valley National Bancorp,6,2,0,4,2
@@ -940,7 +940,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-15,Vontier,7,2,0,5,2
 2025-09-15,Voya Financial,7,3,0,4,3
 2025-09-15,Vulcan Materials,5,1,0,4,1
-2025-09-15,WEC Energy,6,2,0,1,5
+2025-09-15,WEC Energy,6,2,0,0,6
 2025-09-15,WESCO International,7,4,0,3,4
 2025-09-15,WEX,8,7,0,1,7
 2025-09-15,WR Berkley,5,2,0,3,2
@@ -976,7 +976,7 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-09-15,Workday,8,4,0,2,6
 2025-09-15,World Kinect,6,2,0,4,2
 2025-09-15,Worthington Enterprises,7,4,0,3,4
-2025-09-15,Wynn Resorts,95,11,5,74,16
+2025-09-15,Wynn Resorts,95,11,5,73,17
 2025-09-15,XPO,6,3,0,3,3
 2025-09-15,Xcel Energy,6,5,0,0,6
 2025-09-15,Xerox,4,3,0,1,3
