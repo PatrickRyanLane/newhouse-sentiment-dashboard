@@ -7,7 +7,7 @@ and write both row-level and aggregate outputs for the dashboard.
 Inputs
 ------
 Raw S3 CSV per day:
-  https://tk-public-data.s3.us-east-1.amazonaws.com/serp_files/{date}-ceo-serps.csv
+  https://tk-public-data.s3.us-east-1.amazonaws.com/serp_files_plane/{date}-ceo-serps.csv
   NOTE: In raw files, the column named "company" holds the alias text
         (e.g., "Tim Cook Apple"), not the canonical company.
 
@@ -47,7 +47,7 @@ from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 # --------------------------- Config ---------------------------
 
-S3_TEMPLATE = "https://tk-public-data.s3.us-east-1.amazonaws.com/serp_files/{date}-ceo-serps.csv"
+S3_TEMPLATE = "https://tk-public-data.s3.us-east-1.amazonaws.com/serp_files_plane/{date}-ceo-serps.csv"
 
 # First day CEO SERPs exist
 FIRST_AVAILABLE_DATE = dt.date(2025, 9, 15)
