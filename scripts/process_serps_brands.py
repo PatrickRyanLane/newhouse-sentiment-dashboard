@@ -2,7 +2,7 @@
 """
 Process daily BRAND SERP data:
 
-- Fetch raw SERPs from S3: https://tk-public-data.s3.us-east-1.amazonaws.com/serp_files/{date}-brand-serps.csv
+- Fetch raw SERPs from S3: https://tk-public-data.s3.us-east-1.amazonaws.com/serp_files_plane/{date}-brand-serps.csv
 - Classify sentiment (VADER) using ONLY the page TITLE
 - Classify CONTROL using three rules:
     (1) Always-controlled platforms (and their subdomains):
@@ -36,7 +36,7 @@ from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 # Config / constants
 # -----------------------
 S3_URL_TEMPLATE = (
-    "https://tk-public-data.s3.us-east-1.amazonaws.com/serp_files/{date}-brand-serps.csv"
+    "https://tk-public-data.s3.us-east-1.amazonaws.com/serp_files_plane/{date}-brand-serps.csv"
 )
 
 # Updated to use consolidated roster
