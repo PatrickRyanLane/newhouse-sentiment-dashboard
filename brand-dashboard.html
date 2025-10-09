@@ -168,13 +168,13 @@ thead th:first-child, tbody td:first-child{
       <table>
         <thead>
           <tr>
-            <th>Company</th>
-            <th data-key="neg_news" class="right">Negative News % ▲▼</th>
-            <th data-key="neg_serp" class="right">Negative SERP % ▲▼</th>
-            <th data-key="ctrl_pct" class="right">SERP Control % ▲▼</th>
-            <th data-key="risk" class="center">Risk ▲▼</th>
-            <th class="center">Headlines</th>
-            <th class="center">SERP</th>
+            <th title="Select a company to view its individual trend lines on the charts above">Company</th>
+            <th data-key="neg_news" class="right" title="Percentage of articles with negative sentiment from total news coverage, analyzed using VADER sentiment analysis (compound score ≥0.25 = positive, ≤-0.05 = negative, -0.05 to 0.25 = neutral)">Negative News % ▲▼</th>
+            <th data-key="neg_serp" class="right" title="Percentage of negative search results from Google's top 10 results when searching for the company name">Negative SERP % ▲▼</th>
+            <th data-key="ctrl_pct" class="right" title="Percentage of owned/controlled domains (company websites, social media profiles) in Google's top 10 search results">SERP Control % ▲▼</th>
+            <th data-key="risk" class="center" title="Risk level: High = any negative SERPs; Medium = no negative SERPs but control <40%; Low = no negative SERPs and control ≥40%">Risk ▲▼</th>
+            <th class="center" title="View news headlines for this company">Headlines</th>
+            <th class="center" title="View detailed SERP analysis for this company">SERP</th>
           </tr>
         </thead>
         <tbody id="tbody"></tbody>
@@ -228,7 +228,7 @@ let dateWindowStart = null;
 
 /********************** Utils **********************/
 const isISODate = s => /^\d{4}-\d{2}-\d{2}$/.test(String(s||'').trim());
-const esc = (s) => String(s ?? '').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":"&#39;"}[m]));
 const fmtPct = (v) => (v==null) ? 'N/A' : Math.round(v*100)+'%';
 
 const NEG_COLOR   = '#ff8261';
