@@ -29,3 +29,13 @@ date,company,total,controlled,negative_serp,neutral_serp,positive_serp
 2025-10-10,OMNY,6,5,0,1,5
 2025-10-10,The T,14,2,0,12,2
 2025-10-10,Washington Metropolitan Area Transit Authority,6,2,0,3,3
+2025-10-11,Boston T,16,8,2,4,10
+2025-10-11,DC Metro,5,3,0,2,3
+2025-10-11,MBTA,10,6,0,4,6
+2025-10-11,MTA,8,6,0,2,6
+2025-10-11,Massachusetts Bay Transportation Authority,14,6,0,8,6
+2025-10-11,Metrorail,10,2,0,8,2
+2025-10-11,NYC Subway,9,6,0,2,7
+2025-10-11,OMNY,6,5,0,1,5
+2025-10-11,The T,14,2,0,12,2
+2025-10-11,Washington Metropolitan Area Transit Authority,6,2,0,4,2

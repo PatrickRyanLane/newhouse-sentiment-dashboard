@@ -29,3 +29,13 @@ date,company,positive,neutral,negative,total,neg_pct
 2025-10-10,OMNY,7,30,13,50,0.260000
 2025-10-10,The T,10,26,14,50,0.280000
 2025-10-10,Washington Metropolitan Area Transit Authority,8,37,5,50,0.100000
+2025-10-11,Boston T,10,24,16,50,0.320000
+2025-10-11,DC Metro,10,25,15,50,0.300000
+2025-10-11,MBTA,10,22,18,50,0.360000
+2025-10-11,MTA,12,22,16,50,0.320000
+2025-10-11,Massachusetts Bay Transportation Authority,13,25,12,50,0.240000
+2025-10-11,Metrorail,8,21,21,50,0.420000
+2025-10-11,NYC Subway,4,10,36,50,0.720000
+2025-10-11,OMNY,6,31,13,50,0.260000
+2025-10-11,The T,14,30,6,50,0.120000
+2025-10-11,Washington Metropolitan Area Transit Authority,9,36,5,50,0.100000
