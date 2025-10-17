@@ -1,11 +1,14 @@
-feedparser==6.0.11
-vaderSentiment==3.3.2
-pandas>=2.2.2
-scikit-learn>=1.4.2
-boto3
-s3fs
-beautifulsoup4==4.12.3
-lxml>=4.9
-requests>=2.31
-python-dateutil>=2.9
-tqdm>=4.66
+# MBTA Dashboard Requirements
+# Original dependencies
+pandas
+requests
+vaderSentiment
+
+# NEW: Google Sheets API dependencies (for live editing feature)
+google-auth>=2.0.0
+google-auth-oauthlib>=0.5.0
+google-auth-httplib2>=0.1.0
+google-api-python-client>=2.0.0
+
+# Optional but recommended for production:
+# python-dotenv  # For managing environment variables from .env file

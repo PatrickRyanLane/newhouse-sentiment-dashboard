@@ -39,7 +39,18 @@ jobs:
       - name: Install deps
         run: |
           python -m pip install --upgrade pip
-          python -m pip install pandas requests feedparser vaderSentiment
+          pip install -r requirements.txt
+
+      # ============================================
+      # NEW: Setup Google Sheets credentials
+      # ============================================
+      - name: Setup Google Sheets credentials
+        run: |
+          mkdir -p credentials
+          echo "${{ secrets.GOOGLE_CREDENTIALS_BASE64 }}" | base64 -d > credentials/google-sheets-credentials.json
+          chmod 600 credentials/google-sheets-credentials.json
+          echo "✅ Google Sheets credentials configured"
+          echo "   File size:" $(ls -lh credentials/google-sheets-credentials.json | awk '{print $5}')
 
       - name: Ensure folders (NEW STRUCTURE)
         run: |
@@ -54,6 +65,10 @@ jobs:
           RUN_DATE: ${{ github.event.inputs.date || '' }}
           ARTICLES_MAX_PER_ALIAS: "25"
           ARTICLES_SLEEP_SEC: "0.35"
+          # NEW: Add Google Sheets environment variables
+          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+          GOOGLE_CREDENTIALS_PATH: credentials/google-sheets-credentials.json
+          WRITE_TO_SHEETS: 'true'
         run: |
           DATE_TO_RUN="${RUN_DATE:-$(date -u +%F)}"
           echo "Running news_articles_ceos.py for ${DATE_TO_RUN}"
@@ -65,6 +80,10 @@ jobs:
       - name: Run daily CEO sentiment (counts)
         env:
           RUN_DATE: ${{ github.event.inputs.date || '' }}
+          # NEW: Add Google Sheets environment variables
+          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+          GOOGLE_CREDENTIALS_PATH: credentials/google-sheets-credentials.json
+          WRITE_TO_SHEETS: 'true'
         run: |
           DATE_TO_RUN="${RUN_DATE:-$(date -u +%F)}"
           echo "Running news_sentiment_ceos.py for ${DATE_TO_RUN}"
@@ -78,6 +97,10 @@ jobs:
         shell: bash
         env:
           DATE_IN: ${{ github.event.inputs.date }}
+          # NEW: Add Google Sheets environment variables
+          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+          GOOGLE_CREDENTIALS_PATH: credentials/google-sheets-credentials.json
+          WRITE_TO_SHEETS: 'true'
         run: |
           set -euo pipefail
           DATE="${DATE_IN:-$(date -u +%F)}"
@@ -108,4 +131,15 @@ jobs:
             git commit -m "chore(ceos): update CEO counts, articles & SERPs for ${DATE_TO_USE}"
             git pull --rebase --autostash || true
             git push
+          fi
+
+      # ============================================
+      # NEW: Clean up credentials
+      # ============================================
+      - name: Clean up credentials
+        if: always()
+        run: |
+          if [ -f credentials/google-sheets-credentials.json ]; then
+            rm -f credentials/google-sheets-credentials.json
+            echo "✅ Credentials cleaned up"
           fi

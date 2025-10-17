@@ -4,37 +4,13 @@
 Process daily CEO SERPs with sentiment & control classification,
 and write both row-level and aggregate outputs for the dashboard.
 
-Inputs
-------
-Raw S3 CSV per day:
-  https://tk-public-data.s3.us-east-1.amazonaws.com/serp_files_plane/{date}-ceo-serps.csv
-  NOTE: In raw files, the column named "company" holds the alias text
-        (e.g., "Tim Cook Apple"), not the canonical company.
-
-Local maps:
-  rosters/main-roster.csv (CEO, Company, CEO Alias, Website) -> primary source
-
-Outputs
--------
-Row-level processed SERPs (modal):
-  data/processed_serps/{date}-ceo-serps-modal.csv
-
-Per-CEO daily aggregate:
-  data/processed_serps/{date}-ceo-serps-table.csv
-
-Rolling index (dashboard table & SERP trend):
-  data/daily_counts/ceo-serps-daily-counts-chart.csv
-
-Usage
------
-python scripts/process_serps_ceos.py --date 2025-09-17
-python scripts/process_serps_ceos.py --backfill 2025-09-15 2025-09-30
-(no args) -> tries today, then yesterday (skips if before FIRST_AVAILABLE_DATE)
+NOW WITH GOOGLE SHEETS INTEGRATION - writes to both CSV and Google Sheets!
 """
 
 from __future__ import annotations
 import argparse
 import io
+import os
 import re
 import sys
 import datetime as dt
@@ -45,17 +21,22 @@ import pandas as pd
 import requests
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
+# NEW: Import Google Sheets helper
+try:
+    from sheets_helper import write_ceo_serps_to_sheets
+    SHEETS_HELPER_AVAILABLE = True
+except ImportError:
+    SHEETS_HELPER_AVAILABLE = False
+    print("[INFO] sheets_helper not available - will only write CSVs")
+
 # --------------------------- Config ---------------------------
 
 S3_TEMPLATE = "https://tk-public-data.s3.us-east-1.amazonaws.com/serp_files_plane/{date}-ceo-serps.csv"
 
-# First day CEO SERPs exist
 FIRST_AVAILABLE_DATE = dt.date(2025, 9, 15)
 
-# Updated to use consolidated roster
 MAIN_ROSTER_PATH = Path("rosters/main-roster.csv")
 
-# Updated paths - all CEO SERP files consolidated in data/processed_serps
 OUT_DIR_ROWS = Path("data/processed_serps")
 OUT_DIR_DAILY = Path("data/processed_serps")
 INDEX_DIR = Path("data/daily_counts")
@@ -63,6 +44,9 @@ INDEX_PATH = INDEX_DIR / "ceo-serps-daily-counts-chart.csv"
 
 for p in (OUT_DIR_ROWS, OUT_DIR_DAILY, INDEX_DIR):
     p.mkdir(parents=True, exist_ok=True)
+
+# NEW: Enable/disable Google Sheets writing
+WRITE_TO_SHEETS = os.environ.get('WRITE_TO_SHEETS', 'true').lower() == 'true'
 
 # Control rules
 CONTROLLED_SOCIAL_DOMAINS = {
@@ -75,7 +59,6 @@ UNCONTROLLED_DOMAINS = {
     "wikipedia.org", "youtube.com", "youtu.be", "tiktok.com"
 }
 
-# Words/phrases to ignore for title-based sentiment classification
 NEUTRALIZE_TITLE_TERMS = [
     r"\bflees\b",
     r"\bsavage\b",
@@ -257,7 +240,7 @@ def vader_label(analyzer, row):
 
 # ---------------------------- Core ----------------------------
 
-def process_one_date(date_str: str, alias_map, ceo_to_company, controlled_domains):
+def process_one_date(date_str: str, alias_map, ceo_to_company, controlled_domains, skip_sheets=False):
     day = dt.date.fromisoformat(date_str)
     if day < FIRST_AVAILABLE_DATE:
         print(f"[skip] {date_str} < first available ({FIRST_AVAILABLE_DATE})")
@@ -334,16 +317,43 @@ def process_one_date(date_str: str, alias_map, ceo_to_company, controlled_domain
     idx.to_csv(INDEX_PATH, index=False)
     print(f"[update] {INDEX_PATH} ({len(idx)} rows total)")
 
+    # ===================================================================
+    # NEW: Write to Google Sheets
+    # ===================================================================
+    if WRITE_TO_SHEETS and not skip_sheets and SHEETS_HELPER_AVAILABLE:
+        try:
+            print(f"\n[INFO] Writing CEO SERP data to Google Sheets...")
+            success = write_ceo_serps_to_sheets(
+                rows_df=rows_df,
+                daily_df=ag,
+                rollup_df=idx,
+                target_date=date_str
+            )
+            if success:
+                print(f"[OK] Successfully wrote CEO SERP data to Google Sheets!")
+            else:
+                print(f"[WARN] Some Google Sheets writes may have failed")
+        except Exception as e:
+            print(f"[WARN] Could not write to Google Sheets: {e}")
+            print(f"[INFO] CSV files were still created successfully")
+    elif not SHEETS_HELPER_AVAILABLE:
+        print(f"\n[INFO] Google Sheets packages not installed - data saved to CSV only")
+    elif skip_sheets:
+        print(f"\n[INFO] Skipped Google Sheets writing (--skip-sheets flag)")
+    elif not WRITE_TO_SHEETS:
+        print(f"\n[INFO] Google Sheets writing disabled (WRITE_TO_SHEETS=false)")
+    # ===================================================================
+
     return day_path
 
-def backfill(start: str, end: str, alias_map, ceo_to_company, controlled_domains):
+def backfill(start: str, end: str, alias_map, ceo_to_company, controlled_domains, skip_sheets=False):
     d0 = dt.date.fromisoformat(start)
     d1 = dt.date.fromisoformat(end)
     if d0 > d1:
         d0, d1 = d1, d0
     d = d0
     while d <= d1:
-        process_one_date(d.isoformat(), alias_map, ceo_to_company, controlled_domains)
+        process_one_date(d.isoformat(), alias_map, ceo_to_company, controlled_domains, skip_sheets)
         d += dt.timedelta(days=1)
 
 def main():
@@ -351,18 +361,21 @@ def main():
     ap.add_argument("--date", help="Process a single date (YYYY-MM-DD).")
     ap.add_argument("--backfill", nargs=2, metavar=("START", "END"),
                     help="Process an inclusive date range (YYYY-MM-DD YYYY-MM-DD).")
+    # NEW: Add flag to skip sheets writing
+    ap.add_argument("--skip-sheets", action="store_true", 
+                    help="Skip writing to Google Sheets")
     args = ap.parse_args()
 
     alias_map, ceo_to_company, controlled_domains = load_roster_data()
 
     if args.date:
-        process_one_date(args.date, alias_map, ceo_to_company, controlled_domains)
+        process_one_date(args.date, alias_map, ceo_to_company, controlled_domains, args.skip_sheets)
     elif args.backfill:
-        backfill(args.backfill[0], args.backfill[1], alias_map, ceo_to_company, controlled_domains)
+        backfill(args.backfill[0], args.backfill[1], alias_map, ceo_to_company, controlled_domains, args.skip_sheets)
     else:
         today = dt.date.today()
         for cand in (today, today - dt.timedelta(days=1)):
-            if process_one_date(cand.isoformat(), alias_map, ceo_to_company, controlled_domains):
+            if process_one_date(cand.isoformat(), alias_map, ceo_to_company, controlled_domains, args.skip_sheets):
                 break
 
 if __name__ == "__main__":

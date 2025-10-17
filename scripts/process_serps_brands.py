@@ -1,21 +1,11 @@
 #!/usr/bin/env python3
 """
-Process daily BRAND SERP data:
+Process daily BRAND SERP data WITH GOOGLE SHEETS INTEGRATION
 
-- Fetch raw SERPs from S3: https://tk-public-data.s3.us-east-1.amazonaws.com/serp_files_plane/{date}-brand-serps.csv
-- Classify sentiment (VADER) using ONLY the page TITLE
-- Classify CONTROL using three rules:
-    (1) Always-controlled platforms (and their subdomains):
-        facebook.com, instagram.com, twitter.com, x.com, linkedin.com, play.google.com, apps.apple.com
-    (2) Any domain (or its subdomains) present in rosters/main-roster.csv (Website column)
-    (3) Domain contains the normalized brand token
-
-- If CONTROLLED and FORCE_POSITIVE_IF_CONTROLLED = True -> sentiment is forced to "positive"
-
-Outputs:
-  1) Row-level processed SERPs:       data/processed_serps/{date}-brand-serps-modal.csv
-  2) Per-company daily aggregate:     data/processed_serps/{date}-brand-serps-table.csv
-  3) Rolling daily index:             data/daily_counts/brand-serps-daily-counts-chart.csv
+Enhancements:
+- Now writes to both CSV (backup) and Google Sheets (live editing)
+- Uses sheets_helper.py for Google Sheets operations
+- Gracefully handles missing Google Sheets packages
 """
 
 from __future__ import annotations
@@ -32,6 +22,14 @@ import pandas as pd
 import requests
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
+# NEW: Import Google Sheets helper (gracefully fails if packages not installed)
+try:
+    from sheets_helper import write_serps_to_sheets
+    SHEETS_HELPER_AVAILABLE = True
+except ImportError:
+    SHEETS_HELPER_AVAILABLE = False
+    print("[INFO] sheets_helper not available - will only write CSVs")
+
 # -----------------------
 # Config / constants
 # -----------------------
@@ -39,10 +37,8 @@ S3_URL_TEMPLATE = (
     "https://tk-public-data.s3.us-east-1.amazonaws.com/serp_files_plane/{date}-brand-serps.csv"
 )
 
-# Updated to use consolidated roster
 MAIN_ROSTER_PATH = "rosters/main-roster.csv"
 
-# Updated paths - consolidated in data/processed_serps
 OUT_ROWS_DIR = "data/processed_serps"
 OUT_DAILY_DIR = "data/processed_serps"
 OUT_ROLLUP = "data/daily_counts/brand-serps-daily-counts-chart.csv"
@@ -59,12 +55,18 @@ ALWAYS_CONTROLLED_DOMAINS: Set[str] = {
     "apps.apple.com",
 }
 
+# NEW: Enable/disable Google Sheets writing
+WRITE_TO_SHEETS = os.environ.get('WRITE_TO_SHEETS', 'true').lower() == 'true'
+
 # -----------------------
 # Argument parsing / dates
 # -----------------------
 def parse_args() -> argparse.Namespace:
     ap = argparse.ArgumentParser(description="Process daily brand SERPs.")
     ap.add_argument("--date", help="YYYY-MM-DD (defaults to today)", default=None)
+    # NEW: Add flag to skip sheets writing
+    ap.add_argument("--skip-sheets", action="store_true", 
+                    help="Skip writing to Google Sheets")
     return ap.parse_args()
 
 def get_target_date(arg_date: str | None) -> str:
@@ -188,7 +190,7 @@ def vader_label_on_title(analyzer: SentimentIntensityAnalyzer, title: str) -> Tu
 # -----------------------
 # Main processing
 # -----------------------
-def process_for_date(target_date: str) -> None:
+def process_for_date(target_date: str, skip_sheets: bool = False) -> None:
     print(f"[INFO] Processing brand SERPs for {target_date} …")
     ensure_dirs()
 
@@ -285,10 +287,37 @@ def process_for_date(target_date: str) -> None:
     roll.to_csv(OUT_ROLLUP, index=False)
     print(f"[OK] Updated rolling index → {OUT_ROLLUP}")
 
+    # ===================================================================
+    # NEW: Write to Google Sheets
+    # ===================================================================
+    if WRITE_TO_SHEETS and not skip_sheets and SHEETS_HELPER_AVAILABLE:
+        try:
+            print(f"\n[INFO] Writing data to Google Sheets...")
+            success = write_serps_to_sheets(
+                rows_df=rows_df,
+                daily_df=agg,
+                rollup_df=roll,
+                target_date=target_date
+            )
+            if success:
+                print(f"[OK] Successfully wrote all data to Google Sheets!")
+            else:
+                print(f"[WARN] Some Google Sheets writes may have failed (check logs above)")
+        except Exception as e:
+            print(f"[WARN] Could not write to Google Sheets: {e}")
+            print(f"[INFO] CSV files were still created successfully")
+    elif not SHEETS_HELPER_AVAILABLE:
+        print(f"\n[INFO] Google Sheets packages not installed - data saved to CSV only")
+    elif skip_sheets:
+        print(f"\n[INFO] Skipped Google Sheets writing (--skip-sheets flag)")
+    elif not WRITE_TO_SHEETS:
+        print(f"\n[INFO] Google Sheets writing disabled (WRITE_TO_SHEETS=false)")
+    # ===================================================================
+
 def main() -> None:
     args = parse_args()
     date_str = get_target_date(args.date)
-    process_for_date(date_str)
+    process_for_date(date_str, skip_sheets=args.skip_sheets)
 
 if __name__ == "__main__":
     main()

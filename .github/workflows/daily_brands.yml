@@ -42,6 +42,17 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      # ============================================
+      # NEW: Setup Google Sheets credentials
+      # ============================================
+      - name: Setup Google Sheets credentials
+        run: |
+          mkdir -p credentials
+          echo "${{ secrets.GOOGLE_CREDENTIALS_BASE64 }}" | base64 -d > credentials/google-sheets-credentials.json
+          chmod 600 credentials/google-sheets-credentials.json
+          echo "✅ Google Sheets credentials configured"
+          echo "   File size:" $(ls -lh credentials/google-sheets-credentials.json | awk '{print $5}')
+
       - name: Ensure folders (NEW STRUCTURE)
         run: |
           mkdir -p data/daily_counts
@@ -52,6 +63,10 @@ jobs:
       - name: Build brand articles
         env:
           RUN_DATE: ${{ github.event.inputs.date || '' }}
+          # NEW: Add Google Sheets environment variables
+          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+          GOOGLE_CREDENTIALS_PATH: credentials/google-sheets-credentials.json
+          WRITE_TO_SHEETS: 'true'
         run: |
           set -euo pipefail
           DATE_TO_RUN="${RUN_DATE:-$(date -u +%F)}"
@@ -61,6 +76,10 @@ jobs:
       - name: Aggregate brand news sentiment
         env:
           RUN_DATE: ${{ github.event.inputs.date || '' }}
+          # NEW: Add Google Sheets environment variables
+          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+          GOOGLE_CREDENTIALS_PATH: credentials/google-sheets-credentials.json
+          WRITE_TO_SHEETS: 'true'
         run: |
           set -euo pipefail
           DATE_TO_RUN="${RUN_DATE:-$(date -u +%F)}"
@@ -71,6 +90,10 @@ jobs:
         shell: bash
         env:
           DATE_IN: ${{ github.event.inputs.date }}
+          # NEW: Add Google Sheets environment variables
+          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+          GOOGLE_CREDENTIALS_PATH: credentials/google-sheets-credentials.json
+          WRITE_TO_SHEETS: 'true'
         run: |
           set -euo pipefail
           DATE="${DATE_IN:-$(date -u +%F)}"
@@ -117,4 +140,15 @@ jobs:
             echo "Push rejected; rebasing once…"
             git pull --rebase --autostash origin main
             git push origin HEAD:main
+          fi
+
+      # ============================================
+      # NEW: Clean up credentials (optional but good practice)
+      # ============================================
+      - name: Clean up credentials
+        if: always()
+        run: |
+          if [ -f credentials/google-sheets-credentials.json ]; then
+            rm -f credentials/google-sheets-credentials.json
+            echo "✅ Credentials cleaned up"
           fi
