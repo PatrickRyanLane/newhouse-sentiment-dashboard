@@ -1,0 +1,206 @@
+/**
+ * Editable Risk Pills - Stylesheet
+ * 
+ * Add this CSS to your dashboard's <style> section
+ * (after the existing .pill styles)
+ */
+
+/* ============================================================================
+   CLICKABLE PILL STYLES
+   ============================================================================
+   These make the pills look clickable and add hover effects
+*/
+
+.pill {
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+  user-select: none; /* Prevent text selection on double-click */
+}
+
+.pill:hover {
+  filter: brightness(1.15);
+  transform: scale(1.05);
+}
+
+/* Pills with manual overrides get a special appearance */
+.pill.manual {
+  border: 2px solid var(--accent);
+  box-shadow: 0 0 8px rgba(88, 219, 237, 0.3);
+}
+
+/* Add a small pencil icon to manual pills */
+.pill.manual::after {
+  content: '✎';
+  margin-left: 4px;
+  font-size: 10px;
+  opacity: 0.7;
+}
+
+/* ============================================================================
+   RISK EDITOR DROPDOWN
+   ============================================================================
+   The dropdown that appears when you click a pill
+*/
+
+.risk-editor {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 8px;
+  background: var(--card);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  padding: 8px;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  min-width: 140px;
+}
+
+/* Little arrow pointing up at the pill */
+.risk-editor::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 6px solid var(--accent);
+}
+
+/* Each risk option in the dropdown */
+.risk-option {
+  padding: 8px 12px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.15s ease;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
+}
+
+.risk-option:hover {
+  background: rgba(88, 219, 237, 0.15);
+}
+
+/* Highlight the currently selected option */
+.risk-option.selected {
+  background: rgba(88, 219, 237, 0.25);
+  font-weight: bold;
+}
+
+/* Color swatches next to each option */
+.risk-swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  flex-shrink: 0; /* Don't let the swatch shrink */
+}
+
+.risk-swatch.high { 
+  background: #ff8261; 
+}
+
+.risk-swatch.med { 
+  background: #cfdbdd; 
+}
+
+.risk-swatch.low { 
+  background: #82c618; 
+}
+
+/* The "Auto" option gets a striped pattern */
+.risk-swatch.auto { 
+  background: repeating-linear-gradient(
+    45deg,
+    #444,
+    #444 4px,
+    #666 4px,
+    #666 8px
+  );
+}
+
+/* ============================================================================
+   SAVING INDICATOR
+   ============================================================================
+   The notification that appears in the bottom-right when saving
+*/
+
+.saving-indicator {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--card);
+  border: 1px solid var(--accent);
+  padding: 12px 18px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 10000;
+  display: none;
+  align-items: center;
+  gap: 10px;
+  color: var(--text);
+}
+
+.saving-indicator.show {
+  display: flex;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Spinning loader animation */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--muted);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { 
+    transform: rotate(360deg); 
+  }
+}
+
+/* ============================================================================
+   RESPONSIVE ADJUSTMENTS
+   ============================================================================
+*/
+
+@media (max-width: 960px) {
+  /* Make the editor dropdown a bit more compact on mobile */
+  .risk-editor {
+    min-width: 120px;
+    padding: 6px;
+  }
+  
+  .risk-option {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  
+  /* Move saving indicator a bit to avoid covering controls */
+  .saving-indicator {
+    bottom: 12px;
+    right: 12px;
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+}
