@@ -190,6 +190,7 @@ thead th:first-child, tbody td:first-child{position:sticky;left:0;z-index:2;box-
 
 <script>
 /********************** Config **********************/
+// 👇 UPDATE THIS WITH YOUR PROXY URL
 const PROXY_URL = 'https://newhouse-sentiment-dashboard.vercel.app/api/sheets.js';
 
 /********************** Runtime **********************/
@@ -222,21 +223,11 @@ async function fetchFromSheets(sheetName, date = null) {
   try {
     const response = await fetch(PROXY_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
       body: JSON.stringify({
         action: 'READ',
         sheetName: fullName
       })
     });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`HTTP ${response.status} for ${fullName}:`, errorText);
-      return [];
-    }
-    
     const data = await response.json();
     return data.data || [];
   } catch (e) {
@@ -250,9 +241,6 @@ async function updateSentimentInSheets(sheetName, date, url, newSentiment) {
   try {
     const response = await fetch(PROXY_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
       body: JSON.stringify({
         action: 'UPDATE_SENTIMENT',
         sheetName: fullName,
@@ -260,13 +248,6 @@ async function updateSentimentInSheets(sheetName, date, url, newSentiment) {
         sentiment: newSentiment
       })
     });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Failed to update sentiment:`, errorText);
-      return false;
-    }
-    
     const data = await response.json();
     if (data.success) {
       console.log(`✓ Updated ${url} to ${newSentiment}`);
