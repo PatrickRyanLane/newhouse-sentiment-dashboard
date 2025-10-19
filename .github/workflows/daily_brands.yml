@@ -99,11 +99,6 @@ jobs:
           DATE="${DATE_IN:-$(date -u +%F)}"
           ROW="data/processed_serps/${DATE}-brand-serps-modal.csv"
       
-          if [ -s "$ROW" ]; then
-            echo "Rows already exist for ${DATE}; skipping."
-            exit 0
-          fi
-      
           echo "Processing brand SERPs for ${DATE}"
           echo "Writing to Brand Sheet: ${GOOGLE_SHEET_ID:0:20}..."
           python scripts/process_serps_brands.py --date "${DATE}"
