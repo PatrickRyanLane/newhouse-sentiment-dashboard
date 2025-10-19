@@ -313,8 +313,7 @@ async function loadArticlesForDate(date) {
 }
 
 async function loadSERPsForDate(date) {
-  // VERIFY: Using ceo-serps-modal, NOT brand
-  const rows = await fetchFromSheets('ceo-serps-modal', date);
+  const rows = await fetchFromSheets('ceo-serps-modal', date); 
   return rows.map(r => ({
     date,
     company: String(r.company || '').trim(),
@@ -323,7 +322,9 @@ async function loadSERPsForDate(date) {
     position: +r.position || 0,
     snippet: String(r.snippet || '').trim(),
     sentiment: String(r.sentiment || 'neutral').toLowerCase(),
-    controlled: String(r.controlled || 'uncontrolled').toLowerCase()  // FIXED: String, not boolean
+    controlled: (/^true|1|controlled$/i).test(String(r.controlled || '')) ? 'controlled' : 'uncontrolled',
+    sentiment_edited: String(r.sentiment_edited || ''),     // NEW
+    controlled_edited: String(r.controlled_edited || '')    // NEW
   })).filter(r => r.company && r.url);
 }
 
@@ -815,8 +816,8 @@ async function showSerp({ company }) {
       <div class="serp-title">${link}</div>
       ${snippet ? `<div class="serp-snippet">${snippet}</div>` : ''}
       <div class="badges" style="position:relative">
-        <span class="badge editable ${s}" data-url="${esc(url)}" data-type="sentiment" title="Click to edit">${s}</span>
-        <span class="badge editable ${ctrl}" data-url="${esc(url)}" data-type="controlled" title="Click to edit">${ctrl}</span>
+        <span class="badge editable ${s}" data-url="${esc(url)}" data-type="sentiment" title="Click to edit">${s}${r.sentiment_edited === 'true' ? ' ✏️' : ''}</span>
+        <span class="badge editable ${ctrl}" data-url="${esc(url)}" data-type="controlled" title="Click to edit">${ctrl}${r.controlled_edited === 'true' ? ' ✏️' : ''}</span>
       </div>
     </div>`;
   }).join('');
