@@ -254,29 +254,48 @@ def update_rollup_sheet(
     sheet_name: str = 'DailyCounts',
     date_column: str = 'date'
 ) -> bool:
-    """Update rolling index sheet."""
+    """Update rolling index sheet (creates if doesn't exist)."""
     if not SHEETS_AVAILABLE:
         return False
     
     try:
         service = get_sheets_service()
-        result = service.spreadsheets().values().get(
-            spreadsheetId=SPREADSHEET_ID,
-            range=f'{sheet_name}!A:ZZ'
-        ).execute()
         
-        existing_values = result.get('values', [])
+        # First, check if the sheet exists
+        spreadsheet = service.spreadsheets().get(spreadsheetId=SPREADSHEET_ID).execute()
+        sheet_exists = any(s['properties']['title'] == sheet_name for s in spreadsheet['sheets'])
         
-        if existing_values:
-            headers = existing_values[0]
-            data_rows = existing_values[1:]
-            existing_df = pd.DataFrame(data_rows, columns=headers)
-            dates_to_update = new_data_df[date_column].unique()
-            existing_df = existing_df[~existing_df[date_column].isin(dates_to_update)]
-            combined_df = pd.concat([existing_df, new_data_df], ignore_index=True)
-            combined_df = combined_df.sort_values(date_column).reset_index(drop=True)
+        combined_df = new_data_df.copy()
+        
+        # If sheet exists, read and merge data
+        if sheet_exists:
+            try:
+                result = service.spreadsheets().values().get(
+                    spreadsheetId=SPREADSHEET_ID,
+                    range=f'{sheet_name}!A:ZZ'
+                ).execute()
+                
+                existing_values = result.get('values', [])
+                
+                if existing_values and len(existing_values) > 1:
+                    headers = existing_values[0]
+                    data_rows = existing_values[1:]
+                    existing_df = pd.DataFrame(data_rows, columns=headers)
+                    
+                    # Remove rows for dates we're updating
+                    dates_to_update = new_data_df[date_column].unique()
+                    existing_df = existing_df[~existing_df[date_column].isin(dates_to_update)]
+                    
+                    # Combine and sort
+                    combined_df = pd.concat([existing_df, new_data_df], ignore_index=True)
+                    combined_df = combined_df.sort_values(date_column).reset_index(drop=True)
+                    print(f"[INFO] Merged rollup data: {len(existing_df)} existing + {len(new_data_df)} new = {len(combined_df)} total")
+            except Exception as read_error:
+                print(f"[WARN] Could not read existing rollup data: {read_error}")
+                print(f"[INFO] Will use fresh data only")
+                combined_df = new_data_df.copy()
         else:
-            combined_df = new_data_df
+            print(f"[INFO] Rollup sheet '{sheet_name}' doesn't exist yet - will create")
         
         return write_to_sheet(combined_df, sheet_name, preserve_edits=False)
         
@@ -303,13 +322,13 @@ def write_brand_serps_to_sheets(
     
     success = all([
         # Modal: Preserve edits (students edit these!)
-        write_to_sheet(rows_df, 'BrandSERPs-Modal', date=target_date, 
+        write_to_sheet(rows_df, 'brand-serps-modal', date=target_date, 
                       preserve_edits=True, key_column='url', 
                       preserve_columns=['sentiment', 'controlled']),
         # Table: Don't preserve (auto-calculated)
-        write_to_sheet(daily_df, 'BrandSERPs-Table', date=target_date, preserve_edits=False),
+        write_to_sheet(daily_df, 'brand-serps-table', date=target_date, preserve_edits=False),
         # Rollup: Update with fresh data
-        update_rollup_sheet(rollup_df, 'BrandSERPs-DailyCounts', date_column='date')
+        update_rollup_sheet(rollup_df, 'brand-serps-daily-counts-chart', date_column='date')
     ])
     
     return success
@@ -328,11 +347,11 @@ def write_ceo_serps_to_sheets(
     print(f"[INFO] Preserving student edits for existing rows...")
     
     success = all([
-        write_to_sheet(rows_df, 'CEOSERPs-Modal', date=target_date,
+        write_to_sheet(rows_df, 'ceo-serps-modal', date=target_date,
                       preserve_edits=True, key_column='url',
                       preserve_columns=['sentiment', 'controlled']),
-        write_to_sheet(daily_df, 'CEOSERPs-Table', date=target_date, preserve_edits=False),
-        update_rollup_sheet(rollup_df, 'CEOSERPs-DailyCounts', date_column='date')
+        write_to_sheet(daily_df, 'ceo-serps-table', date=target_date, preserve_edits=False),
+        update_rollup_sheet(rollup_df, 'ceo-serps-daily-counts-chart', date_column='date')
     ])
     
     return success
@@ -360,13 +379,13 @@ def write_brand_articles_to_sheets(
     
     success = all([
         # Modal: Preserve sentiment edits (students correct these!)
-        write_to_sheet(rows_df, 'BrandArticles-Modal', date=target_date, 
+        write_to_sheet(rows_df, 'brand-articles-modal', date=target_date, 
                       preserve_edits=True, key_column='url',
                       preserve_columns=['sentiment']),
         # Table: Fresh aggregated data (auto-calculated)
-        write_to_sheet(daily_df, 'BrandArticles-Table', date=target_date, preserve_edits=False),
+        write_to_sheet(daily_df, 'brand-articles-table', date=target_date, preserve_edits=False),
         # Rollup: Update rolling index
-        update_rollup_sheet(rollup_df, 'BrandArticles-DailyCounts', date_column='date')
+        update_rollup_sheet(rollup_df, 'brand-articles-daily-counts-chart', date_column='date')
     ])
     
     return success
@@ -394,13 +413,13 @@ def write_ceo_articles_to_sheets(
     
     success = all([
         # Modal: Preserve sentiment edits (students correct these!)
-        write_to_sheet(rows_df, 'CEOArticles-Modal', date=target_date,
+        write_to_sheet(rows_df, 'ceo-articles-modal', date=target_date,
                       preserve_edits=True, key_column='url',
                       preserve_columns=['sentiment']),
         # Table: Fresh aggregated data (auto-calculated)
-        write_to_sheet(daily_df, 'CEOArticles-Table', date=target_date, preserve_edits=False),
+        write_to_sheet(daily_df, 'ceo-articles-table', date=target_date, preserve_edits=False),
         # Rollup: Update rolling index
-        update_rollup_sheet(rollup_df, 'CEOArticles-DailyCounts', date_column='date')
+        update_rollup_sheet(rollup_df, 'ceo-articles-daily-counts-chart', date_column='date')
     ])
     
     return success
