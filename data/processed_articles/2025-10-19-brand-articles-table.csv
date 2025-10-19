@@ -1,11 +1,11 @@
 date,company,positive,neutral,negative,total,neg_pct
-2025-10-19,Boston T,9,24,17,50,0.340000
+2025-10-19,Boston T,9,25,16,50,0.320000
 2025-10-19,DC Metro,10,25,15,50,0.300000
 2025-10-19,MBTA,7,29,14,50,0.280000
-2025-10-19,MTA,10,25,15,50,0.300000
-2025-10-19,Massachusetts Bay Transportation Authority,14,22,14,50,0.280000
-2025-10-19,Metrorail,9,19,22,50,0.440000
-2025-10-19,NYC Subway,8,15,27,50,0.540000
+2025-10-19,MTA,11,23,16,50,0.320000
+2025-10-19,Massachusetts Bay Transportation Authority,15,22,13,50,0.260000
+2025-10-19,Metrorail,10,18,22,50,0.440000
+2025-10-19,NYC Subway,8,14,28,50,0.560000
 2025-10-19,OMNY,9,29,12,50,0.240000
-2025-10-19,The T,15,24,11,50,0.220000
-2025-10-19,Washington Metropolitan Area Transit Authority,10,35,5,50,0.100000
+2025-10-19,The T,14,23,13,50,0.260000
+2025-10-19,Washington Metropolitan Area Transit Authority,10,34,6,50,0.120000
