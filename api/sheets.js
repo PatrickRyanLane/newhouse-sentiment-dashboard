@@ -9,7 +9,7 @@
  * - GOOGLE_SHEET_ID_BRAND: Your brand Google Sheet ID
  * - GOOGLE_SHEET_ID_CEO: Your CEO Google Sheet ID
  * 
- * Version: 1.0.1
+ * Version: 1.0.2
  */
 
 const { google } = require('googleapis');
@@ -18,6 +18,34 @@ const { google } = require('googleapis');
 const BRAND_SHEET_ID = process.env.GOOGLE_SHEET_ID_BRAND || '15x5AYC3igVZ0AnWavcZpPA8ESSWVF9msi5vztuaqCTw';
 const CEO_SHEET_ID = process.env.GOOGLE_SHEET_ID_CEO || '1RGAgs7aWs_LkqOZN2cDOM06vLAhlJa4Ck_bkgkJ9Gbs';
 const ALLOWED_SENTIMENTS = ['positive', 'neutral', 'negative'];
+
+/**
+ * Parse request body (handles both JSON and raw string)
+ */
+async function parseBody(req) {
+  // If body is already parsed (newer Vercel)
+  if (req.body && typeof req.body === 'object') {
+    return req.body;
+  }
+  
+  // If body is a string, parse it
+  if (typeof req.body === 'string') {
+    return JSON.parse(req.body);
+  }
+  
+  // If body is a buffer or stream, read it
+  return new Promise((resolve, reject) => {
+    let body = '';
+    req.on('data', chunk => body += chunk.toString());
+    req.on('end', () => {
+      try {
+        resolve(JSON.parse(body));
+      } catch (e) {
+        reject(e);
+      }
+    });
+  });
+}
 
 /**
  * Get authenticated Google Sheets client
@@ -269,13 +297,17 @@ module.exports = async (req, res) => {
   // Handle POST requests
   if (req.method === 'POST') {
     try {
-      const data = req.body;
+      // Parse the request body
+      const data = await parseBody(req);
+      
+      console.log('Received request:', JSON.stringify(data));
       
       // Validate action
-      if (!data.action) {
+      if (!data || !data.action) {
         res.status(400).json({
           success: false,
-          error: 'Missing required field: action'
+          error: 'Missing required field: action',
+          received: data
         });
         return;
       }
@@ -300,7 +332,8 @@ module.exports = async (req, res) => {
       console.error('Error processing request:', error);
       res.status(500).json({
         success: false,
-        error: error.message
+        error: error.message,
+        stack: error.stack
       });
     }
     return;
