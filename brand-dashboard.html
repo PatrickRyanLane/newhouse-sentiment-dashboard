@@ -88,10 +88,10 @@ thead th:first-child, tbody td:first-child{position:sticky;left:0;z-index:2;box-
 .badge.editable:hover{filter:brightness(1.2);transform:scale(1.05)}
 .muted{color:var(--muted)}
 
-/* Sentiment dropdown */
-.sentiment-dropdown{position:absolute;top:100%;left:0;margin-top:4px;background:var(--card);border:1px solid var(--stroke);border-radius:8px;padding:4px;z-index:10002;box-shadow:0 4px 12px rgba(0,0,0,.3);min-width:120px}
-.sentiment-dropdown button{display:block;width:100%;text-align:left;padding:6px 10px;margin:2px 0;background:var(--black);border:1px solid #2a3b5e;color:var(--text);border-radius:6px;cursor:pointer;font-size:12px}
-.sentiment-dropdown button:hover{background:#1a2335;filter:brightness(1.15)}
+/* Dropdown for editing */
+.edit-dropdown{position:absolute;top:100%;left:0;margin-top:4px;background:var(--card);border:1px solid var(--stroke);border-radius:8px;padding:4px;z-index:10002;box-shadow:0 4px 12px rgba(0,0,0,.3);min-width:130px}
+.edit-dropdown button{display:block;width:100%;text-align:left;padding:6px 10px;margin:2px 0;background:var(--black);border:1px solid #2a3b5e;color:var(--text);border-radius:6px;cursor:pointer;font-size:12px}
+.edit-dropdown button:hover{background:#1a2335;filter:brightness(1.15)}
 
 /* SERP cards */
 .serp-cards{display:grid;gap:12px;margin-top:12px}
@@ -101,9 +101,6 @@ thead th:first-child, tbody td:first-child{position:sticky;left:0;z-index:2;box-
 .serp-snippet{color:var(--muted);margin-top:6px;line-height:1.35}
 .serp-metrics{margin:4px 0 8px;color:var(--muted)}
 .serp-metrics b{color:var(--text)}
-
-/* Loading indicator */
-.loading{color:var(--muted);font-style:italic;padding:20px;text-align:center}
 </style>
 </head>
 
@@ -151,7 +148,7 @@ thead th:first-child, tbody td:first-child{position:sticky;left:0;z-index:2;box-
   </div>
 
   <div class="table-card">
-    <p class="table-hint">💡 Click on sentiment badges in article/SERP views to edit. Changes save to Google Sheets instantly.</p>
+    <p class="table-hint">💡 Click on <strong>sentiment</strong> or <strong>controlled</strong> badges in SERP views to edit. Changes save to Google Sheets instantly.</p>
     <div class="table-scroll">
       <table>
         <thead>
@@ -222,9 +219,7 @@ async function fetchFromSheets(sheetName, date = null) {
   try {
     const response = await fetch(PROXY_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'READ',
         sheetName: fullName
@@ -245,38 +240,39 @@ async function fetchFromSheets(sheetName, date = null) {
   }
 }
 
-async function updateSentimentInSheets(sheetName, date, url, newSentiment) {
+// NEW: Generic update function that handles both sentiment and controlled
+async function updateInSheets(sheetName, date, url, updates) {
   const fullName = date ? `${date}-${sheetName}` : sheetName;
   try {
+    const requestBody = {
+      action: 'UPDATE_SENTIMENT',
+      sheetName: fullName,
+      url: url,
+      ...updates  // Can include { sentiment: 'positive' } or { controlled: 'controlled' } or both
+    };
+    
     const response = await fetch(PROXY_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        action: 'UPDATE_SENTIMENT',
-        sheetName: fullName,
-        url: url,
-        sentiment: newSentiment
-      })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(requestBody)
     });
     
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`Failed to update sentiment:`, errorText);
+      console.error(`Failed to update:`, errorText);
       return false;
     }
     
     const data = await response.json();
     if (data.success) {
-      console.log(`✓ Updated ${url} to ${newSentiment}`);
+      console.log(`✓ Updated ${url}:`, updates);
       return true;
     } else {
-      console.warn(`Failed to update sentiment: ${data.error}`);
+      console.warn(`Failed to update: ${data.error}`);
       return false;
     }
   } catch (e) {
-    console.error(`Failed to update sentiment:`, e);
+    console.error(`Failed to update:`, e);
     return false;
   }
 }
@@ -323,7 +319,7 @@ async function loadSERPsForDate(date) {
     position: +r.position || 0,
     snippet: String(r.snippet || '').trim(),
     sentiment: String(r.sentiment || 'neutral').toLowerCase(),
-    controlled: (/^true|1|controlled$/i).test(String(r.controlled || ''))
+    controlled: String(r.controlled || 'uncontrolled').toLowerCase()  // FIXED: Store as string
   })).filter(r => r.company && r.url);
 }
 
@@ -464,17 +460,15 @@ async function buildRowsForDate(d) {
     const articleList = articlesByCompany.get(company) || [];
     const serpList = serpsByCompany.get(company) || [];
 
-    // Calculate article sentiment %
     let negArticles = 0;
     if (articleList.length > 0) {
       negArticles = articleList.filter(a => a.sentiment === 'negative').length / articleList.length;
     }
 
-    // Calculate SERP metrics
     let negSerpPct = null, ctrlPct = null;
     if (serpList.length > 0) {
       negSerpPct = serpList.filter(s => s.sentiment === 'negative').length / serpList.length;
-      ctrlPct = serpList.filter(s => s.controlled).length / serpList.length;
+      ctrlPct = serpList.filter(s => s.controlled === 'controlled').length / serpList.length;  // FIXED: Check string
     }
 
     const risk = computeRisk(negSerpPct, ctrlPct);
@@ -661,7 +655,7 @@ function renderCharts() {
   });
 }
 
-/********************** Modals with Editable Sentiment **********************/
+/********************** Modals with Editable Badges **********************/
 const modal = document.getElementById('modal');
 const modalTitle = document.getElementById('modalTitle');
 const modalContent = document.getElementById('modalContent');
@@ -671,39 +665,75 @@ function openModal(title, html) { modalTitle.textContent = title; modalContent.i
 
 // Close dropdown when clicking outside
 document.addEventListener('click', (e) => {
-  if (!e.target.closest('.badge') && !e.target.closest('.sentiment-dropdown')) {
-    document.querySelectorAll('.sentiment-dropdown').forEach(d => d.remove());
+  if (!e.target.closest('.badge') && !e.target.closest('.edit-dropdown')) {
+    document.querySelectorAll('.edit-dropdown').forEach(d => d.remove());
   }
 });
 
-function createSentimentDropdown(sheetName, date, url, currentSentiment) {
+// Dropdown for editing sentiment
+function createSentimentDropdown(sheetName, date, url, currentValue) {
   const container = document.createElement('div');
-  container.className = 'sentiment-dropdown';
+  container.className = 'edit-dropdown';
   
   const options = ['positive', 'neutral', 'negative'];
   
   options.forEach(opt => {
     const btn = document.createElement('button');
     btn.textContent = opt.charAt(0).toUpperCase() + opt.slice(1);
-    if (opt === currentSentiment) {
+    if (opt === currentValue) {
       btn.style.fontWeight = 'bold';
       btn.textContent = '✓ ' + btn.textContent;
     }
     btn.onclick = async (e) => {
       e.stopPropagation();
-      const success = await updateSentimentInSheets(sheetName, date, url, opt);
+      const success = await updateInSheets(sheetName, date, url, { sentiment: opt });
       if (success) {
-        // Find and update the badge
-        const badge = container.parentElement.querySelector('.badge.editable');
+        const badge = container.parentElement.querySelector('.badge.editable[data-type="sentiment"]');
         if (badge) {
           badge.className = `badge editable ${opt}`;
+          badge.setAttribute('data-type', 'sentiment');
           badge.textContent = opt;
         }
         container.remove();
-        // Refresh data to update charts and table
         renderAll();
       } else {
-        alert('Failed to update sentiment. Check console for details.');
+        alert('Failed to update. Check console.');
+      }
+    };
+    container.appendChild(btn);
+  });
+  
+  return container;
+}
+
+// NEW: Dropdown for editing controlled status
+function createControlledDropdown(sheetName, date, url, currentValue) {
+  const container = document.createElement('div');
+  container.className = 'edit-dropdown';
+  
+  const options = ['controlled', 'uncontrolled'];
+  
+  options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.textContent = opt.charAt(0).toUpperCase() + opt.slice(1);
+    if (opt === currentValue) {
+      btn.style.fontWeight = 'bold';
+      btn.textContent = '✓ ' + btn.textContent;
+    }
+    btn.onclick = async (e) => {
+      e.stopPropagation();
+      const success = await updateInSheets(sheetName, date, url, { controlled: opt });
+      if (success) {
+        const badge = container.parentElement.querySelector('.badge.editable[data-type="controlled"]');
+        if (badge) {
+          badge.className = `badge editable ${opt}`;
+          badge.setAttribute('data-type', 'controlled');
+          badge.textContent = opt;
+        }
+        container.remove();
+        renderAll();
+      } else {
+        alert('Failed to update. Check console.');
       }
     };
     container.appendChild(btn);
@@ -733,7 +763,7 @@ async function showHeadlines({ company }) {
       ${domain ? `<div class="serp-domain">${esc(domain)}</div>` : ''}
       <div class="serp-title">${link}</div>
       <div class="badges" style="position:relative;margin-top:8px">
-        <span class="badge editable ${s}" data-url="${esc(url)}" title="Click to edit">${s}</span>
+        <span class="badge editable ${s}" data-url="${esc(url)}" data-type="sentiment" title="Click to edit">${s}</span>
       </div>
     </div>`;
   }).join('');
@@ -741,16 +771,14 @@ async function showHeadlines({ company }) {
   openModal(`Headlines — ${esc(company)}`, `<div class="serp-cards">${cards}</div>`);
 
   // Attach click handlers to sentiment badges
-  document.querySelectorAll('.modal .badge.editable').forEach(badge => {
+  document.querySelectorAll('.modal .badge.editable[data-type="sentiment"]').forEach(badge => {
     badge.addEventListener('click', (e) => {
       e.stopPropagation();
-      
-      // Remove any existing dropdowns
-      document.querySelectorAll('.sentiment-dropdown').forEach(d => d.remove());
+      document.querySelectorAll('.edit-dropdown').forEach(d => d.remove());
       
       const url = badge.getAttribute('data-url');
-      const currentSentiment = badge.textContent.trim();
-      const dropdown = createSentimentDropdown('brand-articles-modal', d, url, currentSentiment);
+      const currentValue = badge.textContent.trim();
+      const dropdown = createSentimentDropdown('brand-articles-modal', d, url, currentValue);
       badge.parentElement.appendChild(dropdown);
     });
   });
@@ -768,7 +796,7 @@ async function showSerp({ company }) {
 
   const total = matches.length;
   const negCount = matches.filter(r => r.sentiment === 'negative').length;
-  const ctrlCount = matches.filter(r => r.controlled).length;
+  const ctrlCount = matches.filter(r => r.controlled === 'controlled').length;  // FIXED: Check string
   const negPct = total ? (negCount / total) : 0;
   const ctrlPct = total ? (ctrlCount / total) : 0;
   const risk = computeRisk(negPct, ctrlPct);
@@ -782,15 +810,15 @@ async function showSerp({ company }) {
     const title = esc(r.title || domain || '(no title)');
     const snippet = esc(r.snippet || '');
     const s = r.sentiment;
-    const ctrl = r.controlled ? 'controlled' : 'uncontrolled';
+    const ctrl = r.controlled;  // FIXED: Already a string now
     const link = url ? `<a class="link" href="${esc(url)}" target="_blank" rel="noopener">${title}</a>` : `<span class="muted">${title}</span>`;
     return `<div class="serp-card" data-url="${esc(url)}">
       ${domain ? `<div class="serp-domain">${esc(domain)}</div>` : ''}
       <div class="serp-title">${link}</div>
       ${snippet ? `<div class="serp-snippet">${snippet}</div>` : ''}
       <div class="badges" style="position:relative">
-        <span class="badge editable ${s}" data-url="${esc(url)}" title="Click to edit">${s}</span>
-        <span class="badge ${ctrl}">${ctrl}</span>
+        <span class="badge editable ${s}" data-url="${esc(url)}" data-type="sentiment" title="Click to edit">${s}</span>
+        <span class="badge editable ${ctrl}" data-url="${esc(url)}" data-type="controlled" title="Click to edit">${ctrl}</span>
       </div>
     </div>`;
   }).join('');
@@ -803,17 +831,28 @@ async function showSerp({ company }) {
 
   openModal(`SERP — ${esc(company)}`, `${metrics}<div class="serp-cards">${cards}</div>`);
 
-  // Attach click handlers to sentiment badges
-  document.querySelectorAll('.modal .badge.editable').forEach(badge => {
+  // Attach click handlers for sentiment badges
+  document.querySelectorAll('.modal .badge.editable[data-type="sentiment"]').forEach(badge => {
     badge.addEventListener('click', (e) => {
       e.stopPropagation();
-      
-      // Remove any existing dropdowns
-      document.querySelectorAll('.sentiment-dropdown').forEach(d => d.remove());
+      document.querySelectorAll('.edit-dropdown').forEach(d => d.remove());
       
       const url = badge.getAttribute('data-url');
-      const currentSentiment = badge.textContent.trim();
-      const dropdown = createSentimentDropdown('brand-serps-modal', d, url, currentSentiment);
+      const currentValue = badge.textContent.trim();
+      const dropdown = createSentimentDropdown('brand-serps-modal', d, url, currentValue);
+      badge.parentElement.appendChild(dropdown);
+    });
+  });
+
+  // NEW: Attach click handlers for controlled badges
+  document.querySelectorAll('.modal .badge.editable[data-type="controlled"]').forEach(badge => {
+    badge.addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.querySelectorAll('.edit-dropdown').forEach(d => d.remove());
+      
+      const url = badge.getAttribute('data-url');
+      const currentValue = badge.textContent.trim();
+      const dropdown = createControlledDropdown('brand-serps-modal', d, url, currentValue);
       badge.parentElement.appendChild(dropdown);
     });
   });
