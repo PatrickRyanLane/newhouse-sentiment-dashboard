@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Brand Risk Dashboard</title>
+<title>CEO Risk Dashboard</title>
 
 <!-- Chart.js CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -88,7 +88,7 @@ thead th:first-child, tbody td:first-child{position:sticky;left:0;z-index:2;box-
 .badge.editable:hover{filter:brightness(1.2);transform:scale(1.05)}
 .muted{color:var(--muted)}
 
-/* Dropdown for editing (shared between sentiment and controlled) */
+/* Dropdown for editing */
 .edit-dropdown{position:absolute;top:100%;left:0;margin-top:4px;background:var(--card);border:1px solid var(--stroke);border-radius:8px;padding:4px;z-index:10002;box-shadow:0 4px 12px rgba(0,0,0,.3);min-width:130px}
 .edit-dropdown button{display:block;width:100%;text-align:left;padding:6px 10px;margin:2px 0;background:var(--black);border:1px solid #2a3b5e;color:var(--text);border-radius:6px;cursor:pointer;font-size:12px}
 .edit-dropdown button:hover{background:#1a2335;filter:brightness(1.15)}
@@ -105,83 +105,83 @@ thead th:first-child, tbody td:first-child{position:sticky;left:0;z-index:2;box-
 </head>
 
 <body>
-<div class="wrap">
-  <h1>Brand Risk Dashboard</h1>
+<div class=\"wrap\">
+  <h1>CEO Risk Dashboard</h1>
 
-  <div class="controls card">
+  <div class=\"controls card\">
     <div>
-      <div class="muted" style="font-size:12px;margin:0 0 4px">Date</div>
-      <select id="dateSelect"></select>
+      <div class=\"muted\" style=\"font-size:12px;margin:0 0 4px\">Date</div>
+      <select id=\"dateSelect\"></select>
     </div>
-    <div style="flex:1 1 420px">
-      <div class="muted" style="font-size:12px;margin:0 0 4px">Filter (Company)</div>
-      <input id="filterInput" type="text" placeholder="Type to filter…" />
+    <div style=\"flex:1 1 420px\">
+      <div class=\"muted\" style=\"font-size:12px;margin:0 0 4px\">Filter (CEO Name)</div>
+      <input id=\"filterInput\" type=\"text\" placeholder=\"Type to filter…\" />
     </div>
-    <button id="refreshBtn">Refresh Data</button>
-    <button id="clearBtn">Clear Selection</button>
+    <button id=\"refreshBtn\">Refresh Data</button>
+    <button id=\"clearBtn\">Clear Selection</button>
   </div>
 
-  <div class="grid">
-    <div class="chart-card">
+  <div class=\"grid\">
+    <div class=\"chart-card\">
       <h3>News sentiment (percent of articles)</h3>
-      <div class="chart-actions">
-        <span class="dates-range muted" aria-live="polite"></span>
-        <div class="dates-pager">
-          <button class="dates-prev" title="Older window">←</button>
-          <button class="dates-next" title="Newer window">→</button>
+      <div class=\"chart-actions\">
+        <span class=\"dates-range muted\" aria-live=\"polite\"></span>
+        <div class=\"dates-pager\">
+          <button class=\"dates-prev\" title=\"Older window\">←</button>
+          <button class=\"dates-next\" title=\"Newer window\">→</button>
         </div>
       </div>
-      <canvas id="newsChart"></canvas>
+      <canvas id=\"newsChart\"></canvas>
     </div>
 
-    <div class="chart-card">
+    <div class=\"chart-card\">
       <h3>SERP (Negative % • Control %)</h3>
-      <div class="chart-actions">
-        <span class="dates-range muted" aria-live="polite"></span>
-        <div class="dates-pager">
-          <button class="dates-prev" title="Older window">←</button>
-          <button class="dates-next" title="Newer window">→</button>
+      <div class=\"chart-actions\">
+        <span class=\"dates-range muted\" aria-live=\"polite\"></span>
+        <div class=\"dates-pager\">
+          <button class=\"dates-prev\" title=\"Older window\">←</button>
+          <button class=\"dates-next\" title=\"Newer window\">→</button>
         </div>
       </div>
-      <canvas id="serpChart"></canvas>
+      <canvas id=\"serpChart\"></canvas>
     </div>
   </div>
 
-  <div class="table-card">
-    <p class="table-hint">💡 Click on <strong>sentiment</strong> or <strong>controlled</strong> badges in SERP views to edit. Changes save to Google Sheets instantly.</p>
-    <div class="table-scroll">
+  <div class=\"table-card\">
+    <p class=\"table-hint\">💡 Click on <strong>sentiment</strong> or <strong>controlled</strong> badges in SERP views to edit. Changes save to Google Sheets instantly.</p>
+    <div class=\"table-scroll\">
       <table>
         <thead>
           <tr>
-            <th>Company</th>
-            <th data-key="neg_news" class="right">Negative News % ▲▼</th>
-            <th data-key="neg_serp" class="right">Negative SERP % ▲▼</th>
-            <th data-key="ctrl_pct" class="right">SERP Control % ▲▼</th>
-            <th data-key="risk" class="center">Risk ▲▼</th>
-            <th class="center">Headlines</th>
-            <th class="center">SERP</th>
+            <th>CEO Name</th>
+            <th data-key=\"neg_news\" class=\"right\">Negative News % ▲▼</th>
+            <th data-key=\"neg_serp\" class=\"right\">Negative SERP % ▲▼</th>
+            <th data-key=\"ctrl_pct\" class=\"right\">SERP Control % ▲▼</th>
+            <th data-key=\"risk\" class=\"center\">Risk ▲▼</th>
+            <th class=\"center\">Headlines</th>
+            <th class=\"center\">SERP</th>
           </tr>
         </thead>
-        <tbody id="tbody"></tbody>
+        <tbody id=\"tbody\"></tbody>
       </table>
     </div>
 
-    <div class="pagination">
-      <button id="prevBtn">Prev</button>
-      <div>Page <span id="pageNo">1</span> / <span id="pageTotal">1</span></div>
-      <button id="nextBtn">Next</button>
+    <div class=\"pagination\">
+      <button id=\"prevBtn\">Prev</button>
+      <div>Page <span id=\"pageNo\">1</span> / <span id=\"pageTotal\">1</span></div>
+      <button id=\"nextBtn\">Next</button>
     </div>
   </div>
 </div>
 
 <!-- Modal -->
-<div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-  <div class="box">
+<div id=\"modal\" class=\"modal\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"modalTitle\">
+  <div class=\"box\">
     <header>
-      <h3 id="modalTitle">Title</h3>
-      <button id="modalClose">Close</button>
+      <h3 id=\"modalTitle\">Title</h3>
+      <button id=\"modalClose\">Close</button>
     </header>
-    <div class="content" id="modalContent"></div>
+    <div class=\"content\" id=\"modalContent\"></div>
   </div>
 </div>
 
@@ -279,8 +279,8 @@ async function updateInSheets(sheetName, date, url, updates) {
 /********************** Data Loaders **********************/
 async function loadDates() {
   const candidates = [
-    'brand-articles-daily-counts-chart',
-    'brand-serps-daily-counts-chart'
+    'ceo-articles-daily-counts-chart',
+    'ceo-serps-daily-counts-chart'
   ];
   
   const dates = new Set();
@@ -297,7 +297,7 @@ async function loadDates() {
 }
 
 async function loadArticlesForDate(date) {
-  const rows = await fetchFromSheets('brand-articles-modal', date);
+  const rows = await fetchFromSheets('ceo-articles-modal', date);
   return rows.map(r => ({
     date,
     company: String(r.company || '').trim(),
@@ -309,7 +309,7 @@ async function loadArticlesForDate(date) {
 }
 
 async function loadSERPsForDate(date) {
-  const rows = await fetchFromSheets('brand-serps-modal', date);
+  const rows = await fetchFromSheets('ceo-serps-modal', date);
   return rows.map(r => ({
     date,
     company: String(r.company || '').trim(),
@@ -323,7 +323,7 @@ async function loadSERPsForDate(date) {
 }
 
 async function loadCounts() {
-  const rows = await fetchFromSheets('brand-articles-daily-counts-chart');
+  const rows = await fetchFromSheets('ceo-articles-daily-counts-chart');
   articlesDaily = rows.map(r => ({
     date: String(r.date || '').trim(),
     company: String(r.company || '').trim(),
@@ -334,7 +334,7 @@ async function loadCounts() {
 }
 
 async function loadSerpDaily() {
-  const rows = await fetchFromSheets('brand-serps-daily-counts-chart');
+  const rows = await fetchFromSheets('ceo-serps-daily-counts-chart');
   serpsDaily = rows.map(r => ({
     date: (r.date || '').trim(),
     company: (r.company || '').trim(),
@@ -438,17 +438,13 @@ async function buildRowsForDate(d) {
 
   const articlesByCompany = new Map();
   articles.forEach(a => {
-    if (!articlesByCompany.has(a.company)) {
-      articlesByCompany.set(a.company, []);
-    }
+    if (!articlesByCompany.has(a.company)) articlesByCompany.set(a.company, []);
     articlesByCompany.get(a.company).push(a);
   });
 
   const serpsByCompany = new Map();
   serps.forEach(s => {
-    if (!serpsByCompany.has(s.company)) {
-      serpsByCompany.set(s.company, []);
-    }
+    if (!serpsByCompany.has(s.company)) serpsByCompany.set(s.company, []);
     serpsByCompany.get(s.company).push(s);
   });
 
@@ -662,7 +658,6 @@ document.getElementById('modalClose').onclick = () => modal.classList.remove('op
 modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('open'); });
 function openModal(title, html) { modalTitle.textContent = title; modalContent.innerHTML = html; modal.classList.add('open'); }
 
-// Close dropdown when clicking outside
 document.addEventListener('click', (e) => {
   if (!e.target.closest('.badge') && !e.target.closest('.edit-dropdown')) {
     document.querySelectorAll('.edit-dropdown').forEach(d => d.remove());
@@ -694,7 +689,7 @@ function createSentimentDropdown(sheetName, date, url, currentValue) {
         container.remove();
         renderAll();
       } else {
-        alert('Failed to update. Check console for details.');
+        alert('Failed to update. Check console.');
       }
     };
     container.appendChild(btn);
@@ -728,7 +723,7 @@ function createControlledDropdown(sheetName, date, url, currentValue) {
         container.remove();
         renderAll();
       } else {
-        alert('Failed to update. Check console for details.');
+        alert('Failed to update. Check console.');
       }
     };
     container.appendChild(btn);
@@ -772,7 +767,7 @@ async function showHeadlines({ company }) {
       
       const url = badge.getAttribute('data-url');
       const currentValue = badge.textContent.trim().replace('✓ ', '');
-      const dropdown = createSentimentDropdown('brand-articles-modal', d, url, currentValue);
+      const dropdown = createSentimentDropdown('ceo-articles-modal', d, url, currentValue);
       badge.parentElement.appendChild(dropdown);
     });
   });
@@ -825,7 +820,6 @@ async function showSerp({ company }) {
 
   openModal(`SERP — ${esc(company)}`, `${metrics}<div class=\"serp-cards\">${cards}</div>`);
 
-  // Attach click handlers for sentiment badges
   document.querySelectorAll('.modal .badge.editable[data-type=\"sentiment\"]').forEach(badge => {
     badge.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -833,12 +827,11 @@ async function showSerp({ company }) {
       
       const url = badge.getAttribute('data-url');
       const currentValue = badge.textContent.trim().replace('✓ ', '');
-      const dropdown = createSentimentDropdown('brand-serps-modal', d, url, currentValue);
+      const dropdown = createSentimentDropdown('ceo-serps-modal', d, url, currentValue);
       badge.parentElement.appendChild(dropdown);
     });
   });
 
-  // Attach click handlers for controlled badges
   document.querySelectorAll('.modal .badge.editable[data-type=\"controlled\"]').forEach(badge => {
     badge.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -846,7 +839,7 @@ async function showSerp({ company }) {
       
       const url = badge.getAttribute('data-url');
       const currentValue = badge.textContent.trim().replace('✓ ', '');
-      const dropdown = createControlledDropdown('brand-serps-modal', d, url, currentValue);
+      const dropdown = createControlledDropdown('ceo-serps-modal', d, url, currentValue);
       badge.parentElement.appendChild(dropdown);
     });
   });

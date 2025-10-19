@@ -9,7 +9,7 @@
  * - GOOGLE_SHEET_ID_BRAND: Your brand Google Sheet ID
  * - GOOGLE_SHEET_ID_CEO: Your CEO Google Sheet ID
  * 
- * Version: 1.0.2
+ * Version: 1.0.3
  */
 
 const { google } = require('googleapis');
@@ -18,6 +18,7 @@ const { google } = require('googleapis');
 const BRAND_SHEET_ID = process.env.GOOGLE_SHEET_ID_BRAND || '15x5AYC3igVZ0AnWavcZpPA8ESSWVF9msi5vztuaqCTw';
 const CEO_SHEET_ID = process.env.GOOGLE_SHEET_ID_CEO || '1RGAgs7aWs_LkqOZN2cDOM06vLAhlJa4Ck_bkgkJ9Gbs';
 const ALLOWED_SENTIMENTS = ['positive', 'neutral', 'negative'];
+const ALLOWED_CONTROLLED = ['controlled', 'uncontrolled'];
 
 /**
  * Parse request body (handles both JSON and raw string)
@@ -152,24 +153,45 @@ async function handleRead(data) {
 }
 
 /**
- * Handle UPDATE_SENTIMENT action - Update a specific row
+ * Handle UPDATE_SENTIMENT action - Update sentiment and/or controlled fields
+ * 
+ * Can update:
+ * - Just sentiment: { action: 'UPDATE_SENTIMENT', sheetName, url, sentiment }
+ * - Just controlled: { action: 'UPDATE_SENTIMENT', sheetName, url, controlled }
+ * - Both: { action: 'UPDATE_SENTIMENT', sheetName, url, sentiment, controlled }
  */
 async function handleUpdateSentiment(data) {
-  const { sheetName, url, sentiment } = data;
+  const { sheetName, url, sentiment, controlled } = data;
   
   // Validate required fields
-  if (!sheetName || !url || !sentiment) {
+  if (!sheetName || !url) {
     return {
       success: false,
-      error: 'Missing required fields: sheetName, url, sentiment'
+      error: 'Missing required fields: sheetName, url'
     };
   }
   
-  // Validate sentiment value
-  if (!ALLOWED_SENTIMENTS.includes(sentiment)) {
+  // Must have at least one field to update
+  if (!sentiment && !controlled) {
+    return {
+      success: false,
+      error: 'Must provide at least one field to update: sentiment or controlled'
+    };
+  }
+  
+  // Validate sentiment value if provided
+  if (sentiment && !ALLOWED_SENTIMENTS.includes(sentiment)) {
     return {
       success: false,
       error: `Invalid sentiment. Must be one of: ${ALLOWED_SENTIMENTS.join(', ')}`
+    };
+  }
+  
+  // Validate controlled value if provided
+  if (controlled && !ALLOWED_CONTROLLED.includes(controlled)) {
+    return {
+      success: false,
+      error: `Invalid controlled. Must be one of: ${ALLOWED_CONTROLLED.join(', ')}`
     };
   }
   
@@ -196,18 +218,12 @@ async function handleUpdateSentiment(data) {
     const headers = values[0];
     const urlCol = headers.indexOf('url');
     const sentimentCol = headers.indexOf('sentiment');
+    const controlledCol = headers.indexOf('controlled');
     
     if (urlCol === -1) {
       return {
         success: false,
         error: 'URL column not found in sheet'
-      };
-    }
-    
-    if (sentimentCol === -1) {
-      return {
-        success: false,
-        error: 'Sentiment column not found in sheet'
       };
     }
     
@@ -227,11 +243,32 @@ async function handleUpdateSentiment(data) {
       };
     }
     
-    // Store old value
-    const oldSentiment = values[rowIndex][sentimentCol];
+    // Track what we're updating
+    const changes = [];
+    let updated = false;
     
-    // Update the value
-    values[rowIndex][sentimentCol] = sentiment;
+    // Update sentiment if provided and column exists
+    if (sentiment && sentimentCol !== -1) {
+      const oldValue = values[rowIndex][sentimentCol];
+      values[rowIndex][sentimentCol] = sentiment;
+      changes.push(`sentiment: ${oldValue} → ${sentiment}`);
+      updated = true;
+    }
+    
+    // Update controlled if provided and column exists
+    if (controlled && controlledCol !== -1) {
+      const oldValue = values[rowIndex][controlledCol];
+      values[rowIndex][controlledCol] = controlled;
+      changes.push(`controlled: ${oldValue} → ${controlled}`);
+      updated = true;
+    }
+    
+    if (!updated) {
+      return {
+        success: false,
+        error: 'No valid fields to update (columns may not exist in sheet)'
+      };
+    }
     
     // Write back to sheet
     await sheets.spreadsheets.values.update({
@@ -243,20 +280,19 @@ async function handleUpdateSentiment(data) {
       }
     });
     
-    console.log(`✓ Row ${rowIndex + 1}: sentiment changed from "${oldSentiment}" to "${sentiment}"`);
+    console.log(`✓ Row ${rowIndex + 1}: ${changes.join(', ')}`);
     console.log(`  URL: ${url}`);
     
     return {
       success: true,
-      message: 'Sentiment updated successfully',
-      oldValue: oldSentiment,
-      newValue: sentiment,
+      message: 'Successfully updated',
+      changes: changes,
       rowIndex: rowIndex + 1,
       timestamp: new Date().toISOString()
     };
     
   } catch (error) {
-    console.error(`❌ Error updating sentiment: ${error.message}`);
+    console.error(`❌ Error updating: ${error.message}`);
     return {
       success: false,
       error: error.message
@@ -285,7 +321,7 @@ module.exports = async (req, res) => {
       '✓ MBTA Dashboard Proxy is running!\n\n' +
       'This endpoint accepts POST requests with actions:\n' +
       '  • READ - Get all data from a sheet\n' +
-      '  • UPDATE_SENTIMENT - Update sentiment for a URL\n\n' +
+      '  • UPDATE_SENTIMENT - Update sentiment and/or controlled fields\n\n' +
       'Configured for:\n' +
       `  • Brand Sheet: ${BRAND_SHEET_ID}\n` +
       `  • CEO Sheet: ${CEO_SHEET_ID}\n\n` +
