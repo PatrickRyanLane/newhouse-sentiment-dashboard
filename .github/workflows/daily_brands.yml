@@ -1,22 +1,20 @@
 name: Daily Brands Pipeline
 
 on:
-  # Manual run with optional date, e.g. 2025-09-22
+  # Manual run with optional date
   workflow_dispatch:
     inputs:
       date:
         description: "Run date in UTC (YYYY-MM-DD). Leave blank for today."
         required: false
         type: string
-  # Scheduled run — adjust as you like
+  # Scheduled run
   schedule:
     - cron: "10 9 * * *"   # 05:10 ET daily
 
-# allow the workflow to push commits back to the repo
 permissions:
   contents: write
 
-# prevent two data-writing jobs from colliding
 concurrency:
   group: data-writes
   cancel-in-progress: false
@@ -29,7 +27,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # needed so we can pull/rebase before pushing
+          fetch-depth: 0
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -43,7 +41,7 @@ jobs:
           pip install -r requirements.txt
 
       # ============================================
-      # NEW: Setup Google Sheets credentials
+      # Setup Google Sheets credentials
       # ============================================
       - name: Setup Google Sheets credentials
         run: |
@@ -51,47 +49,49 @@ jobs:
           echo "${{ secrets.GOOGLE_CREDENTIALS_BASE64 }}" | base64 -d > credentials/google-sheets-credentials.json
           chmod 600 credentials/google-sheets-credentials.json
           echo "✅ Google Sheets credentials configured"
-          echo "   File size:" $(ls -lh credentials/google-sheets-credentials.json | awk '{print $5}')
 
-      - name: Ensure folders (NEW STRUCTURE)
+      - name: Ensure folders
         run: |
           mkdir -p data/daily_counts
           mkdir -p data/processed_articles
           mkdir -p data/processed_serps
           mkdir -p rosters
 
+      # ============================================
+      # All brand scripts use BRAND Sheet ID
+      # ============================================
+      
       - name: Build brand articles
         env:
           RUN_DATE: ${{ github.event.inputs.date || '' }}
-          # NEW: Add Google Sheets environment variables
-          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID_BRAND }}
           GOOGLE_CREDENTIALS_PATH: credentials/google-sheets-credentials.json
           WRITE_TO_SHEETS: 'true'
         run: |
           set -euo pipefail
           DATE_TO_RUN="${RUN_DATE:-$(date -u +%F)}"
           echo "Running news_articles_brands.py for ${DATE_TO_RUN}"
+          echo "Writing to Brand Sheet: ${GOOGLE_SHEET_ID:0:20}..."
           python scripts/news_articles_brands.py --date "${DATE_TO_RUN}"
 
       - name: Aggregate brand news sentiment
         env:
           RUN_DATE: ${{ github.event.inputs.date || '' }}
-          # NEW: Add Google Sheets environment variables
-          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID_BRAND }}
           GOOGLE_CREDENTIALS_PATH: credentials/google-sheets-credentials.json
           WRITE_TO_SHEETS: 'true'
         run: |
           set -euo pipefail
           DATE_TO_RUN="${RUN_DATE:-$(date -u +%F)}"
           echo "Running news_sentiment_brands.py for ${DATE_TO_RUN}"
+          echo "Writing to Brand Sheet: ${GOOGLE_SHEET_ID:0:20}..."
           python scripts/news_sentiment_brands.py --date "${DATE_TO_RUN}"
 
       - name: Process brand SERPs
         shell: bash
         env:
           DATE_IN: ${{ github.event.inputs.date }}
-          # NEW: Add Google Sheets environment variables
-          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID_BRAND }}
           GOOGLE_CREDENTIALS_PATH: credentials/google-sheets-credentials.json
           WRITE_TO_SHEETS: 'true'
         run: |
@@ -99,16 +99,30 @@ jobs:
           DATE="${DATE_IN:-$(date -u +%F)}"
           ROW="data/processed_serps/${DATE}-brand-serps-modal.csv"
       
-          # Optional idempotence – skip if we already wrote this date
           if [ -s "$ROW" ]; then
             echo "Rows already exist for ${DATE}; skipping."
             exit 0
           fi
       
           echo "Processing brand SERPs for ${DATE}"
+          echo "Writing to Brand Sheet: ${GOOGLE_SHEET_ID:0:20}..."
           python scripts/process_serps_brands.py --date "${DATE}"
 
-      # --- Safe commit & push: rebase onto latest main, retry once if needed ---
+      # ============================================
+      # Cleanup old tabs from BRAND sheet
+      # ============================================
+      - name: Cleanup old tabs (Brand Sheet)
+        env:
+          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID_BRAND }}
+          GOOGLE_CREDENTIALS_PATH: credentials/google-sheets-credentials.json
+          KEEP_DAYS: '30'
+        run: |
+          echo "🗑️  Cleaning up Brand Sheet tabs (keeping last ${KEEP_DAYS} days)..."
+          python scripts/cleanup_old_tabs.py || echo "⚠️  Cleanup failed (non-critical)"
+
+      # ============================================
+      # Commit & push
+      # ============================================
       - name: Commit outputs
         shell: bash
         env:
@@ -120,12 +134,10 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
-          # Rebase onto latest main even with local changes from earlier steps
           git fetch origin main
           git checkout main
           git pull --rebase --autostash origin main
 
-          # Stage & commit any generated/updated files
           git add -A
           if git diff --cached --quiet; then
             echo "No data changes to commit."
@@ -135,7 +147,6 @@ jobs:
           DATE_TO_USE="${RUN_DATE:-$(date -u +%F)}"
           git commit -m "brand pipeline: update data (${DATE_TO_USE})"
 
-          # Push; if remote moved meanwhile, rebase once and retry
           if ! git push origin HEAD:main; then
             echo "Push rejected; rebasing once…"
             git pull --rebase --autostash origin main
@@ -143,7 +154,7 @@ jobs:
           fi
 
       # ============================================
-      # NEW: Clean up credentials (optional but good practice)
+      # Clean up credentials
       # ============================================
       - name: Clean up credentials
         if: always()

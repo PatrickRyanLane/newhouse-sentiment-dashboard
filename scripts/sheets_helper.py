@@ -1,23 +1,20 @@
 #!/usr/bin/env python3
 """
-Google Sheets Helper Module - COMPLETE VERSION
+Google Sheets Helper Module - WITH EDIT PRESERVATION
 
-Provides convenience functions for writing ALL dashboard data to Google Sheets:
-  - Brand SERPs (row-level, daily, rollup)
-  - CEO SERPs (row-level, daily, rollup)
-  - Brand Articles/News (row-level, daily, rollup)
-  - CEO Articles/News (row-level, daily, rollup)
+This version PRESERVES student edits by:
+1. Reading existing data from Sheets before writing
+2. Merging new data with existing data
+3. Keeping student edits for matching rows (by URL)
+4. Only adding new rows that don't exist yet
 
-Environment Variables Expected:
-  - GOOGLE_SHEET_ID: Your Google Sheet ID
-  - GOOGLE_CREDENTIALS_PATH: Path to credentials file
+This ensures student manual corrections persist across daily script runs!
 """
 
 import os
 from typing import Optional
 import pandas as pd
 
-# Try to import Google Sheets packages - fail gracefully if not available
 try:
     from google.oauth2 import service_account
     from googleapiclient.discovery import build
@@ -26,12 +23,6 @@ try:
 except ImportError:
     SHEETS_AVAILABLE = False
     print("[INFO] Google Sheets packages not installed.")
-    print("      Install: pip install google-auth google-api-python-client")
-    print("[INFO] Scripts will work but only write to CSV.")
-
-# ========================================
-# CONFIGURATION
-# ========================================
 
 SPREADSHEET_ID = os.environ.get('GOOGLE_SHEET_ID', 'YOUR_SHEET_ID_HERE')
 CREDENTIALS_PATH = os.environ.get('GOOGLE_CREDENTIALS_PATH', 'credentials/google-sheets-credentials.json')
@@ -40,12 +31,6 @@ SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 if __name__ != '__main__' and SHEETS_AVAILABLE:
     sheet_id_display = SPREADSHEET_ID[:20] + "..." if len(SPREADSHEET_ID) > 20 else SPREADSHEET_ID
     print(f"[DEBUG] Sheet ID: {sheet_id_display}")
-    print(f"[DEBUG] Credentials: {CREDENTIALS_PATH}")
-
-
-# ========================================
-# CORE FUNCTIONS
-# ========================================
 
 def get_sheets_service():
     """Create and return Google Sheets API service."""
@@ -61,34 +46,179 @@ def get_sheets_service():
     service = build('sheets', 'v4', credentials=credentials)
     return service
 
-
 def dataframe_to_sheet_values(df: pd.DataFrame) -> list:
     """Convert pandas DataFrame to Google Sheets format."""
     headers = df.columns.tolist()
     values = [headers] + df.values.tolist()
     return values
 
-
-def write_to_sheet(
-    df: pd.DataFrame, 
-    sheet_name: str, 
-    date: Optional[str] = None,
-    clear_first: bool = False
-) -> bool:
-    """Write a pandas DataFrame to a Google Sheet tab."""
+def read_from_sheet(sheet_name: str, date: Optional[str] = None) -> Optional[pd.DataFrame]:
+    """
+    Read existing data from a Google Sheet tab.
+    Returns DataFrame if tab exists, None if it doesn't.
+    """
     if not SHEETS_AVAILABLE:
-        print(f"[SKIP] Sheets not available - skipping {sheet_name}")
-        return False
+        return None
     
     full_sheet_name = f"{date}-{sheet_name}" if date else sheet_name
     
     try:
         service = get_sheets_service()
         
-        # Check if sheet tab exists, create if not
+        # Check if tab exists
         spreadsheet = service.spreadsheets().get(spreadsheetId=SPREADSHEET_ID).execute()
         sheet_exists = any(s['properties']['title'] == full_sheet_name for s in spreadsheet['sheets'])
         
+        if not sheet_exists:
+            return None
+        
+        # Read data
+        result = service.spreadsheets().values().get(
+            spreadsheetId=SPREADSHEET_ID,
+            range=f'{full_sheet_name}!A:ZZ'
+        ).execute()
+        
+        values = result.get('values', [])
+        if not values or len(values) < 2:
+            return None
+        
+        # Convert to DataFrame
+        headers = values[0]
+        data = values[1:]
+        df = pd.DataFrame(data, columns=headers)
+        
+        print(f"[INFO] Read {len(df)} existing rows from: {full_sheet_name}")
+        return df
+        
+    except Exception as e:
+        print(f"[WARN] Could not read from sheet {full_sheet_name}: {e}")
+        return None
+
+def merge_preserving_edits(
+    new_df: pd.DataFrame,
+    existing_df: Optional[pd.DataFrame],
+    key_column: str = 'url',
+    preserve_columns: list = ['sentiment', 'controlled']
+) -> pd.DataFrame:
+    """
+    Merge new data with existing data, preserving student edits.
+    
+    Logic:
+    - For rows that exist in both (matched by key_column, e.g. URL):
+      → Keep the existing values for preserve_columns (student edits)
+      → Update other columns with fresh data
+    - For rows only in new_df:
+      → Add them (new articles/SERPs discovered)
+    - For rows only in existing_df:
+      → Keep them (might be manually added or from old data)
+    
+    Args:
+        new_df: Fresh data from scripts (algorithmic classification)
+        existing_df: Data currently in Google Sheets (may have student edits)
+        key_column: Column to match rows (usually 'url')
+        preserve_columns: Columns to preserve from existing (student-edited values)
+    
+    Returns:
+        Merged DataFrame with student edits preserved
+    """
+    if existing_df is None or existing_df.empty:
+        # No existing data, just use new data
+        print(f"[INFO] No existing data - using fresh data")
+        return new_df
+    
+    # Ensure key column exists
+    if key_column not in new_df.columns or key_column not in existing_df.columns:
+        print(f"[WARN] Key column '{key_column}' not found - can't preserve edits")
+        return new_df
+    
+    # Create lookup of existing data by key
+    existing_dict = {}
+    for _, row in existing_df.iterrows():
+        key = str(row.get(key_column, '')).strip()
+        if key:
+            existing_dict[key] = row.to_dict()
+    
+    # Merge logic
+    merged_rows = []
+    edits_preserved = 0
+    new_rows_added = 0
+    
+    for _, new_row in new_df.iterrows():
+        key = str(new_row.get(key_column, '')).strip()
+        
+        if key and key in existing_dict:
+            # Row exists - preserve student edits
+            existing_row = existing_dict[key]
+            merged_row = new_row.to_dict()
+            
+            # Preserve specified columns from existing data
+            for col in preserve_columns:
+                if col in existing_row and col in merged_row:
+                    # Keep the existing value (student may have edited it)
+                    merged_row[col] = existing_row[col]
+                    edits_preserved += 1
+            
+            merged_rows.append(merged_row)
+            # Remove from dict so we can track rows only in existing
+            del existing_dict[key]
+        else:
+            # New row - add it
+            merged_rows.append(new_row.to_dict())
+            new_rows_added += 1
+    
+    # Add any rows that were in existing but not in new
+    # (might be manually added or old data)
+    for key, existing_row in existing_dict.items():
+        merged_rows.append(existing_row)
+    
+    merged_df = pd.DataFrame(merged_rows)
+    
+    # Preserve column order from new_df
+    cols = [c for c in new_df.columns if c in merged_df.columns]
+    merged_df = merged_df[cols]
+    
+    print(f"[INFO] Merge complete: {edits_preserved} edits preserved, {new_rows_added} new rows added")
+    
+    return merged_df
+
+def write_to_sheet(
+    df: pd.DataFrame, 
+    sheet_name: str, 
+    date: Optional[str] = None,
+    preserve_edits: bool = True,
+    key_column: str = 'url',
+    preserve_columns: list = None
+) -> bool:
+    """
+    Write DataFrame to Google Sheet, optionally preserving student edits.
+    
+    Args:
+        preserve_edits: If True, read existing data and preserve edits
+        key_column: Column to match rows (default: 'url')
+        preserve_columns: Columns to preserve (default: ['sentiment', 'controlled'])
+    """
+    if not SHEETS_AVAILABLE:
+        print(f"[SKIP] Sheets not available - skipping {sheet_name}")
+        return False
+    
+    if preserve_columns is None:
+        preserve_columns = ['sentiment', 'controlled']
+    
+    full_sheet_name = f"{date}-{sheet_name}" if date else sheet_name
+    
+    try:
+        service = get_sheets_service()
+        
+        # Check if sheet tab exists
+        spreadsheet = service.spreadsheets().get(spreadsheetId=SPREADSHEET_ID).execute()
+        sheet_exists = any(s['properties']['title'] == full_sheet_name for s in spreadsheet['sheets'])
+        
+        # If preserving edits and sheet exists, read existing data
+        if preserve_edits and sheet_exists:
+            existing_df = read_from_sheet(sheet_name, date)
+            df = merge_preserving_edits(df, existing_df, key_column, preserve_columns)
+        
+        # Create tab if doesn't exist
         if not sheet_exists:
             service.spreadsheets().batchUpdate(
                 spreadsheetId=SPREADSHEET_ID,
@@ -96,15 +226,13 @@ def write_to_sheet(
             ).execute()
             print(f"[INFO] Created sheet tab: {full_sheet_name}")
         
-        # Clear if requested
-        if clear_first:
-            service.spreadsheets().values().clear(
-                spreadsheetId=SPREADSHEET_ID,
-                range=f'{full_sheet_name}!A1:ZZ',
-                body={}
-            ).execute()
+        # Clear and write
+        service.spreadsheets().values().clear(
+            spreadsheetId=SPREADSHEET_ID,
+            range=f'{full_sheet_name}!A1:ZZ',
+            body={}
+        ).execute()
         
-        # Write data
         values = dataframe_to_sheet_values(df)
         result = service.spreadsheets().values().update(
             spreadsheetId=SPREADSHEET_ID,
@@ -121,21 +249,17 @@ def write_to_sheet(
         print(f"[ERROR] Failed to write {full_sheet_name}: {e}")
         return False
 
-
 def update_rollup_sheet(
     new_data_df: pd.DataFrame,
     sheet_name: str = 'DailyCounts',
     date_column: str = 'date'
 ) -> bool:
-    """Update rolling index sheet (removes old date data, adds new)."""
+    """Update rolling index sheet."""
     if not SHEETS_AVAILABLE:
-        print(f"[SKIP] Sheets not available - skipping rollup")
         return False
     
     try:
         service = get_sheets_service()
-        
-        # Read existing data
         result = service.spreadsheets().values().get(
             spreadsheetId=SPREADSHEET_ID,
             range=f'{sheet_name}!A:ZZ'
@@ -147,26 +271,21 @@ def update_rollup_sheet(
             headers = existing_values[0]
             data_rows = existing_values[1:]
             existing_df = pd.DataFrame(data_rows, columns=headers)
-            
-            # Remove rows for dates we're updating
             dates_to_update = new_data_df[date_column].unique()
             existing_df = existing_df[~existing_df[date_column].isin(dates_to_update)]
-            
-            # Combine and sort
             combined_df = pd.concat([existing_df, new_data_df], ignore_index=True)
             combined_df = combined_df.sort_values(date_column).reset_index(drop=True)
         else:
             combined_df = new_data_df
         
-        return write_to_sheet(combined_df, sheet_name, clear_first=True)
+        return write_to_sheet(combined_df, sheet_name, preserve_edits=False)
         
     except Exception as e:
         print(f"[ERROR] Failed to update rollup: {e}")
         return False
 
-
 # ========================================
-# CONVENIENCE FUNCTIONS - BRAND SERPS
+# CONVENIENCE FUNCTIONS
 # ========================================
 
 def write_brand_serps_to_sheets(
@@ -175,25 +294,25 @@ def write_brand_serps_to_sheets(
     rollup_df: pd.DataFrame,
     target_date: str
 ) -> bool:
-    """Write all three brand SERP dataframes to Google Sheets."""
+    """Write brand SERP data, preserving student edits on sentiment and control."""
     if not SHEETS_AVAILABLE:
-        print(f"[SKIP] Sheets not available - brand SERPs only in CSV")
         return False
     
     print(f"\n[INFO] Writing brand SERP data to Google Sheets ({target_date})...")
+    print(f"[INFO] Preserving student edits for existing rows...")
     
     success = all([
-        write_to_sheet(rows_df, 'BrandSERPs-Modal', date=target_date, clear_first=True),
-        write_to_sheet(daily_df, 'BrandSERPs-Table', date=target_date, clear_first=True),
+        # Modal: Preserve edits (students edit these!)
+        write_to_sheet(rows_df, 'BrandSERPs-Modal', date=target_date, 
+                      preserve_edits=True, key_column='url', 
+                      preserve_columns=['sentiment', 'controlled']),
+        # Table: Don't preserve (auto-calculated)
+        write_to_sheet(daily_df, 'BrandSERPs-Table', date=target_date, preserve_edits=False),
+        # Rollup: Update with fresh data
         update_rollup_sheet(rollup_df, 'BrandSERPs-DailyCounts', date_column='date')
     ])
     
     return success
-
-
-# ========================================
-# CONVENIENCE FUNCTIONS - CEO SERPS
-# ========================================
 
 def write_ceo_serps_to_sheets(
     rows_df: pd.DataFrame,
@@ -201,89 +320,126 @@ def write_ceo_serps_to_sheets(
     rollup_df: pd.DataFrame,
     target_date: str
 ) -> bool:
-    """Write all three CEO SERP dataframes to Google Sheets."""
+    """Write CEO SERP data, preserving student edits."""
     if not SHEETS_AVAILABLE:
-        print(f"[SKIP] Sheets not available - CEO SERPs only in CSV")
         return False
     
     print(f"\n[INFO] Writing CEO SERP data to Google Sheets ({target_date})...")
+    print(f"[INFO] Preserving student edits for existing rows...")
     
     success = all([
-        write_to_sheet(rows_df, 'CEOSERPs-Modal', date=target_date, clear_first=True),
-        write_to_sheet(daily_df, 'CEOSERPs-Table', date=target_date, clear_first=True),
+        write_to_sheet(rows_df, 'CEOSERPs-Modal', date=target_date,
+                      preserve_edits=True, key_column='url',
+                      preserve_columns=['sentiment', 'controlled']),
+        write_to_sheet(daily_df, 'CEOSERPs-Table', date=target_date, preserve_edits=False),
         update_rollup_sheet(rollup_df, 'CEOSERPs-DailyCounts', date_column='date')
     ])
     
     return success
 
-
-# ========================================
-# CONVENIENCE FUNCTIONS - BRAND ARTICLES
-# ========================================
-
 def write_brand_articles_to_sheets(
+    rows_df: pd.DataFrame,
     daily_df: pd.DataFrame,
     rollup_df: pd.DataFrame,
     target_date: str
 ) -> bool:
-    """Write brand article sentiment data to Google Sheets."""
+    """
+    Write all three brand article dataframes to Google Sheets (mirrors SERP pattern).
+    
+    Args:
+        rows_df: Individual articles (modal sheet) - preserves student edits
+        daily_df: Aggregated counts by company and sentiment (table sheet)
+        rollup_df: Rolling index over time (chart sheet)
+        target_date: Date string (YYYY-MM-DD)
+    """
     if not SHEETS_AVAILABLE:
-        print(f"[SKIP] Sheets not available - brand articles only in CSV")
         return False
     
     print(f"\n[INFO] Writing brand article data to Google Sheets ({target_date})...")
+    print(f"[INFO] Preserving student sentiment edits for existing articles...")
     
     success = all([
-        write_to_sheet(daily_df, 'BrandArticles-Table', date=target_date, clear_first=True),
+        # Modal: Preserve sentiment edits (students correct these!)
+        write_to_sheet(rows_df, 'BrandArticles-Modal', date=target_date, 
+                      preserve_edits=True, key_column='url',
+                      preserve_columns=['sentiment']),
+        # Table: Fresh aggregated data (auto-calculated)
+        write_to_sheet(daily_df, 'BrandArticles-Table', date=target_date, preserve_edits=False),
+        # Rollup: Update rolling index
         update_rollup_sheet(rollup_df, 'BrandArticles-DailyCounts', date_column='date')
     ])
     
     return success
 
-
-# ========================================
-# CONVENIENCE FUNCTIONS - CEO ARTICLES
-# ========================================
-
 def write_ceo_articles_to_sheets(
+    rows_df: pd.DataFrame,
     daily_df: pd.DataFrame,
     rollup_df: pd.DataFrame,
     target_date: str
 ) -> bool:
-    """Write CEO article sentiment data to Google Sheets."""
+    """
+    Write all three CEO article dataframes to Google Sheets (mirrors SERP pattern).
+    
+    Args:
+        rows_df: Individual articles (modal sheet) - preserves student edits
+        daily_df: Aggregated counts by CEO and sentiment (table sheet)
+        rollup_df: Rolling index over time (chart sheet)
+        target_date: Date string (YYYY-MM-DD)
+    """
     if not SHEETS_AVAILABLE:
-        print(f"[SKIP] Sheets not available - CEO articles only in CSV")
         return False
     
     print(f"\n[INFO] Writing CEO article data to Google Sheets ({target_date})...")
+    print(f"[INFO] Preserving student sentiment edits for existing articles...")
     
     success = all([
-        write_to_sheet(daily_df, 'CEOArticles-Table', date=target_date, clear_first=True),
+        # Modal: Preserve sentiment edits (students correct these!)
+        write_to_sheet(rows_df, 'CEOArticles-Modal', date=target_date,
+                      preserve_edits=True, key_column='url',
+                      preserve_columns=['sentiment']),
+        # Table: Fresh aggregated data (auto-calculated)
+        write_to_sheet(daily_df, 'CEOArticles-Table', date=target_date, preserve_edits=False),
+        # Rollup: Update rolling index
         update_rollup_sheet(rollup_df, 'CEOArticles-DailyCounts', date_column='date')
     ])
     
     return success
 
+# Special function for article Modal files (called by news_articles scripts)
+def write_articles_modal_to_sheets(
+    df: pd.DataFrame,
+    sheet_name: str,
+    target_date: str,
+    is_ceo: bool = False
+) -> bool:
+    """
+    Write articles modal file, preserving sentiment edits.
+    Used by news_articles_brands.py and news_articles_ceos.py
+    """
+    if not SHEETS_AVAILABLE:
+        return False
+    
+    data_type = "CEO" if is_ceo else "Brand"
+    print(f"\n[INFO] Writing {data_type} articles modal to Google Sheets...")
+    print(f"[INFO] Preserving student sentiment edits for existing articles...")
+    
+    return write_to_sheet(
+        df, 
+        sheet_name, 
+        date=target_date,
+        preserve_edits=True,
+        key_column='url',
+        preserve_columns=['sentiment']  # Only preserve sentiment for articles
+    )
 
-# ========================================
-# BACKWARDS COMPATIBILITY
-# ========================================
-
-# Alias for backwards compatibility
+# Backwards compatibility
 write_serps_to_sheets = write_brand_serps_to_sheets
 write_articles_to_sheets = write_brand_articles_to_sheets
-
-
-# ========================================
-# TESTING
-# ========================================
 
 def test_connection():
     """Test connection to Google Sheets."""
     if not SHEETS_AVAILABLE:
         print("❌ Google Sheets packages not installed")
-        print("\nInstall with:")
-        print("  pip install google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client")
         return False
     
     print(f"[DEBUG] Sheet ID: {SPREADSHEET_ID}")
@@ -298,20 +454,14 @@ def test_connection():
         
         print(f"\n✅ Successfully connected to: {title}")
         print(f"✅ Sheet ID: {SPREADSHEET_ID}")
-        print(f"✅ Found {len(sheets)} sheet tabs:")
-        for sheet in sheets:
-            print(f"   - {sheet['properties']['title']}")
+        print(f"✅ Found {len(sheets)} sheet tabs")
+        print(f"✅ Tab limit remaining: {200 - len(sheets)}")
         
         return True
         
     except Exception as e:
         print(f"\n❌ Connection failed: {e}")
-        print(f"\nTroubleshooting:")
-        print(f"  1. Verify GOOGLE_SHEET_ID: {SPREADSHEET_ID}")
-        print(f"  2. Check credentials file: {CREDENTIALS_PATH}")
-        print(f"  3. Ensure service account has Editor access to sheet")
         return False
-
 
 if __name__ == '__main__':
     print("Testing Google Sheets connection...\n")

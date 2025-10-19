@@ -2,7 +2,7 @@ name: Daily CEO Pipeline
 
 on:
   schedule:
-    - cron: "10 10 * * *"   # 10:10 UTC (one hour after brands at 09:10)
+    - cron: "10 10 * * *"   # 10:10 UTC (one hour after brands)
   workflow_dispatch:
     inputs:
       date:
@@ -13,7 +13,6 @@ on:
 permissions:
   contents: write
 
-# Prevent overlapping runs
 concurrency:
   group: daily-ceos-${{ github.ref }}
   cancel-in-progress: true
@@ -42,7 +41,7 @@ jobs:
           pip install -r requirements.txt
 
       # ============================================
-      # NEW: Setup Google Sheets credentials
+      # Setup Google Sheets credentials
       # ============================================
       - name: Setup Google Sheets credentials
         run: |
@@ -50,55 +49,49 @@ jobs:
           echo "${{ secrets.GOOGLE_CREDENTIALS_BASE64 }}" | base64 -d > credentials/google-sheets-credentials.json
           chmod 600 credentials/google-sheets-credentials.json
           echo "✅ Google Sheets credentials configured"
-          echo "   File size:" $(ls -lh credentials/google-sheets-credentials.json | awk '{print $5}')
 
-      - name: Ensure folders (NEW STRUCTURE)
+      - name: Ensure folders
         run: |
           mkdir -p data/daily_counts
           mkdir -p data/processed_articles
           mkdir -p data/processed_serps
           mkdir -p rosters
 
-      # Build today's articles → data/processed_articles/YYYY-MM-DD-ceo-articles-modal.csv
+      # ============================================
+      # All CEO scripts use CEO Sheet ID
+      # ============================================
+
       - name: Build daily CEO articles (Google News RSS)
         env:
           RUN_DATE: ${{ github.event.inputs.date || '' }}
           ARTICLES_MAX_PER_ALIAS: "25"
           ARTICLES_SLEEP_SEC: "0.35"
-          # NEW: Add Google Sheets environment variables
-          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID_CEO }}
           GOOGLE_CREDENTIALS_PATH: credentials/google-sheets-credentials.json
           WRITE_TO_SHEETS: 'true'
         run: |
           DATE_TO_RUN="${RUN_DATE:-$(date -u +%F)}"
           echo "Running news_articles_ceos.py for ${DATE_TO_RUN}"
+          echo "Writing to CEO Sheet: ${GOOGLE_SHEET_ID:0:20}..."
           ARTICLES_DATE="${DATE_TO_RUN}" python scripts/news_articles_ceos.py
 
-      # Normalize daily counts and write to:
-      # - data/processed_articles/{date}-ceo-articles-table.csv
-      # - data/daily_counts/ceo-articles-daily-counts-chart.csv
       - name: Run daily CEO sentiment (counts)
         env:
           RUN_DATE: ${{ github.event.inputs.date || '' }}
-          # NEW: Add Google Sheets environment variables
-          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID_CEO }}
           GOOGLE_CREDENTIALS_PATH: credentials/google-sheets-credentials.json
           WRITE_TO_SHEETS: 'true'
         run: |
           DATE_TO_RUN="${RUN_DATE:-$(date -u +%F)}"
           echo "Running news_sentiment_ceos.py for ${DATE_TO_RUN}"
+          echo "Writing to CEO Sheet: ${GOOGLE_SHEET_ID:0:20}..."
           python scripts/news_sentiment_ceos.py --date "${DATE_TO_RUN}"
 
-      # Process CEO SERPs
-      # - data/processed_serps/{date}-ceo-serps-processed.csv
-      # - data/processed_serps/{date}-ceo-serps-rows.csv
-      # - data/daily_counts/ceo-serps-daily-counts-chart.csv
       - name: Process CEO SERPs
         shell: bash
         env:
           DATE_IN: ${{ github.event.inputs.date }}
-          # NEW: Add Google Sheets environment variables
-          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID_CEO }}
           GOOGLE_CREDENTIALS_PATH: credentials/google-sheets-credentials.json
           WRITE_TO_SHEETS: 'true'
         run: |
@@ -106,15 +99,30 @@ jobs:
           DATE="${DATE_IN:-$(date -u +%F)}"
           ROW="data/processed_serps/${DATE}-ceo-serps-rows.csv"
       
-          # Optional idempotence – skip if we already wrote this date
           if [ -s "$ROW" ]; then
             echo "SERP rows already exist for ${DATE}; skipping."
             exit 0
           fi
       
           echo "Processing CEO SERPs for ${DATE}"
+          echo "Writing to CEO Sheet: ${GOOGLE_SHEET_ID:0:20}..."
           python scripts/process_serps_ceos.py --date "${DATE}"
 
+      # ============================================
+      # Cleanup old tabs from CEO sheet
+      # ============================================
+      - name: Cleanup old tabs (CEO Sheet)
+        env:
+          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID_CEO }}
+          GOOGLE_CREDENTIALS_PATH: credentials/google-sheets-credentials.json
+          KEEP_DAYS: '30'
+        run: |
+          echo "🗑️  Cleaning up CEO Sheet tabs (keeping last ${KEEP_DAYS} days)..."
+          python scripts/cleanup_old_tabs.py || echo "⚠️  Cleanup failed (non-critical)"
+
+      # ============================================
+      # Commit & push
+      # ============================================
       - name: Commit & push changes (if any)
         env:
           RUN_DATE: ${{ github.event.inputs.date || '' }}
@@ -134,7 +142,7 @@ jobs:
           fi
 
       # ============================================
-      # NEW: Clean up credentials
+      # Clean up credentials
       # ============================================
       - name: Clean up credentials
         if: always()

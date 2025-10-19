@@ -8,6 +8,7 @@ This is the file students will edit to correct CEO article sentiment.
 """
 
 from __future__ import annotations
+import argparse
 import os
 import time
 import html
@@ -184,24 +185,64 @@ def main() -> int:
     print(f"✔ Wrote {len(df):,} rows → {out_path}")
     
     # ===================================================================
-    # NEW: Write to Google Sheets
+    # NEW: Calculate aggregations and write to Google Sheets
     # ===================================================================
     if WRITE_TO_SHEETS and not args.skip_sheets and SHEETS_HELPER_AVAILABLE:
         try:
-            print(f"\n[INFO] Writing CEO articles to Google Sheets...")
-            success = write_to_sheet(
-                df=df,
-                sheet_name='CEOArticles-Modal',
-                date=out_date,
-                clear_first=True
+            # Use the DataFrame we already have (modal sheet data)
+            modal_df = df.copy()
+            
+            # Calculate daily aggregation by CEO
+            if not modal_df.empty:
+                daily_df = (
+                    modal_df.groupby("ceo", as_index=False)
+                    .agg(
+                        total=("ceo", "size"),
+                        negative_articles=("sentiment", lambda s: (s == "negative").sum()),
+                        neutral_articles=("sentiment", lambda s: (s == "neutral").sum()),
+                        positive_articles=("sentiment", lambda s: (s == "positive").sum()),
+                        company=("company", lambda s: s.mode()[0] if not s.mode().empty else ""),
+                    )
+                )
+                daily_df.insert(0, "date", out_date)
+            else:
+                daily_df = pd.DataFrame(columns=["date", "ceo", "total", "negative_articles", "neutral_articles", "positive_articles", "company"])
+            
+            # Create rolling index (read existing, merge, sort)
+            rollup_path = OUT_DIR / "ceo-articles-daily-counts-chart.csv"
+            if rollup_path.exists():
+                rollup_df = pd.read_csv(rollup_path)
+                # Remove any rows for this date
+                rollup_df = rollup_df[rollup_df["date"] != out_date]
+                # Add new data
+                rollup_df = pd.concat([rollup_df, daily_df], ignore_index=True)
+            else:
+                rollup_df = daily_df.copy()
+            
+            # Sort by date and CEO
+            rollup_df = rollup_df.sort_values(["date", "ceo"]).reset_index(drop=True)
+            
+            # Save rollup to CSV
+            rollup_path.parent.mkdir(parents=True, exist_ok=True)
+            rollup_df.to_csv(rollup_path, index=False)
+            print(f"[OK] Updated rolling index → {rollup_path}")
+            
+            # Write all three sheets to Google Sheets
+            from sheets_helper import write_ceo_articles_to_sheets
+            
+            success = write_ceo_articles_to_sheets(
+                rows_df=modal_df,
+                daily_df=daily_df,
+                rollup_df=rollup_df,
+                target_date=out_date
             )
             if success:
                 print(f"[OK] Successfully wrote CEO articles to Google Sheets!")
             else:
-                print(f"[WARN] Failed to write to Google Sheets")
+                print(f"[WARN] Some Google Sheets writes may have failed")
         except Exception as e:
             print(f"[WARN] Could not write to Google Sheets: {e}")
-            print(f"[INFO] CSV file was still created successfully")
+            print(f"[INFO] CSV files were still created successfully")
     elif not SHEETS_HELPER_AVAILABLE:
         print(f"\n[INFO] Google Sheets packages not installed - data saved to CSV only")
     elif args.skip_sheets:
