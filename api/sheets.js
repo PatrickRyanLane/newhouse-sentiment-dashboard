@@ -9,7 +9,7 @@
  * - GOOGLE_SHEET_ID_BRAND: Your brand Google Sheet ID
  * - GOOGLE_SHEET_ID_CEO: Your CEO Google Sheet ID
  * 
- * Version: 1.0.3
+ * Version: 1.1.0 - Added edit tracking
  */
 
 const { google } = require('googleapis');
@@ -24,17 +24,14 @@ const ALLOWED_CONTROLLED = ['controlled', 'uncontrolled'];
  * Parse request body (handles both JSON and raw string)
  */
 async function parseBody(req) {
-  // If body is already parsed (newer Vercel)
   if (req.body && typeof req.body === 'object') {
     return req.body;
   }
   
-  // If body is a string, parse it
   if (typeof req.body === 'string') {
     return JSON.parse(req.body);
   }
   
-  // If body is a buffer or stream, read it
   return new Promise((resolve, reject) => {
     let body = '';
     req.on('data', chunk => body += chunk.toString());
@@ -52,7 +49,6 @@ async function parseBody(req) {
  * Get authenticated Google Sheets client
  */
 function getGoogleSheetsClient() {
-  // Decode credentials from environment variable
   const credentialsBase64 = process.env.GOOGLE_CREDENTIALS;
   
   if (!credentialsBase64) {
@@ -100,7 +96,6 @@ async function handleRead(data) {
     const sheets = getGoogleSheetsClient();
     const sheetId = getSheetId(sheetName);
     
-    // Try to read the sheet
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
       range: `${sheetName}!A:ZZ`,
@@ -115,7 +110,6 @@ async function handleRead(data) {
       };
     }
     
-    // Convert to array of objects
     const headers = values[0];
     const rows = [];
     
@@ -135,7 +129,6 @@ async function handleRead(data) {
     };
     
   } catch (error) {
-    // If sheet doesn't exist, return empty data (not an error)
     if (error.code === 400 || error.message?.includes('Unable to parse range')) {
       console.log(`⚠️ Sheet "${sheetName}" not found, returning empty data`);
       return {
@@ -155,15 +148,11 @@ async function handleRead(data) {
 /**
  * Handle UPDATE_SENTIMENT action - Update sentiment and/or controlled fields
  * 
- * Can update:
- * - Just sentiment: { action: 'UPDATE_SENTIMENT', sheetName, url, sentiment }
- * - Just controlled: { action: 'UPDATE_SENTIMENT', sheetName, url, controlled }
- * - Both: { action: 'UPDATE_SENTIMENT', sheetName, url, sentiment, controlled }
+ * NEW: Tracks manual edits by setting *_edited columns to 'true'
  */
 async function handleUpdateSentiment(data) {
-  const { sheetName, url, sentiment, controlled } = data;
+  const { sheetName, url, sentiment, controlled, markEdited } = data;
   
-  // Validate required fields
   if (!sheetName || !url) {
     return {
       success: false,
@@ -171,7 +160,6 @@ async function handleUpdateSentiment(data) {
     };
   }
   
-  // Must have at least one field to update
   if (!sentiment && !controlled) {
     return {
       success: false,
@@ -179,7 +167,6 @@ async function handleUpdateSentiment(data) {
     };
   }
   
-  // Validate sentiment value if provided
   if (sentiment && !ALLOWED_SENTIMENTS.includes(sentiment)) {
     return {
       success: false,
@@ -187,7 +174,6 @@ async function handleUpdateSentiment(data) {
     };
   }
   
-  // Validate controlled value if provided
   if (controlled && !ALLOWED_CONTROLLED.includes(controlled)) {
     return {
       success: false,
@@ -199,7 +185,6 @@ async function handleUpdateSentiment(data) {
     const sheets = getGoogleSheetsClient();
     const sheetId = getSheetId(sheetName);
     
-    // Read current data
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
       range: `${sheetName}!A:ZZ`,
@@ -214,11 +199,27 @@ async function handleUpdateSentiment(data) {
       };
     }
     
-    // Find column indices
     const headers = values[0];
     const urlCol = headers.indexOf('url');
     const sentimentCol = headers.indexOf('sentiment');
     const controlledCol = headers.indexOf('controlled');
+    
+    // Find edit tracking columns (create if needed)
+    let sentimentEditedCol = headers.indexOf('sentiment_edited');
+    let controlledEditedCol = headers.indexOf('controlled_edited');
+    
+    // Add edit tracking columns if they don't exist
+    if (sentimentEditedCol === -1 && markEdited) {
+      headers.push('sentiment_edited');
+      sentimentEditedCol = headers.length - 1;
+    }
+    if (controlledEditedCol === -1 && markEdited) {
+      headers.push('controlled_edited');
+      controlledEditedCol = headers.length - 1;
+    }
+    
+    // Update header row if we added columns
+    values[0] = headers;
     
     if (urlCol === -1) {
       return {
@@ -227,7 +228,6 @@ async function handleUpdateSentiment(data) {
       };
     }
     
-    // Find the row with matching URL
     let rowIndex = -1;
     for (let i = 1; i < values.length; i++) {
       if (values[i][urlCol] === url) {
@@ -243,30 +243,46 @@ async function handleUpdateSentiment(data) {
       };
     }
     
-    // Track what we're updating
+    // Ensure row has enough columns
+    while (values[rowIndex].length < headers.length) {
+      values[rowIndex].push('');
+    }
+    
     const changes = [];
     let updated = false;
     
-    // Update sentiment if provided and column exists
+    // Update sentiment if provided
     if (sentiment && sentimentCol !== -1) {
       const oldValue = values[rowIndex][sentimentCol];
       values[rowIndex][sentimentCol] = sentiment;
       changes.push(`sentiment: ${oldValue} → ${sentiment}`);
+      
+      // Mark as manually edited
+      if (markEdited && sentimentEditedCol !== -1) {
+        values[rowIndex][sentimentEditedCol] = 'true';
+        changes.push('marked sentiment_edited');
+      }
       updated = true;
     }
     
-    // Update controlled if provided and column exists
+    // Update controlled if provided
     if (controlled && controlledCol !== -1) {
       const oldValue = values[rowIndex][controlledCol];
       values[rowIndex][controlledCol] = controlled;
       changes.push(`controlled: ${oldValue} → ${controlled}`);
+      
+      // Mark as manually edited
+      if (markEdited && controlledEditedCol !== -1) {
+        values[rowIndex][controlledEditedCol] = 'true';
+        changes.push('marked controlled_edited');
+      }
       updated = true;
     }
     
     if (!updated) {
       return {
         success: false,
-        error: 'No valid fields to update (columns may not exist in sheet)'
+        error: 'No valid fields to update'
       };
     }
     
@@ -304,24 +320,21 @@ async function handleUpdateSentiment(data) {
  * Main handler - Routes requests to appropriate functions
  */
 module.exports = async (req, res) => {
-  // Enable CORS for all origins
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   
-  // Handle OPTIONS preflight request
   if (req.method === 'OPTIONS') {
     res.status(200).end();
     return;
   }
   
-  // Handle GET requests (health check)
   if (req.method === 'GET') {
     res.status(200).send(
       '✓ MBTA Dashboard Proxy is running!\n\n' +
       'This endpoint accepts POST requests with actions:\n' +
       '  • READ - Get all data from a sheet\n' +
-      '  • UPDATE_SENTIMENT - Update sentiment and/or controlled fields\n\n' +
+      '  • UPDATE_SENTIMENT - Update sentiment and/or controlled (with edit tracking)\n\n' +
       'Configured for:\n' +
       `  • Brand Sheet: ${BRAND_SHEET_ID}\n` +
       `  • CEO Sheet: ${CEO_SHEET_ID}\n\n` +
@@ -330,15 +343,12 @@ module.exports = async (req, res) => {
     return;
   }
   
-  // Handle POST requests
   if (req.method === 'POST') {
     try {
-      // Parse the request body
       const data = await parseBody(req);
       
       console.log('Received request:', JSON.stringify(data));
       
-      // Validate action
       if (!data || !data.action) {
         res.status(400).json({
           success: false,
@@ -348,7 +358,6 @@ module.exports = async (req, res) => {
         return;
       }
       
-      // Route to appropriate handler
       let result;
       if (data.action === 'READ') {
         result = await handleRead(data);
@@ -375,7 +384,6 @@ module.exports = async (req, res) => {
     return;
   }
   
-  // Method not allowed
   res.status(405).json({
     success: false,
     error: 'Method not allowed'
