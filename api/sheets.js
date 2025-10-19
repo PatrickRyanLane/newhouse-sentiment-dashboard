@@ -6,15 +6,15 @@
  * 
  * Environment Variables Required (set in Vercel dashboard):
  * - GOOGLE_CREDENTIALS: Base64-encoded service account JSON
- * - BRAND_SHEET_ID: Your brand Google Sheet ID
- * - CEO_SHEET_ID: Your CEO Google Sheet ID
+ * - GOOGLE_SHEET_ID_BRAND: Your brand Google Sheet ID
+ * - GOOGLE_SHEET_ID_CEO: Your CEO Google Sheet ID
  */
 
 const { google } = require('googleapis');
 
-// Configuration
-const BRAND_SHEET_ID = process.env.BRAND_SHEET_ID || '15x5AYC3igVZ0AnWavcZpPA8ESSWVF9msi5vztuaqCTw';
-const CEO_SHEET_ID = process.env.CEO_SHEET_ID || '1RGAgs7aWs_LkqOZN2cDOM06vLAhlJa4Ck_bkgkJ9Gbs';
+// Configuration - Using same names as GitHub Secrets for consistency
+const BRAND_SHEET_ID = process.env.GOOGLE_SHEET_ID_BRAND || '15x5AYC3igVZ0AnWavcZpPA8ESSWVF9msi5vztuaqCTw';
+const CEO_SHEET_ID = process.env.GOOGLE_SHEET_ID_CEO || '1RGAgs7aWs_LkqOZN2cDOM06vLAhlJa4Ck_bkgkJ9Gbs';
 const ALLOWED_SENTIMENTS = ['positive', 'neutral', 'negative'];
 
 /**
@@ -213,100 +213,8 @@ async function handleUpdateSentiment(data) {
       }
     });
     
-    console.log(`✓ Row ${rowIndex + 1}: sentiment changed from "${oldSentiment}" to "${sentiment}"`);
-    console.log(`  URL: ${url}`);
-    
-    return {
+    console.log(`✓ Row ${rowIndex + 1}: sentiment changed from \"${oldSentiment}\" to \"${sentiment}\"`);\n    console.log(`  URL: ${url}`);\n    \n    return {
       success: true,
-      message: 'Sentiment updated successfully',
-      oldValue: oldSentiment,
-      newValue: sentiment,
-      rowIndex: rowIndex + 1,
-      timestamp: new Date().toISOString()
+      message: 'Sentiment updated successfully',\n      oldValue: oldSentiment,\n      newValue: sentiment,\n      rowIndex: rowIndex + 1,\n      timestamp: new Date().toISOString()
     };
-    
-  } catch (error) {
-    console.error(`❌ Error updating sentiment: ${error.message}`);
-    return {
-      success: false,
-      error: error.message
-    };
-  }
-}
-
-/**
- * Main handler - Routes requests to appropriate functions
- */
-module.exports = async (req, res) => {
-  // Enable CORS for all origins
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  
-  // Handle OPTIONS preflight request
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
-  
-  // Handle GET requests (health check)
-  if (req.method === 'GET') {
-    res.status(200).send(
-      '✓ MBTA Dashboard Proxy is running!\n\n' +
-      'This endpoint accepts POST requests with actions:\n' +
-      '  • READ - Get all data from a sheet\n' +
-      '  • UPDATE_SENTIMENT - Update sentiment for a URL\n\n' +
-      'Configured for:\n' +
-      `  • Brand Sheet: ${BRAND_SHEET_ID}\n` +
-      `  • CEO Sheet: ${CEO_SHEET_ID}\n\n` +
-      `Time: ${new Date().toISOString()}`
-    );
-    return;
-  }
-  
-  // Handle POST requests
-  if (req.method === 'POST') {
-    try {
-      const data = req.body;
-      
-      // Validate action
-      if (!data.action) {
-        res.status(400).json({
-          success: false,
-          error: 'Missing required field: action'
-        });
-        return;
-      }
-      
-      // Route to appropriate handler
-      let result;
-      if (data.action === 'READ') {
-        result = await handleRead(data);
-      } else if (data.action === 'UPDATE_SENTIMENT') {
-        result = await handleUpdateSentiment(data);
-      } else {
-        res.status(400).json({
-          success: false,
-          error: `Unknown action: ${data.action}`
-        });
-        return;
-      }
-      
-      res.status(200).json(result);
-      
-    } catch (error) {
-      console.error('Error processing request:', error);
-      res.status(500).json({
-        success: false,
-        error: error.message
-      });
-    }
-    return;
-  }
-  
-  // Method not allowed
-  res.status(405).json({
-    success: false,
-    error: 'Method not allowed'
-  });
-};
+    \n  } catch (error) {\n    console.error(`❌ Error updating sentiment: ${error.message}`);\n    return {\n      success: false,\n      error: error.message\n    };\n  }\n}\n\n/**\n * Main handler - Routes requests to appropriate functions\n */\nmodule.exports = async (req, res) => {\n  // Enable CORS for all origins\n  res.setHeader('Access-Control-Allow-Origin', '*');\n  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');\n  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');\n  \n  // Handle OPTIONS preflight request\n  if (req.method === 'OPTIONS') {\n    res.status(200).end();\n    return;\n  }\n  \n  // Handle GET requests (health check)\n  if (req.method === 'GET') {\n    res.status(200).send(\n      '✓ MBTA Dashboard Proxy is running!\\n\\n' +\n      'This endpoint accepts POST requests with actions:\\n' +\n      '  • READ - Get all data from a sheet\\n' +\n      '  • UPDATE_SENTIMENT - Update sentiment for a URL\\n\\n' +\n      'Configured for:\\n' +\n      `  • Brand Sheet: ${BRAND_SHEET_ID}\\n` +\n      `  • CEO Sheet: ${CEO_SHEET_ID}\\n\\n` +\n      `Time: ${new Date().toISOString()}`\n    );\n    return;\n  }\n  \n  // Handle POST requests\n  if (req.method === 'POST') {\n    try {\n      const data = req.body;\n      \n      // Validate action\n      if (!data.action) {\n        res.status(400).json({\n          success: false,\n          error: 'Missing required field: action'\n        });\n        return;\n      }\n      \n      // Route to appropriate handler\n      let result;\n      if (data.action === 'READ') {\n        result = await handleRead(data);\n      } else if (data.action === 'UPDATE_SENTIMENT') {\n        result = await handleUpdateSentiment(data);\n      } else {\n        res.status(400).json({\n          success: false,\n          error: `Unknown action: ${data.action}`\n        });\n        return;\n      }\n      \n      res.status(200).json(result);\n      \n    } catch (error) {\n      console.error('Error processing request:', error);\n      res.status(500).json({\n        success: false,\n        error: error.message\n      });\n    }\n    return;\n  }\n  \n  // Method not allowed\n  res.status(405).json({\n    success: false,\n    error: 'Method not allowed'\n  });\n};\n
