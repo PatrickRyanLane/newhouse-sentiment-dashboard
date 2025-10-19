@@ -1,0 +1,15 @@
+{
+  "name": "mbta-dashboard-proxy",
+  "version": "1.0.0",
+  "description": "Serverless proxy for MBTA sentiment dashboards",
+  "main": "api/sheets.js",
+  "scripts": {
+    "test": "echo \"No tests yet\""
+  },
+  "dependencies": {
+    "googleapis": "^128.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
