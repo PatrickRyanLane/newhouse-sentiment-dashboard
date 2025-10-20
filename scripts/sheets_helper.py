@@ -47,7 +47,18 @@ def get_sheets_service():
     return service
 
 def dataframe_to_sheet_values(df: pd.DataFrame) -> list:
-    """Convert pandas DataFrame to Google Sheets format."""
+    """Convert pandas DataFrame to Google Sheets format.
+    
+    Handles NaN values by replacing them with empty strings,
+    since Google Sheets API doesn't support NaN in JSON.
+    
+    Why: When pandas reads CSV files, missing values become NaN (Not a Number).
+    Google Sheets API converts data to JSON for uploading, but JSON doesn't
+    support NaN, so we replace NaN with empty strings.
+    """
+    # Replace NaN with empty strings (Google Sheets doesn't support NaN in JSON)
+    df = df.fillna('')
+    
     headers = df.columns.tolist()
     values = [headers] + df.values.tolist()
     return values
