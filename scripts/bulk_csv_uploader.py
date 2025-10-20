@@ -10,6 +10,16 @@ Smart Routing:
 - Files with "ceo" in filename → GOOGLE_SHEET_ID_CEO
 - Files with neither → Uses GOOGLE_SHEET_ID (default)
 
+Environment Variables:
+- GOOGLE_SHEET_ID_BRAND: Google Sheet ID for brand data
+- GOOGLE_SHEET_ID_CEO: Google Sheet ID for CEO data
+- GOOGLE_SHEET_ID: Default Google Sheet ID (fallback)
+
+You can set these in:
+1. GitHub Secrets (for CI/CD workflows)
+2. Terminal: export GOOGLE_SHEET_ID_BRAND="..."
+3. .env file in project root (for local development)
+
 Usage:
     python bulk_csv_uploader.py --folder ./data/my_csvs
 
@@ -24,10 +34,20 @@ import argparse
 import pandas as pd
 from pathlib import Path
 
+# Try to load from .env file if it exists (for local development)
+try:
+    from dotenv import load_dotenv
+    env_path = os.path.join(os.path.dirname(__file__), '..', '.env')
+    if os.path.exists(env_path):
+        load_dotenv(env_path)
+        print(f"[INFO] Loaded environment variables from .env file")
+except ImportError:
+    pass  # python-dotenv not installed, that's fine
+
 # Import the sheets_helper from the same directory
 from sheets_helper import write_to_sheet, get_sheets_service
 
-# Get sheet IDs from environment variables (GitHub Secrets)
+# Get sheet IDs from environment variables (GitHub Secrets or .env)
 SHEET_ID_BRAND = os.environ.get('GOOGLE_SHEET_ID_BRAND')
 SHEET_ID_CEO = os.environ.get('GOOGLE_SHEET_ID_CEO')
 SHEET_ID_DEFAULT = os.environ.get('GOOGLE_SHEET_ID')
@@ -166,7 +186,15 @@ def upload_csvs_to_sheet(folder_path, sheet_type_override=None, preserve_edits=F
     
     if not any(sheet_ids_configured.values()):
         print("❌ ERROR: No Google Sheet IDs configured!")
-        print("   Please set GOOGLE_SHEET_ID_BRAND, GOOGLE_SHEET_ID_CEO, or GOOGLE_SHEET_ID")
+        print("\n   Please set one or more of these environment variables:")
+        print("   - GOOGLE_SHEET_ID_BRAND")
+        print("   - GOOGLE_SHEET_ID_CEO")
+        print("   - GOOGLE_SHEET_ID")
+        print("\n   Options:")
+        print("   1. GitHub Secrets (for workflows)")
+        print("   2. Terminal: export GOOGLE_SHEET_ID_BRAND='...'")
+        print("   3. .env file (for local development)")
+        print()
         return {'successful': 0, 'failed': 0, 'skipped': 0}
     
     if verbose:
