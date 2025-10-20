@@ -20,17 +20,25 @@ You can set these in:
 2. Terminal: export GOOGLE_SHEET_ID_BRAND="..."
 3. .env file in project root (for local development)
 
+Rate Limiting:
+The Google Sheets API has limits (60 writes/minute). To avoid hitting quota errors,
+this script adds delays between uploads. Use --rate-limit to control this.
+
 Usage:
     python bulk_csv_uploader.py --folder ./data/my_csvs
 
 Or with custom routing (overrides filename detection):
     python bulk_csv_uploader.py --folder ./data --sheet-type brand
+
+Or with slower uploads to avoid quota limits:
+    python bulk_csv_uploader.py --folder ./data --rate-limit 2
 """
 
 import os
 import sys
 import glob
 import argparse
+import time
 import pandas as pd
 from pathlib import Path
 
@@ -138,7 +146,7 @@ def csv_to_sheet_name(csv_filename):
     
     return name
 
-def upload_csvs_to_sheet(folder_path, sheet_type_override=None, preserve_edits=False, verbose=True):
+def upload_csvs_to_sheet(folder_path, sheet_type_override=None, preserve_edits=False, rate_limit_delay=0, verbose=True):
     """
     Main function: upload all CSVs from a folder as separate sheet tabs.
     
@@ -151,11 +159,13 @@ def upload_csvs_to_sheet(folder_path, sheet_type_override=None, preserve_edits=F
     2. Detects which Google Sheet each belongs to
     3. Reads each CSV into pandas
     4. Writes to the appropriate sheet tab
+    5. Waits between uploads to respect rate limits
     
     Args:
         folder_path: Folder containing CSV files
         sheet_type_override: Force all files to 'brand', 'ceo', or None (auto-detect)
         preserve_edits: Whether to preserve existing data if tab already exists
+        rate_limit_delay: Seconds to wait between uploads (default: 0)
         verbose: Print progress messages
         
     Returns:
@@ -207,11 +217,13 @@ def upload_csvs_to_sheet(folder_path, sheet_type_override=None, preserve_edits=F
             print(f"   ✓ Default sheet configured")
         if sheet_type_override:
             print(f"   ⚠️  Override: All files → {sheet_type_override}")
+        if rate_limit_delay > 0:
+            print(f"   ⏱️  Rate limiting: {rate_limit_delay}s between uploads")
         print()
     
     results = {'successful': 0, 'failed': 0, 'skipped': 0, 'by_type': {'brand': 0, 'ceo': 0, 'default': 0}}
     
-    for csv_path in csv_files:
+    for idx, csv_path in enumerate(csv_files):
         csv_name = os.path.basename(csv_path)
         sheet_name = csv_to_sheet_name(csv_name)
         
@@ -268,6 +280,12 @@ def upload_csvs_to_sheet(folder_path, sheet_type_override=None, preserve_edits=F
         except Exception as e:
             print(f"   ❌ Error: {e}\n")
             results['failed'] += 1
+        
+        # Rate limiting: add delay between uploads (except after last file)
+        if rate_limit_delay > 0 and idx < len(csv_files) - 1:
+            if verbose:
+                print(f"⏱️  Waiting {rate_limit_delay}s to avoid hitting API rate limits...\n")
+            time.sleep(rate_limit_delay)
     
     # Print summary
     print("\n" + "="*60)
@@ -307,6 +325,12 @@ if __name__ == '__main__':
         help='Preserve existing data if tab already exists'
     )
     parser.add_argument(
+        '--rate-limit',
+        type=float,
+        default=0,
+        help='Seconds to wait between uploading files (default: 0). Use 2-3 to avoid quota errors'
+    )
+    parser.add_argument(
         '--quiet',
         action='store_true',
         help='Suppress progress messages'
@@ -321,6 +345,7 @@ if __name__ == '__main__':
         args.folder,
         sheet_type_override=args.sheet_type,
         preserve_edits=args.preserve_edits,
+        rate_limit_delay=args.rate_limit,
         verbose=not args.quiet
     )
     
