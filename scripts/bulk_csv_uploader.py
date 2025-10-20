@@ -32,6 +32,9 @@ Or with custom routing (overrides filename detection):
 
 Or with slower uploads to avoid quota limits:
     python bulk_csv_uploader.py --folder ./data --rate-limit 2
+
+Or to skip tabs that already exist:
+    python bulk_csv_uploader.py --folder ./data --skip-existing
 """
 
 import os
@@ -146,7 +149,30 @@ def csv_to_sheet_name(csv_filename):
     
     return name
 
-def upload_csvs_to_sheet(folder_path, sheet_type_override=None, preserve_edits=False, rate_limit_delay=0, verbose=True):
+def sheet_tab_exists(sheet_id, sheet_name):
+    """
+    Check if a sheet tab already exists in Google Sheets.
+    
+    Why: Before uploading, we might want to check if the tab already exists
+    and skip it (with --skip-existing flag).
+    
+    Args:
+        sheet_id: Google Sheet ID
+        sheet_name: Name of the tab to check
+        
+    Returns:
+        True if tab exists, False otherwise
+    """
+    try:
+        service = get_sheets_service()
+        spreadsheet = service.spreadsheets().get(spreadsheetId=sheet_id).execute()
+        sheet_exists = any(s['properties']['title'] == sheet_name for s in spreadsheet['sheets'])
+        return sheet_exists
+    except Exception as e:
+        print(f"[WARN] Could not check if tab exists: {e}")
+        return False
+
+def upload_csvs_to_sheet(folder_path, sheet_type_override=None, preserve_edits=False, rate_limit_delay=0, skip_existing=False, verbose=True):
     """
     Main function: upload all CSVs from a folder as separate sheet tabs.
     
@@ -158,14 +184,16 @@ def upload_csvs_to_sheet(folder_path, sheet_type_override=None, preserve_edits=F
     1. Finds all CSV files in the folder
     2. Detects which Google Sheet each belongs to
     3. Reads each CSV into pandas
-    4. Writes to the appropriate sheet tab
-    5. Waits between uploads to respect rate limits
+    4. Checks if tab exists (if skip_existing=True)
+    5. Writes to the appropriate sheet tab
+    6. Waits between uploads to respect rate limits
     
     Args:
         folder_path: Folder containing CSV files
         sheet_type_override: Force all files to 'brand', 'ceo', or None (auto-detect)
         preserve_edits: Whether to preserve existing data if tab already exists
         rate_limit_delay: Seconds to wait between uploads (default: 0)
+        skip_existing: Skip tabs that already exist (default: False)
         verbose: Print progress messages
         
     Returns:
@@ -219,6 +247,8 @@ def upload_csvs_to_sheet(folder_path, sheet_type_override=None, preserve_edits=F
             print(f"   ⚠️  Override: All files → {sheet_type_override}")
         if rate_limit_delay > 0:
             print(f"   ⏱️  Rate limiting: {rate_limit_delay}s between uploads")
+        if skip_existing:
+            print(f"   ⏭️  Skip mode: Existing tabs will be skipped")
         print()
     
     results = {'successful': 0, 'failed': 0, 'skipped': 0, 'by_type': {'brand': 0, 'ceo': 0, 'default': 0}}
@@ -242,6 +272,12 @@ def upload_csvs_to_sheet(folder_path, sheet_type_override=None, preserve_edits=F
         # Skip if sheet ID not configured
         if not target_sheet_id:
             print(f"⏭️  Skipping: {csv_name} (no sheet ID for type '{sheet_type}')\n")
+            results['skipped'] += 1
+            continue
+        
+        # Skip if tab already exists and skip_existing flag is set
+        if skip_existing and sheet_tab_exists(target_sheet_id, sheet_name):
+            print(f"⏭️  Skipping: {csv_name} (tab '{sheet_name}' already exists)\n")
             results['skipped'] += 1
             continue
         
@@ -331,6 +367,11 @@ if __name__ == '__main__':
         help='Seconds to wait between uploading files (default: 0). Use 2-3 to avoid quota errors'
     )
     parser.add_argument(
+        '--skip-existing',
+        action='store_true',
+        help='Skip tabs that already exist in Google Sheets (do not overwrite)'
+    )
+    parser.add_argument(
         '--quiet',
         action='store_true',
         help='Suppress progress messages'
@@ -346,6 +387,7 @@ if __name__ == '__main__':
         sheet_type_override=args.sheet_type,
         preserve_edits=args.preserve_edits,
         rate_limit_delay=args.rate_limit,
+        skip_existing=args.skip_existing,
         verbose=not args.quiet
     )
     
