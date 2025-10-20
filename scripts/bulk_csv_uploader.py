@@ -24,9 +24,8 @@ import argparse
 import pandas as pd
 from pathlib import Path
 
-# Import the sheets_helper from the project
-sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
-from scripts.sheets_helper import write_to_sheet, get_sheets_service
+# Import the sheets_helper from the same directory
+from sheets_helper import write_to_sheet, get_sheets_service
 
 # Get sheet IDs from environment variables (GitHub Secrets)
 SHEET_ID_BRAND = os.environ.get('GOOGLE_SHEET_ID_BRAND')
