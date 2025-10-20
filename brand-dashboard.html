@@ -45,7 +45,8 @@ button:hover{filter:brightness(1.08)}
 .table-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:8px}
 
 table{width:100%;border-collapse:separate;border-spacing:0 6px;min-width:980px}
-thead th{font-size:12px;color:var(--muted);text-align:left;padding:6px 8px}
+thead th{font-size:12px;color:var(--muted);text-align:left;padding:6px 8px;cursor:help;border-bottom:1px dotted rgba(255,255,255,.1)}
+thead th:hover{color:var(--accent)}
 tbody td{padding:10px 8px;background:var(--black);border-top:1px solid #0f1831;border-bottom:1px solid #0f1831}
 tbody tr td:first-child{border-left:1px solid #0f1831;border-radius:10px 0 0 10px}
 tbody tr td:last-child{border-right:1px solid #0f1831;border-radius:0 10px 10px 0}
@@ -151,18 +152,18 @@ thead th:first-child, tbody td:first-child{position:sticky;left:0;z-index:2;box-
   </div>
 
   <div class="table-card">
-    <p class="table-hint">💡 Click on <strong>sentiment</strong> or <strong>controlled</strong> badges to edit. Manual edits are marked with ✏️ and persist across days.</p>
+    <p class="table-hint">💡 Click on <strong>sentiment</strong> or <strong>controlled</strong> badges to edit. Manual edits are marked with ✏️ and persist across days. Hover over column headers for details.</p>
     <div class="table-scroll">
       <table>
         <thead>
           <tr>
-            <th>Company</th>
-            <th data-key="neg_news" class="right">Negative News % ▲▼</th>
-            <th data-key="neg_serp" class="right">Negative SERP % ▲▼</th>
-            <th data-key="ctrl_pct" class="right">SERP Control % ▲▼</th>
-            <th data-key="risk" class="center">Risk ▲▼</th>
-            <th class="center">Headlines</th>
-            <th class="center">SERP</th>
+            <th title="Brand or entity name being tracked for sentiment and news coverage">Company</th>
+            <th data-key="neg_news" class="center" title="Percentage of news articles about this company that have negative sentiment. Calculated by: (number of negative articles ÷ total articles) × 100. Higher percentages indicate more negative news coverage.">Negative News % ▲▼</th>
+            <th data-key="neg_serp" class="center" title="Percentage of search results (SERPs) about this company with negative sentiment. Calculated by: (number of negative SERP results ÷ total SERP results) × 100. Represents what appears in Google search results.">Negative SERP % ▲▼</th>
+            <th data-key="ctrl_pct" class="center" title="Percentage of search results (SERPs) that are controlled, meaning company-owned or favorable properties. Calculated by: (number of controlled results ÷ total SERP results) × 100. Higher percentages indicate better search engine optimization and reputation control.">SERP Control % ▲▼</th>
+            <th data-key="risk" class="center" title="Overall crisis risk classification. Calculated as: High if negative SERP > 0%, Medium if control < 40%, Low if control ≥ 40%. This helps identify and prioritize crisis communications situations.">Risk ▲▼</th>
+            <th class="center" title="View individual news articles and headlines about this company. Shows each article's sentiment classification and source. Click to explore full headlines for this company.">Headlines</th>
+            <th class="center" title="View search engine results (SERP) for this company. Shows what appears when searching the company name, including each result's sentiment and whether it's controlled. Click to analyze search presence.">SERP</th>
           </tr>
         </thead>
         <tbody id="tbody"></tbody>
@@ -529,9 +530,9 @@ function renderTable() {
     const checked = (selectedCompany && selectedCompany === r.company) ? 'checked' : '';
     return `<tr>
       <td><input type="checkbox" data-company="${esc(r.company)}" class="brandCheck" ${checked} /> ${esc(r.company)}</td>
-      <td class="right">${fmtPct(r.neg_news)}</td>
-      <td class="right">${fmtPct(r.neg_serp)}</td>
-      <td class="right">${fmtPct(r.ctrl_pct)}</td>
+      <td class="center">${fmtPct(r.neg_news)}</td>
+      <td class="center">${fmtPct(r.neg_serp)}</td>
+      <td class="center">${fmtPct(r.ctrl_pct)}</td>
       <td class="center">${
         (r.risk === 'High' || r.risk === 'Medium' || r.risk === 'Low')
           ? (r.risk === 'High'
