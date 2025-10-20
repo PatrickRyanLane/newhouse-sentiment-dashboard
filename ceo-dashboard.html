@@ -196,7 +196,7 @@ const PROXY_URL = 'https://newhouse-sentiment-dashboard.vercel.app/api/sheets.js
 let articlesDaily = [];
 let serpsDaily = [];
 let filteredRows = [];
-let selectedCompany = null;
+let selectedCEO = null;
 let currentSort = { key: null, dir: 1 };
 let currentPage = 1;
 const PAGE_SIZE = 25;
@@ -306,13 +306,14 @@ async function loadArticlesForDate(date) {
   const rows = await fetchFromSheets('ceo-articles-modal', date);
   return rows.map(r => ({
     date,
+    ceo: String(r.ceo || '').trim(),
     company: String(r.company || '').trim(),
     title: String(r.title || '').trim(),
     url: String(r.url || '').trim(),
     source: String(r.source || '').trim(),
     sentiment: String(r.sentiment || 'neutral').toLowerCase(),
     sentiment_edited: String(r.sentiment_edited || '')
-  })).filter(r => r.company && r.url);
+  })).filter(r => r.ceo && r.url);
 }
 
 async function loadSERPsForDate(date) {
@@ -320,6 +321,7 @@ async function loadSERPsForDate(date) {
   const rows = await fetchFromSheets('ceo-serps-modal', date);
   return rows.map(r => ({
     date,
+    ceo: String(r.ceo || '').trim(),
     company: String(r.company || '').trim(),
     title: String(r.title || '').trim(),
     url: String(r.url || '').trim(),
@@ -330,31 +332,31 @@ async function loadSERPsForDate(date) {
     controlled: (/^true|1|controlled$/i).test(String(r.controlled || '')) ? 'controlled' : 'uncontrolled',
     sentiment_edited: String(r.sentiment_edited || ''),
     controlled_edited: String(r.controlled_edited || '')
-  })).filter(r => r.company && r.url);
+  })).filter(r => r.ceo && r.url);
 }
 
 async function loadCounts() {
-  // CEO articles daily counts
+  // CEO articles daily counts - FIXED: Use 'ceo' not 'company', use correct column names
   const rows = await fetchFromSheets('ceo-articles-daily-counts-chart');
   articlesDaily = rows.map(r => ({
     date: String(r.date || '').trim(),
-    company: String(r.company || '').trim(),
-    pos: +r.positive_articles || 0,
-    neu: +r.neutral_articles || 0,
-    neg: +r.negative_articles || 0
-  })).filter(r => isISODate(r.date) && r.company);
+    ceo: String(r.ceo || '').trim(),
+    pos: +r.positive || 0,
+    neu: +r.neutral || 0,
+    neg: +r.negative || 0
+  })).filter(r => isISODate(r.date) && r.ceo);
 }
 
 async function loadSerpDaily() {
-  // CEO SERPs daily counts
+  // CEO SERPs daily counts - FIXED: Use 'ceo' not 'company'
   const rows = await fetchFromSheets('ceo-serps-daily-counts-chart');
   serpsDaily = rows.map(r => ({
     date: (r.date || '').trim(),
-    company: (r.company || '').trim(),
+    ceo: (r.ceo || '').trim(),
     total: +r.total || 0,
     neg_serp: +r.negative_serp || 0,
     ctrl: +r.controlled || 0
-  })).filter(r => isISODate(r.date) && r.company);
+  })).filter(r => isISODate(r.date) && r.ceo);
 }
 
 /********************** Risk Calculation **********************/
@@ -380,7 +382,7 @@ function sliceWindow(arr, start, size) {
 function updateDateRangeUI(allDates) {
   const start = clampDateStart(allDates.length);
   const end = Math.min(allDates.length, start + DATE_WINDOW_SIZE);
-  const label = allDates.length ? `${allDates[start]} — ${allDates[end - 1]}` : '';
+  const label = allDates.length ? `${allDates[start]} – ${allDates[end - 1]}` : '';
   document.querySelectorAll('.dates-range').forEach(el => el.textContent = label);
 
   const atStart = start === 0;
@@ -417,14 +419,14 @@ async function init() {
   const sel = document.getElementById('dateSelect');
   sel.innerHTML = dates.map(d => `<option value="${d}">${d}</option>`).join('');
   sel.value = dates[dates.length - 1] || '';
-  sel.addEventListener('change', () => { currentPage = 1; selectedCompany = null; renderAll(); });
+  sel.addEventListener('change', () => { currentPage = 1; selectedCEO = null; renderAll(); });
 
   document.getElementById('filterInput').addEventListener('input', () => { currentPage = 1; renderAll(); });
   document.getElementById('refreshBtn').onclick = async () => { 
     console.log('🔄 Refreshing CEO data...');
     await init(); 
   };
-  document.getElementById('clearBtn').onclick = () => { selectedCompany = null; document.getElementById('filterInput').value = ''; renderAll(); };
+  document.getElementById('clearBtn').onclick = () => { selectedCEO = null; document.getElementById('filterInput').value = ''; renderAll(); };
   document.getElementById('prevBtn').onclick = () => { if (currentPage > 1) { currentPage--; renderTable(); } };
   document.getElementById('nextBtn').onclick = () => { const totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE)); if (currentPage < totalPages) { currentPage++; renderTable(); } };
 
@@ -449,24 +451,25 @@ async function buildRowsForDate(d) {
   const articles = await loadArticlesForDate(d);
   const serps = await loadSERPsForDate(d);
 
-  const articlesByCompany = new Map();
+  // FIXED: Group by CEO instead of company
+  const articlesByCEO = new Map();
   articles.forEach(a => {
-    if (!articlesByCompany.has(a.company)) articlesByCompany.set(a.company, []);
-    articlesByCompany.get(a.company).push(a);
+    if (!articlesByCEO.has(a.ceo)) articlesByCEO.set(a.ceo, []);
+    articlesByCEO.get(a.ceo).push(a);
   });
 
-  const serpsByCompany = new Map();
+  const serpsByCEO = new Map();
   serps.forEach(s => {
-    if (!serpsByCompany.has(s.company)) serpsByCompany.set(s.company, []);
-    serpsByCompany.get(s.company).push(s);
+    if (!serpsByCEO.has(s.ceo)) serpsByCEO.set(s.ceo, []);
+    serpsByCEO.get(s.ceo).push(s);
   });
 
-  const companies = new Set([...articlesByCompany.keys(), ...serpsByCompany.keys()]);
+  const ceos = new Set([...articlesByCEO.keys(), ...serpsByCEO.keys()]);
   const out = [];
 
-  for (const company of companies) {
-    const articleList = articlesByCompany.get(company) || [];
-    const serpList = serpsByCompany.get(company) || [];
+  for (const ceo of ceos) {
+    const articleList = articlesByCEO.get(ceo) || [];
+    const serpList = serpsByCEO.get(ceo) || [];
 
     let negArticles = 0;
     if (articleList.length > 0) {
@@ -484,7 +487,7 @@ async function buildRowsForDate(d) {
 
     out.push({
       date: d,
-      company,
+      ceo,
       neg_news: negArticles,
       neg_serp: negSerpPct,
       ctrl_pct: ctrlPct,
@@ -499,13 +502,13 @@ async function buildRowsForDate(d) {
 async function renderAll() {
   const d = document.getElementById('dateSelect').value;
   const filter = document.getElementById('filterInput').value.trim().toLowerCase();
-  const rows = (await buildRowsForDate(d)).filter(r => !filter || r.company.toLowerCase().includes(filter));
+  const rows = (await buildRowsForDate(d)).filter(r => !filter || r.ceo.toLowerCase().includes(filter));
   filteredRows = rows;
   currentPage = 1;
   if (rows.length === 1) {
-    selectedCompany = rows[0].company;
-  } else if (selectedCompany && !rows.some(r => r.company === selectedCompany)) {
-    selectedCompany = null;
+    selectedCEO = rows[0].ceo;
+  } else if (selectedCEO && !rows.some(r => r.ceo === selectedCEO)) {
+    selectedCEO = null;
   }
   renderTable();
   renderCharts();
@@ -526,9 +529,9 @@ function renderTable() {
   const start = (currentPage - 1) * PAGE_SIZE;
   const pageRows = rows.slice(start, start + PAGE_SIZE);
   tbody.innerHTML = pageRows.map(r => {
-    const checked = (selectedCompany && selectedCompany === r.company) ? 'checked' : '';
+    const checked = (selectedCEO && selectedCEO === r.ceo) ? 'checked' : '';
     return `<tr>
-      <td><input type="checkbox" data-company="${esc(r.company)}" class="brandCheck" ${checked} /> ${esc(r.company)}</td>
+      <td><input type="checkbox" data-ceo="${esc(r.ceo)}" class="ceoCheck" ${checked} /> ${esc(r.ceo)}</td>
       <td class="right">${fmtPct(r.neg_news)}</td>
       <td class="right">${fmtPct(r.neg_serp)}</td>
       <td class="right">${fmtPct(r.ctrl_pct)}</td>
@@ -541,28 +544,28 @@ function renderTable() {
               : '<span class="pill low">Low</span>')
           : '<span class="muted">N/A</span>'
       }</td>
-      <td class="center"><button class="headBtn" data-company="${esc(r.company)}">View</button></td>
-      <td class="center"><button class="serpBtn" data-company="${esc(r.company)}">View</button></td>
+      <td class="center"><button class="headBtn" data-ceo="${esc(r.ceo)}">View</button></td>
+      <td class="center"><button class="serpBtn" data-ceo="${esc(r.ceo)}">View</button></td>
     </tr>`;
   }).join('');
 
-  tbody.querySelectorAll('.brandCheck').forEach(cb => {
+  tbody.querySelectorAll('.ceoCheck').forEach(cb => {
     cb.addEventListener('change', (e) => {
-      const company = e.target.getAttribute('data-company');
+      const ceo = e.target.getAttribute('data-ceo');
       if (e.target.checked) {
-        selectedCompany = company;
-        tbody.querySelectorAll('.brandCheck').forEach(x => { if (x !== e.target) x.checked = false; });
-      } else selectedCompany = null;
+        selectedCEO = ceo;
+        tbody.querySelectorAll('.ceoCheck').forEach(x => { if (x !== e.target) x.checked = false; });
+      } else selectedCEO = null;
       renderCharts();
     });
   });
 
   tbody.querySelectorAll('.serpBtn').forEach(btn => {
-    btn.onclick = () => showSerp({ company: btn.getAttribute('data-company') });
+    btn.onclick = () => showSerp({ ceo: btn.getAttribute('data-ceo') });
   });
 
   tbody.querySelectorAll('.headBtn').forEach(btn => {
-    btn.onclick = () => showHeadlines({ company: btn.getAttribute('data-company') });
+    btn.onclick = () => showHeadlines({ ceo: btn.getAttribute('data-ceo') });
   });
 
   document.getElementById('pageNo').textContent = String(currentPage);
@@ -576,7 +579,7 @@ function getDateSeries() {
     const key = r.date;
     if (!byDate.has(key)) byDate.set(key, { pos: 0, neu: 0, neg: 0 });
     const b = byDate.get(key);
-    if (!selectedCompany || r.company === selectedCompany) {
+    if (!selectedCEO || r.ceo === selectedCEO) {
       b.pos += +r.pos || 0; b.neu += +r.neu || 0; b.neg += +r.neg || 0;
     }
   });
@@ -585,7 +588,7 @@ function getDateSeries() {
   serpsDaily.forEach(r => {
     const key = r.date;
     if (!serpByDate.has(key)) serpByDate.set(key, { total: 0, neg: 0, ctrl: 0 });
-    if (!selectedCompany || r.company === selectedCompany) {
+    if (!selectedCEO || r.ceo === selectedCEO) {
       const b = serpByDate.get(key);
       b.total += +r.total || 0; b.neg += +r.neg_serp || 0; b.ctrl += +r.ctrl || 0;
     }
@@ -627,7 +630,7 @@ function renderCharts() {
   updateDateRangeUI(dates);
   hookDatePager(dates);
 
-  const who = selectedCompany ? selectedCompany : 'Index Average';
+  const who = selectedCEO ? selectedCEO : 'Index Average';
   const pct = v => `${Math.round(v)}%`;
 
   const commonOpts = {
@@ -748,13 +751,13 @@ function createControlledDropdown(sheetName, date, url, currentValue) {
   return container;
 }
 
-async function showHeadlines({ company }) {
+async function showHeadlines({ ceo }) {
   const d = document.getElementById('dateSelect').value;
   const articles = await loadArticlesForDate(d);
-  const list = articles.filter(a => a.company === company);
+  const list = articles.filter(a => a.ceo === ceo);
   
   if (!list.length) {
-    openModal(`Headlines — ${esc(company)}`, `<div class="muted">No headlines for ${esc(company)} on ${d}.</div>`);
+    openModal(`Headlines – ${esc(ceo)}`, `<div class="muted">No headlines for ${esc(ceo)} on ${d}.</div>`);
     return;
   }
 
@@ -775,7 +778,7 @@ async function showHeadlines({ company }) {
     </div>`;
   }).join('');
 
-  openModal(`Headlines — ${esc(company)}`, `<div class="serp-cards">${cards}</div>`);
+  openModal(`Headlines – ${esc(ceo)}`, `<div class="serp-cards">${cards}</div>`);
 
   document.querySelectorAll('.modal .badge.editable[data-type="sentiment"]').forEach(badge => {
     badge.addEventListener('click', (e) => {
@@ -790,13 +793,13 @@ async function showHeadlines({ company }) {
   });
 }
 
-async function showSerp({ company }) {
+async function showSerp({ ceo }) {
   const d = document.getElementById('dateSelect').value;
   const serps = await loadSERPsForDate(d);
-  const matches = serps.filter(s => s.company === company);
+  const matches = serps.filter(s => s.ceo === ceo);
 
   if (!matches.length) {
-    openModal(`SERP — ${esc(company)}`, `<div class="muted">No SERPs for ${esc(company)} on ${d}.</div>`);
+    openModal(`SERP – ${esc(ceo)}`, `<div class="muted">No SERPs for ${esc(ceo)} on ${d}.</div>`);
     return;
   }
 
@@ -840,7 +843,7 @@ async function showSerp({ company }) {
     <b>Risk:</b> ${esc(risk)}
   </div>`;
 
-  openModal(`SERP — ${esc(company)}`, `${metrics}<div class="serp-cards">${cards}</div>`);
+  openModal(`SERP – ${esc(ceo)}`, `${metrics}<div class="serp-cards">${cards}</div>`);
 
   // Attach click handlers for sentiment badges
   document.querySelectorAll('.modal .badge.editable[data-type="sentiment"]').forEach(badge => {
