@@ -52,21 +52,27 @@ def dataframe_to_sheet_values(df: pd.DataFrame) -> list:
     values = [headers] + df.values.tolist()
     return values
 
-def read_from_sheet(sheet_name: str, date: Optional[str] = None) -> Optional[pd.DataFrame]:
+def read_from_sheet(sheet_name: str, date: Optional[str] = None, sheet_id: Optional[str] = None) -> Optional[pd.DataFrame]:
     """
     Read existing data from a Google Sheet tab.
     Returns DataFrame if tab exists, None if it doesn't.
+    
+    Args:
+        sheet_name: Name of the sheet tab
+        date: Optional date prefix for tab name
+        sheet_id: Optional Google Sheet ID to override default
     """
     if not SHEETS_AVAILABLE:
         return None
     
+    target_sheet_id = sheet_id if sheet_id else SPREADSHEET_ID
     full_sheet_name = f"{date}-{sheet_name}" if date else sheet_name
     
     try:
         service = get_sheets_service()
         
         # Check if tab exists
-        spreadsheet = service.spreadsheets().get(spreadsheetId=SPREADSHEET_ID).execute()
+        spreadsheet = service.spreadsheets().get(spreadsheetId=target_sheet_id).execute()
         sheet_exists = any(s['properties']['title'] == full_sheet_name for s in spreadsheet['sheets'])
         
         if not sheet_exists:
@@ -74,7 +80,7 @@ def read_from_sheet(sheet_name: str, date: Optional[str] = None) -> Optional[pd.
         
         # Read data
         result = service.spreadsheets().values().get(
-            spreadsheetId=SPREADSHEET_ID,
+            spreadsheetId=target_sheet_id,
             range=f'{full_sheet_name}!A:ZZ'
         ).execute()
         
@@ -187,7 +193,8 @@ def write_to_sheet(
     date: Optional[str] = None,
     preserve_edits: bool = True,
     key_column: str = 'url',
-    preserve_columns: list = None
+    preserve_columns: list = None,
+    sheet_id: Optional[str] = None
 ) -> bool:
     """
     Write DataFrame to Google Sheet, optionally preserving student edits.
@@ -196,6 +203,7 @@ def write_to_sheet(
         preserve_edits: If True, read existing data and preserve edits
         key_column: Column to match rows (default: 'url')
         preserve_columns: Columns to preserve (default: ['sentiment', 'controlled'])
+        sheet_id: Optional Google Sheet ID to override default (for smart routing)
     """
     if not SHEETS_AVAILABLE:
         print(f"[SKIP] Sheets not available - skipping {sheet_name}")
@@ -204,38 +212,41 @@ def write_to_sheet(
     if preserve_columns is None:
         preserve_columns = ['sentiment', 'controlled']
     
+    # Use provided sheet_id or fall back to default
+    target_sheet_id = sheet_id if sheet_id else SPREADSHEET_ID
+    
     full_sheet_name = f"{date}-{sheet_name}" if date else sheet_name
     
     try:
         service = get_sheets_service()
         
         # Check if sheet tab exists
-        spreadsheet = service.spreadsheets().get(spreadsheetId=SPREADSHEET_ID).execute()
+        spreadsheet = service.spreadsheets().get(spreadsheetId=target_sheet_id).execute()
         sheet_exists = any(s['properties']['title'] == full_sheet_name for s in spreadsheet['sheets'])
         
         # If preserving edits and sheet exists, read existing data
         if preserve_edits and sheet_exists:
-            existing_df = read_from_sheet(sheet_name, date)
+            existing_df = read_from_sheet(sheet_name, date, sheet_id=target_sheet_id)
             df = merge_preserving_edits(df, existing_df, key_column, preserve_columns)
         
         # Create tab if doesn't exist
         if not sheet_exists:
             service.spreadsheets().batchUpdate(
-                spreadsheetId=SPREADSHEET_ID,
+                spreadsheetId=target_sheet_id,
                 body={'requests': [{'addSheet': {'properties': {'title': full_sheet_name}}}]}
             ).execute()
             print(f"[INFO] Created sheet tab: {full_sheet_name}")
         
         # Clear and write
         service.spreadsheets().values().clear(
-            spreadsheetId=SPREADSHEET_ID,
+            spreadsheetId=target_sheet_id,
             range=f'{full_sheet_name}!A1:ZZ',
             body={}
         ).execute()
         
         values = dataframe_to_sheet_values(df)
         result = service.spreadsheets().values().update(
-            spreadsheetId=SPREADSHEET_ID,
+            spreadsheetId=target_sheet_id,
             range=f'{full_sheet_name}!A1',
             valueInputOption='RAW',
             body={'values': values}
@@ -252,17 +263,27 @@ def write_to_sheet(
 def update_rollup_sheet(
     new_data_df: pd.DataFrame,
     sheet_name: str = 'DailyCounts',
-    date_column: str = 'date'
+    date_column: str = 'date',
+    sheet_id: Optional[str] = None
 ) -> bool:
-    """Update rolling index sheet (creates if doesn't exist)."""
+    """Update rolling index sheet (creates if doesn't exist).
+    
+    Args:
+        new_data_df: DataFrame with new data to add/update
+        sheet_name: Name of the rollup sheet tab
+        date_column: Column name containing dates
+        sheet_id: Optional Google Sheet ID to override default
+    """
     if not SHEETS_AVAILABLE:
         return False
+    
+    target_sheet_id = sheet_id if sheet_id else SPREADSHEET_ID
     
     try:
         service = get_sheets_service()
         
         # First, check if the sheet exists
-        spreadsheet = service.spreadsheets().get(spreadsheetId=SPREADSHEET_ID).execute()
+        spreadsheet = service.spreadsheets().get(spreadsheetId=target_sheet_id).execute()
         sheet_exists = any(s['properties']['title'] == sheet_name for s in spreadsheet['sheets'])
         
         combined_df = new_data_df.copy()
@@ -271,7 +292,7 @@ def update_rollup_sheet(
         if sheet_exists:
             try:
                 result = service.spreadsheets().values().get(
-                    spreadsheetId=SPREADSHEET_ID,
+                    spreadsheetId=target_sheet_id,
                     range=f'{sheet_name}!A:ZZ'
                 ).execute()
                 
@@ -297,7 +318,7 @@ def update_rollup_sheet(
         else:
             print(f"[INFO] Rollup sheet '{sheet_name}' doesn't exist yet - will create")
         
-        return write_to_sheet(combined_df, sheet_name, preserve_edits=False)
+        return write_to_sheet(combined_df, sheet_name, preserve_edits=False, sheet_id=target_sheet_id)
         
     except Exception as e:
         print(f"[ERROR] Failed to update rollup: {e}")
