@@ -88,6 +88,9 @@ thead th:first-child, tbody td:first-child{position:sticky;left:0;z-index:2;box-
 .badge.editable:hover{filter:brightness(1.2);transform:scale(1.05)}
 .muted{color:var(--muted)}
 
+/* Edit indicator */
+.edit-indicator{font-size:10px;margin-left:2px;opacity:0.8}
+
 /* Dropdown for editing */
 .edit-dropdown{position:absolute;top:100%;left:0;margin-top:4px;background:var(--card);border:1px solid var(--stroke);border-radius:8px;padding:4px;z-index:10002;box-shadow:0 4px 12px rgba(0,0,0,.3);min-width:130px}
 .edit-dropdown button{display:block;width:100%;text-align:left;padding:6px 10px;margin:2px 0;background:var(--black);border:1px solid #2a3b5e;color:var(--text);border-radius:6px;cursor:pointer;font-size:12px}
@@ -148,7 +151,7 @@ thead th:first-child, tbody td:first-child{position:sticky;left:0;z-index:2;box-
   </div>
 
   <div class="table-card">
-    <p class="table-hint">💡 Click on <strong>sentiment</strong> or <strong>controlled</strong> badges in SERP views to edit. Changes save to Google Sheets instantly.</p>
+    <p class="table-hint">💡 Click on <strong>sentiment</strong> or <strong>controlled</strong> badges to edit. Manual edits are marked with ✏️ and persist across days.</p>
     <div class="table-scroll">
       <table>
         <thead>
@@ -216,7 +219,6 @@ const DASH_PATTERN = [8, 6];
 /********************** Google Sheets via Proxy **********************/
 async function fetchFromSheets(sheetName, date = null) {
   const fullName = date ? `${date}-${sheetName}` : sheetName;
-  console.log(`📊 Fetching CEO data from: ${fullName}`);  // Debug log
   try {
     const response = await fetch(PROXY_URL, {
       method: 'POST',
@@ -234,7 +236,6 @@ async function fetchFromSheets(sheetName, date = null) {
     }
     
     const data = await response.json();
-    console.log(`✓ Loaded ${data.data?.length || 0} rows from ${fullName}`);  // Debug log
     return data.data || [];
   } catch (e) {
     console.warn(`Failed to read ${fullName}:`, e);
@@ -249,6 +250,7 @@ async function updateInSheets(sheetName, date, url, updates) {
       action: 'UPDATE_SENTIMENT',
       sheetName: fullName,
       url: url,
+      markEdited: true,  // Tell proxy to mark as manually edited
       ...updates
     };
     
@@ -280,7 +282,7 @@ async function updateInSheets(sheetName, date, url, updates) {
 
 /********************** Data Loaders **********************/
 async function loadDates() {
-  // VERIFY: Using CEO sheet names, NOT brand
+  // CEO sheets only
   const candidates = [
     'ceo-articles-daily-counts-chart',
     'ceo-serps-daily-counts-chart'
@@ -300,7 +302,7 @@ async function loadDates() {
 }
 
 async function loadArticlesForDate(date) {
-  // VERIFY: Using ceo-articles-modal, NOT brand
+  // CEO articles
   const rows = await fetchFromSheets('ceo-articles-modal', date);
   return rows.map(r => ({
     date,
@@ -308,12 +310,14 @@ async function loadArticlesForDate(date) {
     title: String(r.title || '').trim(),
     url: String(r.url || '').trim(),
     source: String(r.source || '').trim(),
-    sentiment: String(r.sentiment || 'neutral').toLowerCase()
+    sentiment: String(r.sentiment || 'neutral').toLowerCase(),
+    sentiment_edited: String(r.sentiment_edited || '')
   })).filter(r => r.company && r.url);
 }
 
 async function loadSERPsForDate(date) {
-  const rows = await fetchFromSheets('ceo-serps-modal', date); 
+  // CEO SERPs
+  const rows = await fetchFromSheets('ceo-serps-modal', date);
   return rows.map(r => ({
     date,
     company: String(r.company || '').trim(),
@@ -322,14 +326,15 @@ async function loadSERPsForDate(date) {
     position: +r.position || 0,
     snippet: String(r.snippet || '').trim(),
     sentiment: String(r.sentiment || 'neutral').toLowerCase(),
+    // FIXED: Convert true/false/1/0 to controlled/uncontrolled
     controlled: (/^true|1|controlled$/i).test(String(r.controlled || '')) ? 'controlled' : 'uncontrolled',
-    sentiment_edited: String(r.sentiment_edited || ''),     // NEW
-    controlled_edited: String(r.controlled_edited || '')    // NEW
+    sentiment_edited: String(r.sentiment_edited || ''),
+    controlled_edited: String(r.controlled_edited || '')
   })).filter(r => r.company && r.url);
 }
 
 async function loadCounts() {
-  // VERIFY: Using ceo-articles-daily-counts-chart
+  // CEO articles daily counts
   const rows = await fetchFromSheets('ceo-articles-daily-counts-chart');
   articlesDaily = rows.map(r => ({
     date: String(r.date || '').trim(),
@@ -341,7 +346,7 @@ async function loadCounts() {
 }
 
 async function loadSerpDaily() {
-  // VERIFY: Using ceo-serps-daily-counts-chart
+  // CEO SERPs daily counts
   const rows = await fetchFromSheets('ceo-serps-daily-counts-chart');
   serpsDaily = rows.map(r => ({
     date: (r.date || '').trim(),
@@ -471,7 +476,8 @@ async function buildRowsForDate(d) {
     let negSerpPct = null, ctrlPct = null;
     if (serpList.length > 0) {
       negSerpPct = serpList.filter(s => s.sentiment === 'negative').length / serpList.length;
-      ctrlPct = serpList.filter(s => s.controlled === 'controlled').length / serpList.length;  // FIXED: Check string
+      // FIXED: Check string value
+      ctrlPct = serpList.filter(s => s.controlled === 'controlled').length / serpList.length;
     }
 
     const risk = computeRisk(negSerpPct, ctrlPct);
@@ -693,7 +699,7 @@ function createSentimentDropdown(sheetName, date, url, currentValue) {
         if (badge) {
           badge.className = `badge editable ${opt}`;
           badge.setAttribute('data-type', 'sentiment');
-          badge.textContent = opt;
+          badge.innerHTML = `${opt}<span class="edit-indicator">✏️</span>`;
         }
         container.remove();
         renderAll();
@@ -728,7 +734,7 @@ function createControlledDropdown(sheetName, date, url, currentValue) {
         if (badge) {
           badge.className = `badge editable ${opt}`;
           badge.setAttribute('data-type', 'controlled');
-          badge.textContent = opt;
+          badge.innerHTML = `${opt}<span class="edit-indicator">✏️</span>`;
         }
         container.remove();
         renderAll();
@@ -759,11 +765,12 @@ async function showHeadlines({ company }) {
     const title = esc(r.title || domain || '(no title)');
     const link = url ? `<a class="link" href="${esc(url)}" target="_blank" rel="noopener">${title}</a>` : `<span class="muted">${title}</span>`;
     const s = r.sentiment;
+    const editIcon = r.sentiment_edited === 'true' ? '<span class="edit-indicator">✏️</span>' : '';
     return `<div class="serp-card" data-url="${esc(url)}">
       ${domain ? `<div class="serp-domain">${esc(domain)}</div>` : ''}
       <div class="serp-title">${link}</div>
       <div class="badges" style="position:relative;margin-top:8px">
-        <span class="badge editable ${s}" data-url="${esc(url)}" data-type="sentiment" title="Click to edit">${s}</span>
+        <span class="badge editable ${s}" data-url="${esc(url)}" data-type="sentiment" title="Click to edit">${s}${editIcon}</span>
       </div>
     </div>`;
   }).join('');
@@ -776,7 +783,7 @@ async function showHeadlines({ company }) {
       document.querySelectorAll('.edit-dropdown').forEach(d => d.remove());
       
       const url = badge.getAttribute('data-url');
-      const currentValue = badge.textContent.trim();
+      const currentValue = badge.textContent.trim().replace('✏️', '').trim();
       const dropdown = createSentimentDropdown('ceo-articles-modal', d, url, currentValue);
       badge.parentElement.appendChild(dropdown);
     });
@@ -795,7 +802,7 @@ async function showSerp({ company }) {
 
   const total = matches.length;
   const negCount = matches.filter(r => r.sentiment === 'negative').length;
-  const ctrlCount = matches.filter(r => r.controlled === 'controlled').length;  // FIXED: Check string
+  const ctrlCount = matches.filter(r => r.controlled === 'controlled').length;
   const negPct = total ? (negCount / total) : 0;
   const ctrlPct = total ? (ctrlCount / total) : 0;
   const risk = computeRisk(negPct, ctrlPct);
@@ -809,15 +816,20 @@ async function showSerp({ company }) {
     const title = esc(r.title || domain || '(no title)');
     const snippet = esc(r.snippet || '');
     const s = r.sentiment;
-    const ctrl = r.controlled;  // FIXED: Already a string
+    const ctrl = r.controlled;  // Now properly 'controlled' or 'uncontrolled'
+    
+    // Add edit indicators
+    const sentimentEditIcon = r.sentiment_edited === 'true' ? '<span class="edit-indicator">✏️</span>' : '';
+    const controlledEditIcon = r.controlled_edited === 'true' ? '<span class="edit-indicator">✏️</span>' : '';
+    
     const link = url ? `<a class="link" href="${esc(url)}" target="_blank" rel="noopener">${title}</a>` : `<span class="muted">${title}</span>`;
     return `<div class="serp-card" data-url="${esc(url)}">
       ${domain ? `<div class="serp-domain">${esc(domain)}</div>` : ''}
       <div class="serp-title">${link}</div>
       ${snippet ? `<div class="serp-snippet">${snippet}</div>` : ''}
       <div class="badges" style="position:relative">
-        <span class="badge editable ${s}" data-url="${esc(url)}" data-type="sentiment" title="Click to edit">${s}${r.sentiment_edited === 'true' ? ' ✏️' : ''}</span>
-        <span class="badge editable ${ctrl}" data-url="${esc(url)}" data-type="controlled" title="Click to edit">${ctrl}${r.controlled_edited === 'true' ? ' ✏️' : ''}</span>
+        <span class="badge editable ${s}" data-url="${esc(url)}" data-type="sentiment" title="Click to edit">${s}${sentimentEditIcon}</span>
+        <span class="badge editable ${ctrl}" data-url="${esc(url)}" data-type="controlled" title="Click to edit">${ctrl}${controlledEditIcon}</span>
       </div>
     </div>`;
   }).join('');
@@ -837,20 +849,20 @@ async function showSerp({ company }) {
       document.querySelectorAll('.edit-dropdown').forEach(d => d.remove());
       
       const url = badge.getAttribute('data-url');
-      const currentValue = badge.textContent.trim();
+      const currentValue = badge.textContent.trim().replace('✏️', '').trim();
       const dropdown = createSentimentDropdown('ceo-serps-modal', d, url, currentValue);
       badge.parentElement.appendChild(dropdown);
     });
   });
 
-  // NEW: Attach click handlers for controlled badges
+  // Attach click handlers for controlled badges
   document.querySelectorAll('.modal .badge.editable[data-type="controlled"]').forEach(badge => {
     badge.addEventListener('click', (e) => {
       e.stopPropagation();
       document.querySelectorAll('.edit-dropdown').forEach(d => d.remove());
       
       const url = badge.getAttribute('data-url');
-      const currentValue = badge.textContent.trim();
+      const currentValue = badge.textContent.trim().replace('✏️', '').trim();
       const dropdown = createControlledDropdown('ceo-serps-modal', d, url, currentValue);
       badge.parentElement.appendChild(dropdown);
     });
