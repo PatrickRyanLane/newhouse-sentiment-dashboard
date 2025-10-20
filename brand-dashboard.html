@@ -336,9 +336,9 @@ async function loadCounts() {
   articlesDaily = rows.map(r => ({
     date: String(r.date || '').trim(),
     company: String(r.company || '').trim(),
-    pos: +r.positive_articles || 0,
-    neu: +r.neutral_articles || 0,
-    neg: +r.negative_articles || 0
+    pos: +r.positive || 0,        // FIXED: positive not positive_articles
+    neu: +r.neutral || 0,         // FIXED: neutral not neutral_articles
+    neg: +r.negative || 0         // FIXED: negative not negative_articles
   })).filter(r => isISODate(r.date) && r.company);
 }
 
