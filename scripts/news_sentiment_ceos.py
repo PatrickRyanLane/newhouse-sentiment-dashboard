@@ -192,9 +192,11 @@ def main(argv: List[str] | None = None) -> int:
     if WRITE_TO_SHEETS and not args.skip_sheets and SHEETS_HELPER_AVAILABLE:
         try:
             print(f"\n[INFO] Writing CEO article data to Google Sheets...")
+            articles_for_modal = load_articles(Path(args.articles_dir), args.date)
             success = write_ceo_articles_to_sheets(
-                daily_df=daily_rows,
-                rollup_df=master_df,
+                rows_df=articles_for_modal,        # Individual articles for modal
+                daily_df=daily_rows,               # Daily aggregates for table
+                rollup_df=master_df,               # Rolling index for chart
                 target_date=args.date
             )
             if success:
