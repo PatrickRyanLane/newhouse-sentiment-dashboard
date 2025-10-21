@@ -90,7 +90,7 @@ def load_articles(articles_dir: Path, date_str: str) -> pd.DataFrame:
     return df[cols]
 
 def aggregate_counts(roster: pd.DataFrame, articles: pd.DataFrame, date_str: str) -> pd.DataFrame:
-    """Aggregate sentiment counts per CEO."""
+    """Aggregate sentiment counts per CEO with standardized column names."""
     base = roster.copy()
 
     if not articles.empty:
@@ -119,7 +119,9 @@ def aggregate_counts(roster: pd.DataFrame, articles: pd.DataFrame, date_str: str
 
     base["theme"] = ""
 
+    # Use standardized column names: positive_articles, neutral_articles, negative_articles
     out = base[["ceo", "company", "positive", "neutral", "negative", "total", "neg_pct", "theme", "alias"]].copy()
+    out.columns = ["ceo", "company", "positive_articles", "neutral_articles", "negative_articles", "total", "neg_pct", "theme", "alias"]
     out.insert(0, "date", date_str)
     return out
 
@@ -137,7 +139,8 @@ def upsert_master_index(out_path: Path, date_str: str, daily_rows: pd.DataFrame)
     if out_path.exists():
         master = pd.read_csv(out_path)
         master = master.rename(columns={c: c.lower() for c in master.columns})
-        expected = ["date", "ceo", "company", "positive", "neutral", "negative", "total", "neg_pct", "theme", "alias"]
+        # Use standardized column names
+        expected = ["date", "ceo", "company", "positive_articles", "neutral_articles", "negative_articles", "total", "neg_pct", "theme", "alias"]
         for col in expected:
             if col not in master.columns:
                 master[col] = [] if col in ["theme", "alias"] else 0
