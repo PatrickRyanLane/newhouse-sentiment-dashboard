@@ -62,19 +62,6 @@ tbody tr td:last-child{border-right:1px solid #0f1831;border-radius:0 10px 10px 
 }
 .pagination{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:8px}
 .muted{color:var(--muted)}
-
-/* Modal Styles */
-.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center}
-.modal.open{display:flex}
-.modal-content{background:var(--card);border:1px solid var(--stroke);border-radius:12px;padding:20px;max-width:600px;max-height:80vh;overflow-y:auto;width:90%;position:relative}
-.modal-close{position:absolute;top:10px;right:10px;background:none;border:none;color:var(--text);font-size:24px;cursor:pointer}
-.modal-close:hover{color:var(--accent)}
-.modal-title{margin-top:0;margin-bottom:16px;font-size:18px}
-.modal-body{font-size:13px;line-height:1.6}
-.article-item{background:#1f2121;border:1px solid #0f1831;border-radius:8px;padding:12px;margin-bottom:10px}
-.article-item h4{margin:0 0 6px;color:var(--accent);font-size:14px}
-.article-item p{margin:0;color:var(--muted);font-size:12px}
-.loading-spinner{text-align:center;color:var(--muted);padding:20px}
 </style>
 </head>
 
@@ -127,7 +114,6 @@ tbody tr td:last-child{border-right:1px solid #0f1831;border-radius:0 10px 10px 
             <th data-key="neg_news">Negative News % ▲▼</th>
             <th data-key="neg_serp">Negative SERP % ▲▼</th>
             <th data-key="ctrl_pct">SERP Control % ▲▼</th>
-            <th style="width:120px">Actions</th>
           </tr>
         </thead>
         <tbody id="tbody"></tbody>
@@ -141,22 +127,6 @@ tbody tr td:last-child{border-right:1px solid #0f1831;border-radius:0 10px 10px 
   </div>
 </div>
 
-<!-- Modal for Headlines -->
-<div id="headlinesModal" class="modal">
-  <div class="modal-content">
-    <button class="modal-close" onclick="closeModal('headlinesModal')">✕</button>
-    <h2 class="modal-title">Articles for <span id="modalSectorName"></span></h2>
-    <div id="modalBody" class="modal-body"></div>
-  </div>
-</div>
-
-<!-- Modal for SERP Data -->
-<div id="serpModal" class="modal">
-  <div class="modal-content">
-    <button class="modal-close" onclick="closeModal('serpModal')">✕</button>
-    <h2 class="modal-title">SERP Data for <span id="serpModalSectorName"></span></h2>
-    <div id="serpModalBody" class="modal-body"></div>
-  </div>
 </div>
 
 <script>
@@ -174,12 +144,6 @@ const PAGE_SIZE = 25;
 let newsChart, serpChart;
 const DATE_WINDOW_SIZE = 30;
 let dateWindowStart = null;
-
-// Modal Cache: stores fetched modal data to avoid refetching
-const modalCache = {
-  headlines: {},
-  serps: {}
-};
 
 const isISODate = s => /^\d{4}-\d{2}-\d{2}$/.test(String(s||'').trim());
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
@@ -368,7 +332,7 @@ function renderTable(){
   const pageRows=rows.slice(start,start+PAGE_SIZE);
   tbody.innerHTML=pageRows.map(r=>{
     const checked=(selectedSector&&selectedSector===r.sector)?'checked':'';
-    return `<tr><td class="center"><input type="checkbox" class="sectorCheck" data-sector="${esc(r.sector)}" ${checked} /></td><td>${esc(r.sector)}</td><td>${fmtPct(r.neg_news)}</td><td>${fmtPct(r.neg_serp)}</td><td>${fmtPct(r.ctrl_pct)}</td><td class="center"><button onclick="showHeadlines('${esc(r.sector)}', '${document.getElementById('dateSelect').value}')">Headlines</button><button onclick="showSerps('${esc(r.sector)}', '${document.getElementById('dateSelect').value}')">SERPs</button></td></tr>`
+    return `<tr><td class="center"><input type="checkbox" class="sectorCheck" data-sector="${esc(r.sector)}" ${checked} /></td><td>${esc(r.sector)}</td><td>${fmtPct(r.neg_news)}</td><td>${fmtPct(r.neg_serp)}</td><td>${fmtPct(r.ctrl_pct)}</td></tr>`
   }).join('');
   tbody.querySelectorAll('.sectorCheck').forEach(cb=>{
     cb.addEventListener('change',e=>{
@@ -452,135 +416,6 @@ function renderCharts(){
   if(serpChart)serpChart.destroy();
   serpChart=new Chart(sh,{type:'line',data:{labels:d,datasets:[{label:'Negative SERP %',data:sN,tension:.25,borderColor:'#ff8261',backgroundColor:'rgba(255,130,97,.2)',fill:false},{label:'Control %',data:sC,tension:.25,borderColor:'#58dbed',backgroundColor:'rgba(88,219,237,.15)',fill:false}]},options:{...commonOpts}})
 }
-
-// LAZY LOADING: Modal functions - data only fetches when user clicks button
-async function showHeadlines(sector, date) {
-  const cacheKey = `${sector}-${date}`;
-  
-  // Check cache first - if data exists, use it instantly (no network request)
-  if (modalCache.headlines[cacheKey]) {
-    displayHeadlinesModal(sector, modalCache.headlines[cacheKey]);
-    return;
-  }
-
-  // Show loading state while fetching
-  const modalBody = document.getElementById('modalBody');
-  modalBody.innerHTML = '<div class="loading-spinner">Loading articles...</div>';
-  document.getElementById('modalSectorName').textContent = sector;
-  document.getElementById('headlinesModal').classList.add('open');
-
-  try {
-    // Lazy load: only fetch when user clicks (not on page load)
-    const sheetName = `${date}-brand-articles-daily`;
-    const articles = await fetchFromSheets(sheetName);
-    
-    // Filter articles for this sector's brands
-    const sectorBrands = brandsBySector.get(sector) || new Set();
-    const filtered = articles.filter(a => {
-      const brandKey = canonBrand(a.company || a.brand || '');
-      return sectorBrands.has(brandKey);
-    });
-
-    // Cache the result
-    modalCache.headlines[cacheKey] = filtered;
-    
-    // Display cached data
-    displayHeadlinesModal(sector, filtered);
-  } catch (e) {
-    console.error('Error loading headlines:', e);
-    modalBody.innerHTML = '<div class="loading-spinner">Error loading articles</div>';
-  }
-}
-
-function displayHeadlinesModal(sector, articles) {
-  const modalBody = document.getElementById('modalBody');
-  
-  if (articles.length === 0) {
-    modalBody.innerHTML = '<p class="muted">No articles found for this sector on this date.</p>';
-    return;
-  }
-
-  modalBody.innerHTML = articles.map(a => `
-    <div class="article-item">
-      <h4>${esc(a.title || 'Untitled')}</h4>
-      <p><strong>Brand:</strong> ${esc(a.company || a.brand || 'Unknown')}</p>
-      <p><strong>Sentiment:</strong> ${esc(a.sentiment || 'Unknown')}</p>
-      <p>${esc(a.snippet || a.description || 'No description available')}</p>
-      ${a.url ? `<p><a href="${esc(a.url)}" target="_blank" style="color: var(--accent);">Read more →</a></p>` : ''}
-    </div>
-  `).join('');
-}
-
-// LAZY LOADING: Similar implementation for SERP data
-async function showSerps(sector, date) {
-  const cacheKey = `${sector}-${date}`;
-  
-  // Check cache first
-  if (modalCache.serps[cacheKey]) {
-    displaySerpsModal(sector, modalCache.serps[cacheKey]);
-    return;
-  }
-
-  // Show loading state
-  const serpModalBody = document.getElementById('serpModalBody');
-  serpModalBody.innerHTML = '<div class="loading-spinner">Loading SERP data...</div>';
-  document.getElementById('serpModalSectorName').textContent = sector;
-  document.getElementById('serpModal').classList.add('open');
-
-  try {
-    // Lazy load: only fetch when clicked
-    const sheetName = `${date}-brand-serps-daily`;
-    const serpData = await fetchFromSheets(sheetName);
-    
-    // Filter for this sector's brands
-    const sectorBrands = brandsBySector.get(sector) || new Set();
-    const filtered = serpData.filter(s => {
-      const brandKey = canonBrand(s.company || s.brand || '');
-      return sectorBrands.has(brandKey);
-    });
-
-    // Cache the result
-    modalCache.serps[cacheKey] = filtered;
-    
-    // Display cached data
-    displaySerpsModal(sector, filtered);
-  } catch (e) {
-    console.error('Error loading SERP data:', e);
-    serpModalBody.innerHTML = '<div class="loading-spinner">Error loading SERP data</div>';
-  }
-}
-
-function displaySerpsModal(sector, serpData) {
-  const serpModalBody = document.getElementById('serpModalBody');
-  
-  if (serpData.length === 0) {
-    serpModalBody.innerHTML = '<p class="muted">No SERP data found for this sector on this date.</p>';
-    return;
-  }
-
-  serpModalBody.innerHTML = serpData.map(s => `
-    <div class="article-item">
-      <h4>${esc(s.company || s.brand || 'Unknown')}</h4>
-      <p><strong>Total Results:</strong> ${s.total || 0}</p>
-      <p><strong>Negative %:</strong> ${fmtPct(s.neg_pct || s.neg_serp || 0)}</p>
-      <p><strong>Control %:</strong> ${fmtPct(s.controlled || s.control || 0)}</p>
-      ${s.domain ? `<p><strong>Domain:</strong> ${esc(s.domain)}</p>` : ''}
-    </div>
-  `).join('');
-}
-
-function closeModal(modalId) {
-  document.getElementById(modalId).classList.remove('open');
-}
-
-// Close modals when clicking outside
-document.addEventListener('click', (e) => {
-  const headlinesModal = document.getElementById('headlinesModal');
-  const serpModal = document.getElementById('serpModal');
-  
-  if (e.target === headlinesModal) headlinesModal.classList.remove('open');
-  if (e.target === serpModal) serpModal.classList.remove('open');
-});
 
 init();
 </script>
