@@ -180,7 +180,7 @@ let dateWindowStart = null;
 
 /* ================= Utilities ================= */
 const isISODate = s => /^\d{4}-\d{2}-\d{2}$/.test(String(s||'').trim());
-const esc = (s) => String(s ?? '').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[m]));
 const fmtPct = v => (v==null) ? 'N/A' : (Math.round(v*100) + '%');
 
 const canonBrand = s => String(s || '').toLowerCase().replace(/\s+/g,' ').trim();
@@ -244,27 +244,29 @@ async function fetchCsvAny(candidates){
 /* ================= Loading ================= */
 async function loadCounts(){
   const rows = await fetchCsvAny(COUNTS_CANDIDATES);
+  // UPDATED: Using new column names (positive_articles, neutral_articles, negative_articles)
   allCountsRows = rows
-    .map(r => ({
+    .map(r => (({
       date: String(r.date || '').trim(),
       company: String(r.company || r.brand || '').trim(),
-      pos: +r.positive || +r.pos || 0,
-      neu: +r.neutral  || +r.neu || 0,
-      neg: +r.negative || +r.neg || 0
-    }))
+      pos: +r.positive_articles || +r.positive || +r.pos || 0,        // UPDATED: try positive_articles first
+      neu: +r.neutral_articles  || +r.neutral  || +r.neu || 0,        // UPDATED: try neutral_articles first
+      neg: +r.negative_articles || +r.negative || +r.neg || 0         // UPDATED: try negative_articles first
+    })))
     .filter(r => isISODate(r.date) && r.company);
 }
 
 async function loadSerpDaily(){
   try{
     const rows = await fetchCsv(SERPS_DAILY_CSV);
-    serpsDaily = rows.map(r => ({
+    // UPDATED: Using new column names (neg_pct instead of negative_serp)
+    serpsDaily = rows.map(r => (({
       date: (r.date||'').trim(),
       company: (r.company||r.brand||'').trim(),
       total: +r.total || 0,
-      neg_serp: +r.negative_serp || +r.neg_serp || 0,
+      neg_serp: +r.neg_pct || +r.negative_serp || +r.neg_serp || 0,  // UPDATED: try neg_pct first
       ctrl: +r.controlled || +r.control || 0,
-    })).filter(r => isISODate(r.date) && r.company);
+    }))).filter(r => isISODate(r.date) && r.company);
   }catch(e){ serpsDaily = []; }
 }
 
