@@ -31,8 +31,8 @@ DAILY_INDEX  = Path("data/daily_counts") / "brand-articles-daily-counts-chart.cs
 # NEW: Enable/disable Google Sheets writing
 WRITE_TO_SHEETS = os.environ.get('WRITE_TO_SHEETS', 'true').lower() == 'true'
 
-# Columns we will ALWAYS write for the daily index
-INDEX_FIELDS = ["date","company","positive","neutral","negative","total","neg_pct"]
+# Columns we will ALWAYS write for the daily index - STANDARDIZED NAMING
+INDEX_FIELDS = ["date","company","positive_articles","neutral_articles","negative_articles","total","neg_pct"]
 
 def iter_dates(from_str: str, to_str: str):
     d0 = date.fromisoformat(from_str)
@@ -79,7 +79,7 @@ def write_daily(dstr: str, agg: dict):
     """Write per-day file and return DataFrame for Sheets."""
     out = OUT_DIR / f"{dstr}-brand-articles-table.csv"
     
-    # Build DataFrame
+    # Build DataFrame with standardized column names
     rows = []
     for company, c in sorted(agg.items()):
         total = c["total"]
@@ -87,9 +87,9 @@ def write_daily(dstr: str, agg: dict):
         rows.append({
             "date": dstr,
             "company": company,
-            "positive": c["positive"],
-            "neutral": c["neutral"],
-            "negative": c["negative"],
+            "positive_articles": c["positive"],
+            "neutral_articles": c["neutral"],
+            "negative_articles": c["negative"],
             "total": total,
             "neg_pct": f"{neg_pct:.6f}"
         })
@@ -112,16 +112,16 @@ def upsert_daily_index(dstr: str, agg: dict):
     # Drop existing rows for this date
     rows = [r for r in rows if r.get("date") != dstr]
     
-    # Add new rows
+    # Add new rows with standardized column names
     for company, c in agg.items():
         total = c["total"]
         neg_pct = (c["negative"] / total) if total else 0.0
         rows.append({
             "date": dstr,
             "company": company,
-            "positive": str(c["positive"]),
-            "neutral": str(c["neutral"]),
-            "negative": str(c["negative"]),
+            "positive_articles": str(c["positive"]),
+            "neutral_articles": str(c["neutral"]),
+            "negative_articles": str(c["negative"]),
             "total":    str(total),
             "neg_pct":  f"{neg_pct:.6f}",
         })
