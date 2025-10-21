@@ -303,7 +303,7 @@ async function loadDates() {
 
 async function loadArticlesForDate(date) {
   const rows = await fetchFromSheets('brand-articles-modal', date);
-  return rows.map(r => ({
+  return rows.map(r => (({
     date,
     company: String(r.company || '').trim(),
     title: String(r.title || '').trim(),
@@ -311,12 +311,12 @@ async function loadArticlesForDate(date) {
     source: String(r.source || '').trim(),
     sentiment: String(r.sentiment || 'neutral').toLowerCase(),
     sentiment_edited: String(r.sentiment_edited || '')  // Track if manually edited
-  })).filter(r => r.company && r.url);
+  }))).filter(r => r.company && r.url);
 }
 
 async function loadSERPsForDate(date) {
   const rows = await fetchFromSheets('brand-serps-modal', date);
-  return rows.map(r => ({
+  return rows.map(r => (({
     date,
     company: String(r.company || '').trim(),
     title: String(r.title || '').trim(),
@@ -329,29 +329,30 @@ async function loadSERPsForDate(date) {
     // Track manual edits
     sentiment_edited: String(r.sentiment_edited || ''),
     controlled_edited: String(r.controlled_edited || '')
-  })).filter(r => r.company && r.url);
+  }))).filter(r => r.company && r.url);
 }
 
 async function loadCounts() {
   const rows = await fetchFromSheets('brand-articles-daily-counts-chart');
-  articlesDaily = rows.map(r => ({
+  // UPDATED: Using new column names (positive_articles, neutral_articles, negative_articles)
+  articlesDaily = rows.map(r => (({
     date: String(r.date || '').trim(),
     company: String(r.company || '').trim(),
-    pos: +r.positive || 0,        // FIXED: positive not positive_articles
-    neu: +r.neutral || 0,         // FIXED: neutral not neutral_articles
-    neg: +r.negative || 0         // FIXED: negative not negative_articles
-  })).filter(r => isISODate(r.date) && r.company);
+    pos: +r.positive_articles || 0,        // UPDATED: positive_articles not positive
+    neu: +r.neutral_articles || 0,         // UPDATED: neutral_articles not neutral
+    neg: +r.negative_articles || 0         // UPDATED: negative_articles not negative
+  }))).filter(r => isISODate(r.date) && r.company);
 }
 
 async function loadSerpDaily() {
   const rows = await fetchFromSheets('brand-serps-daily-counts-chart');
-  serpsDaily = rows.map(r => ({
+  serpsDaily = rows.map(r => (({
     date: (r.date || '').trim(),
     company: (r.company || '').trim(),
     total: +r.total || 0,
-    neg_serp: +r.negative_serp || 0,
+    neg_serp: +r.neg_pct || 0,             // Uses neg_pct from sheet
     ctrl: +r.controlled || 0
-  })).filter(r => isISODate(r.date) && r.company);
+  }))).filter(r => isISODate(r.date) && r.company);
 }
 
 /********************** Risk Calculation **********************/
