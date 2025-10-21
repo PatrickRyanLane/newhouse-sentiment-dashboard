@@ -5,8 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Geographic Locations — Sectors Dashboard</title>
 
-<!-- Chart.js (no longer need PapaParse for CSV parsing!) -->
+<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<!-- PapaParse for GitHub CSV roster parsing -->
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
 <style>
 :root {
@@ -157,9 +159,9 @@ tbody tr td:last-child{border-right:1px solid #0f1831;border-radius:0 10px 10px 
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
 const PROXY_URL = 'https://newhouse-sentiment-dashboard.vercel.app/api/sheets.js';
+const GITHUB_RAW_URL = 'https://raw.githubusercontent.com/PatrickRyanLane/newhouse-sentiment-dashboard/main';
 let allCountsRows = [];
 let serpsDaily = [];
 let sectorFromBrand = new Map();
@@ -191,13 +193,38 @@ function hookDatePager(allDates){const goPrev=()=>{const total=allDates.length;i
 
 async function fetchFromSheets(sheetName,date=null){const fullName=date?`${date}-${sheetName}`:sheetName;try{const response=await fetch(PROXY_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'READ',sheetName:fullName})});if(!response.ok){const errorText=await response.text();console.error(`HTTP ${response.status} for ${fullName}:`,errorText);return[]}const data=await response.json();return data.data||[]}catch(e){console.warn(`Failed to read ${fullName}:`,e);return[]}}
 
+// Fetch CSV from GitHub using PapaParse
+async function fetchGitHubCSV(filePath) {
+  try {
+    const url = `${GITHUB_RAW_URL}/${filePath}`;
+    console.log('[DEBUG] Fetching GitHub CSV:', url);
+    const response = await fetch(url);
+    if (!response.ok) {
+      console.error(`HTTP ${response.status} for ${url}`);
+      return [];
+    }
+    const text = await response.text();
+    
+    // Use PapaParse to handle CSV properly (handles quoted fields with commas, etc.)
+    const result = Papa.parse(text, { header: true, skipEmptyLines: true });
+    console.log('[DEBUG] Parsed', result.data.length, 'rows from', filePath);
+    return result.data;
+  } catch (e) {
+    console.warn(`Failed to read ${filePath}:`, e);
+    return [];
+  }
+}
+
 // CONSOLIDATED DATA LOADING: Single function that fetches all data simultaneously using Promise.all()
 async function loadAllData(){
+  // Fetch roster from GitHub CSV, counts from Google Sheets
   const results = await Promise.all([
-    fetchFromSheets('main-roster'),
+    fetchGitHubCSV('rosters/main-roster.csv'),
     fetchFromSheets('brand-articles-daily-counts-chart'),
     fetchFromSheets('brand-serps-daily-counts-chart')
   ]);
+
+  console.log('[DEBUG] loadAllData results:', {roster: results[0].length, counts: results[1].length, serps: results[2].length});
 
   // Process roster data
   const rosterRows = results[0];
@@ -212,7 +239,7 @@ async function loadAllData(){
     if(!brandsBySector.has(sector))brandsBySector.set(sector,new Set());
     brandsBySector.get(sector).add(brandKey)
   });
-  console.log(`[INFO] Loaded ${brandsBySector.size} sectors with ${sectorFromBrand.size} brands`);
+  console.log(`[INFO] Loaded ${brandsBySector.size} sectors with ${sectorFromBrand.size} brands`, Array.from(brandsBySector.keys()));
 
   // Process article counts data
   const countsRows = results[1];
@@ -265,6 +292,7 @@ async function init(){
 }
 
 async function buildSectorRowsForDate(d){
+  console.log('[DEBUG] buildSectorRowsForDate called with date:', d);
   const newsByBrand=new Map();
   for(const r of allCountsRows){
     if(r.date!==d)continue;
@@ -287,6 +315,7 @@ async function buildSectorRowsForDate(d){
     cur.ctrl+=+r.ctrl||0;
     serpByBrand.set(b,cur)
   }
+  console.log('[DEBUG] buildSectorRowsForDate:', {date: d, newsByBrandCount: newsByBrand.size, serpByBrandCount: serpByBrand.size});
   const sectors=[];
   brandsBySector.forEach((brandSet,sectorName)=>{
     let nPos=0,nNeu=0,nNeg=0,sTot=0,sNeg=0,sCtrl=0;
@@ -305,6 +334,7 @@ async function buildSectorRowsForDate(d){
     }
   });
   sectors.sort((a,b)=>a.sector.localeCompare(b.sector));
+  console.log('[DEBUG] buildSectorRowsForDate returning:', {sectorCount: sectors.length, sectors: sectors.map(s => s.sector)});
   return sectors
 }
 
@@ -312,6 +342,7 @@ async function renderAll(){
   const d=document.getElementById('dateSelect').value;
   const filter=document.getElementById('filterInput').value.trim().toLowerCase();
   const rows=(await buildSectorRowsForDate(d)).filter(r=>!filter||r.sector.toLowerCase().includes(filter));
+  console.log('[DEBUG] renderAll:', {date: d, sectorCount: rows.length, sectors: rows.map(r => r.sector), brandsBySectorSize: brandsBySector.size, allCountsRowsSize: allCountsRows.length, serpsDailySize: serpsDaily.length});
   filteredRows=rows;
   currentPage=1;
   if(rows.length===1){
