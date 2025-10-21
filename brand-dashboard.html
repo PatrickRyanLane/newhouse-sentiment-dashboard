@@ -206,6 +206,9 @@ let newsChart, serpChart;
 const DATE_WINDOW_SIZE = 30;
 let dateWindowStart = null;
 
+// ✨ Cache for modal data - eliminates redundant fetches
+const modalCache = new Map();
+
 /********************** Utils **********************/
 const isISODate = s => /^\d{4}-\d{2}-\d{2}$/.test(String(s || '').trim());
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m]));
@@ -281,42 +284,79 @@ async function updateInSheets(sheetName, date, url, updates) {
   }
 }
 
-/********************** Data Loaders **********************/
+/********************** Data Loaders with Caching **********************/
+// ✨ OPTIMIZATION #1: Consolidate data loading and parallelize
+// Instead of loadDates, loadCounts, loadSerpDaily being 3 separate sequential calls,
+// this single function fetches both sheets in parallel and populates all data at once
 async function loadDates() {
-  const candidates = [
-    'brand-articles-daily-counts-chart',
-    'brand-serps-daily-counts-chart'
-  ];
+  // Fetch BOTH sheets in parallel - this is the key optimization!
+  const [articlesRows, serpsRows] = await Promise.all([
+    fetchFromSheets('brand-articles-daily-counts-chart'),
+    fetchFromSheets('brand-serps-daily-counts-chart')
+  ]);
   
+  // Process articles data for dates AND populate articlesDaily
+  articlesDaily = articlesRows.map(r => (({
+    date: String(r.date || '').trim(),
+    company: String(r.company || '').trim(),
+    pos: +r.positive_articles || 0,
+    neu: +r.neutral_articles || 0,
+    neg: +r.negative_articles || 0
+  }))).filter(r => isISODate(r.date) && r.company);
+  
+  // Process serps data for dates AND populate serpsDaily
+  serpsDaily = serpsRows.map(r => (({
+    date: (r.date || '').trim(),
+    company: (r.company || '').trim(),
+    total: +r.total || 0,
+    neg_serp: +r.neg_pct || 0,
+    ctrl: +r.controlled || 0
+  }))).filter(r => isISODate(r.date) && r.company);
+  
+  // Extract unique dates from both sources
   const dates = new Set();
-  
-  for (const sheet of candidates) {
-    const rows = await fetchFromSheets(sheet);
-    rows.forEach(r => {
-      const d = String(r.date || '').trim();
-      if (isISODate(d)) dates.add(d);
-    });
-  }
+  articlesDaily.forEach(r => { if (isISODate(r.date)) dates.add(r.date); });
+  serpsDaily.forEach(r => { if (isISODate(r.date)) dates.add(r.date); });
   
   return [...dates].sort();
 }
 
+// ✨ OPTIMIZATION #2: Lazy load modal data with caching
+// Only fetch articles when user clicks "View" + cache so repeat clicks are instant
 async function loadArticlesForDate(date) {
+  // Check cache first
+  const cacheKey = `articles-${date}`;
+  if (modalCache.has(cacheKey)) {
+    console.log(`📦 Using cached articles for ${date}`);
+    return modalCache.get(cacheKey);
+  }
+  
   const rows = await fetchFromSheets('brand-articles-modal', date);
-  return rows.map(r => (({
+  const result = rows.map(r => (({
     date,
     company: String(r.company || '').trim(),
     title: String(r.title || '').trim(),
     url: String(r.url || '').trim(),
     source: String(r.source || '').trim(),
     sentiment: String(r.sentiment || 'neutral').toLowerCase(),
-    sentiment_edited: String(r.sentiment_edited || '')  // Track if manually edited
+    sentiment_edited: String(r.sentiment_edited || '')
   }))).filter(r => r.company && r.url);
+  
+  modalCache.set(cacheKey, result);
+  return result;
 }
 
+// ✨ OPTIMIZATION #2: Lazy load modal data with caching
 async function loadSERPsForDate(date) {
+  // Check cache first
+  const cacheKey = `serps-${date}`;
+  if (modalCache.has(cacheKey)) {
+    console.log(`📦 Using cached SERPs for ${date}`);
+    return modalCache.get(cacheKey);
+  }
+  
   const rows = await fetchFromSheets('brand-serps-modal', date);
-  return rows.map(r => (({
+  const result = rows.map(r => (({
     date,
     company: String(r.company || '').trim(),
     title: String(r.title || '').trim(),
@@ -324,35 +364,13 @@ async function loadSERPsForDate(date) {
     position: +r.position || 0,
     snippet: String(r.snippet || '').trim(),
     sentiment: String(r.sentiment || 'neutral').toLowerCase(),
-    // FIXED: Properly convert controlled to string
     controlled: (/^true|1|controlled$/i).test(String(r.controlled || '')) ? 'controlled' : 'uncontrolled',
-    // Track manual edits
     sentiment_edited: String(r.sentiment_edited || ''),
     controlled_edited: String(r.controlled_edited || '')
   }))).filter(r => r.company && r.url);
-}
-
-async function loadCounts() {
-  const rows = await fetchFromSheets('brand-articles-daily-counts-chart');
-  // UPDATED: Using new column names (positive_articles, neutral_articles, negative_articles)
-  articlesDaily = rows.map(r => (({
-    date: String(r.date || '').trim(),
-    company: String(r.company || '').trim(),
-    pos: +r.positive_articles || 0,        // UPDATED: positive_articles not positive
-    neu: +r.neutral_articles || 0,         // UPDATED: neutral_articles not neutral
-    neg: +r.negative_articles || 0         // UPDATED: negative_articles not negative
-  }))).filter(r => isISODate(r.date) && r.company);
-}
-
-async function loadSerpDaily() {
-  const rows = await fetchFromSheets('brand-serps-daily-counts-chart');
-  serpsDaily = rows.map(r => (({
-    date: (r.date || '').trim(),
-    company: (r.company || '').trim(),
-    total: +r.total || 0,
-    neg_serp: +r.neg_pct || 0,             // Uses neg_pct from sheet
-    ctrl: +r.controlled || 0
-  }))).filter(r => isISODate(r.date) && r.company);
+  
+  modalCache.set(cacheKey, result);
+  return result;
 }
 
 /********************** Risk Calculation **********************/
@@ -408,9 +426,10 @@ function hookDatePager(allDates) {
 
 /********************** UI Bootstrap **********************/
 async function init() {
+  // ✨ OPTIMIZATION #3: Updated init()
+  // Now just calls loadDates() which does the work of 3 functions!
+  // Removed the separate loadCounts() and loadSerpDaily() calls
   const dates = await loadDates();
-  
-  await Promise.all([loadCounts(), loadSerpDaily()]);
   
   const sel = document.getElementById('dateSelect');
   sel.innerHTML = dates.map(d => `<option value="${d}">${d}</option>`).join('');
@@ -478,7 +497,6 @@ async function buildRowsForDate(d) {
     let negSerpPct = null, ctrlPct = null;
     if (serpList.length > 0) {
       negSerpPct = serpList.filter(s => s.sentiment === 'negative').length / serpList.length;
-      // FIXED: Check string value 'controlled' not boolean
       ctrlPct = serpList.filter(s => s.controlled === 'controlled').length / serpList.length;
     }
 
@@ -701,7 +719,7 @@ function createSentimentDropdown(sheetName, date, url, currentValue) {
         if (badge) {
           badge.className = `badge editable ${opt}`;
           badge.setAttribute('data-type', 'sentiment');
-          badge.innerHTML = `${opt}<span class="edit-indicator">✏️</span>`;  // Add edit indicator
+          badge.innerHTML = `${opt}<span class="edit-indicator">✏️</span>`;
         }
         container.remove();
         renderAll();
@@ -736,7 +754,7 @@ function createControlledDropdown(sheetName, date, url, currentValue) {
         if (badge) {
           badge.className = `badge editable ${opt}`;
           badge.setAttribute('data-type', 'controlled');
-          badge.innerHTML = `${opt}<span class="edit-indicator">✏️</span>`;  // Add edit indicator
+          badge.innerHTML = `${opt}<span class="edit-indicator">✏️</span>`;
         }
         container.remove();
         renderAll();
@@ -818,9 +836,8 @@ async function showSerp({ company }) {
     const title = esc(r.title || domain || '(no title)');
     const snippet = esc(r.snippet || '');
     const s = r.sentiment;
-    const ctrl = r.controlled;  // Now properly 'controlled' or 'uncontrolled'
+    const ctrl = r.controlled;
     
-    // Add edit indicators
     const sentimentEditIcon = r.sentiment_edited === 'true' ? '<span class="edit-indicator">✏️</span>' : '';
     const controlledEditIcon = r.controlled_edited === 'true' ? '<span class="edit-indicator">✏️</span>' : '';
     
@@ -844,7 +861,6 @@ async function showSerp({ company }) {
 
   openModal(`SERP — ${esc(company)}`, `${metrics}<div class="serp-cards">${cards}</div>`);
 
-  // Attach click handlers for sentiment badges
   document.querySelectorAll('.modal .badge.editable[data-type="sentiment"]').forEach(badge => {
     badge.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -857,7 +873,6 @@ async function showSerp({ company }) {
     });
   });
 
-  // Attach click handlers for controlled badges
   document.querySelectorAll('.modal .badge.editable[data-type="controlled"]').forEach(badge => {
     badge.addEventListener('click', (e) => {
       e.stopPropagation();
