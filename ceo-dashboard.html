@@ -206,6 +206,9 @@ let newsChart, serpChart;
 const DATE_WINDOW_SIZE = 30;
 let dateWindowStart = null;
 
+// ✨ Cache for modal data - eliminates redundant fetches
+const modalCache = new Map();
+
 /********************** Utils **********************/
 const isISODate = s => /^\d{4}-\d{2}-\d{2}$/.test(String(s || '').trim());
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m]));
@@ -281,29 +284,52 @@ async function updateInSheets(sheetName, date, url, updates) {
   }
 }
 
-/********************** Data Loaders **********************/
+/********************** Data Loaders with Caching **********************/
+// ✨ OPTIMIZATION #1: Consolidate data loading and parallelize
 async function loadDates() {
-  const candidates = [
-    'ceo-articles-daily-counts-chart',
-    'ceo-serps-daily-counts-chart'
-  ];
+  // Fetch BOTH sheets in parallel
+  const [articlesRows, serpsRows] = await Promise.all([
+    fetchFromSheets('ceo-articles-daily-counts-chart'),
+    fetchFromSheets('ceo-serps-daily-counts-chart')
+  ]);
   
+  // Process articles data for dates AND populate articlesDaily
+  articlesDaily = articlesRows.map(r => (({
+    date: String(r.date || '').trim(),
+    ceo: String(r.ceo || '').trim(),
+    pos: +r.positive_articles || 0,
+    neu: +r.neutral_articles || 0,
+    neg: +r.negative_articles || 0
+  }))).filter(r => isISODate(r.date) && r.ceo);
+  
+  // Process serps data for dates AND populate serpsDaily
+  serpsDaily = serpsRows.map(r => (({
+    date: (r.date || '').trim(),
+    ceo: (r.ceo || '').trim(),
+    total: +r.total || 0,
+    neg_serp: +r.neg_pct || 0,
+    ctrl: +r.controlled || 0
+  }))).filter(r => isISODate(r.date) && r.ceo);
+  
+  // Extract unique dates from both sources
   const dates = new Set();
-  
-  for (const sheet of candidates) {
-    const rows = await fetchFromSheets(sheet);
-    rows.forEach(r => {
-      const d = String(r.date || '').trim();
-      if (isISODate(d)) dates.add(d);
-    });
-  }
+  articlesDaily.forEach(r => { if (isISODate(r.date)) dates.add(r.date); });
+  serpsDaily.forEach(r => { if (isISODate(r.date)) dates.add(r.date); });
   
   return [...dates].sort();
 }
 
+// ✨ OPTIMIZATION #2: Lazy load modal data with caching
 async function loadArticlesForDate(date) {
+  // Check cache first
+  const cacheKey = `articles-${date}`;
+  if (modalCache.has(cacheKey)) {
+    console.log(`📦 Using cached articles for ${date}`);
+    return modalCache.get(cacheKey);
+  }
+  
   const rows = await fetchFromSheets('ceo-articles-modal', date);
-  return rows.map(r => (({
+  const result = rows.map(r => (({
     date,
     ceo: String(r.ceo || '').trim(),
     title: String(r.title || '').trim(),
@@ -312,11 +338,22 @@ async function loadArticlesForDate(date) {
     sentiment: String(r.sentiment || 'neutral').toLowerCase(),
     sentiment_edited: String(r.sentiment_edited || '')
   }))).filter(r => r.ceo && r.url);
+  
+  modalCache.set(cacheKey, result);
+  return result;
 }
 
+// ✨ OPTIMIZATION #2: Lazy load modal data with caching
 async function loadSERPsForDate(date) {
+  // Check cache first
+  const cacheKey = `serps-${date}`;
+  if (modalCache.has(cacheKey)) {
+    console.log(`📦 Using cached SERPs for ${date}`);
+    return modalCache.get(cacheKey);
+  }
+  
   const rows = await fetchFromSheets('ceo-serps-modal', date);
-  return rows.map(r => (({
+  const result = rows.map(r => (({
     date,
     ceo: String(r.ceo || '').trim(),
     title: String(r.title || '').trim(),
@@ -328,29 +365,9 @@ async function loadSERPsForDate(date) {
     sentiment_edited: String(r.sentiment_edited || ''),
     controlled_edited: String(r.controlled_edited || '')
   }))).filter(r => r.ceo && r.url);
-}
-
-async function loadCounts() {
-  const rows = await fetchFromSheets('ceo-articles-daily-counts-chart');
-  // UPDATED: Using new column names (positive_articles, neutral_articles, negative_articles)
-  articlesDaily = rows.map(r => (({
-    date: String(r.date || '').trim(),
-    ceo: String(r.ceo || '').trim(),
-    pos: +r.positive_articles || 0,        // UPDATED: positive_articles not positive
-    neu: +r.neutral_articles || 0,         // UPDATED: neutral_articles not neutral
-    neg: +r.negative_articles || 0         // UPDATED: negative_articles not negative
-  }))).filter(r => isISODate(r.date) && r.ceo);
-}
-
-async function loadSerpDaily() {
-  const rows = await fetchFromSheets('ceo-serps-daily-counts-chart');
-  serpsDaily = rows.map(r => (({
-    date: (r.date || '').trim(),
-    ceo: (r.ceo || '').trim(),
-    total: +r.total || 0,
-    neg_serp: +r.neg_pct || 0,             // Uses neg_pct from sheet
-    ctrl: +r.controlled || 0
-  }))).filter(r => isISODate(r.date) && r.ceo);
+  
+  modalCache.set(cacheKey, result);
+  return result;
 }
 
 /********************** Risk Calculation **********************/
@@ -406,9 +423,8 @@ function hookDatePager(allDates) {
 
 /********************** UI Bootstrap **********************/
 async function init() {
+  // ✨ OPTIMIZATION #3: Updated init()
   const dates = await loadDates();
-  
-  await Promise.all([loadCounts(), loadSerpDaily()]);
   
   const sel = document.getElementById('dateSelect');
   sel.innerHTML = dates.map(d => `<option value="${d}">${d}</option>`).join('');
