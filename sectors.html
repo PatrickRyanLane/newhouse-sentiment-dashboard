@@ -142,7 +142,7 @@ const DATE_WINDOW_SIZE = 30;
 let dateWindowStart = null;
 
 const isISODate = s => /^\\d{4}-\\d{2}-\\d{2}$/.test(String(s||'').trim());
-const esc = (s) => String(s ?? '').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[m]));
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const fmtPct = v => (v==null) ? 'N/A' : (Math.round(v*100) + '%');
 const canonBrand = s => String(s || '').toLowerCase().replace(/\\s+/g,' ').trim();
 
