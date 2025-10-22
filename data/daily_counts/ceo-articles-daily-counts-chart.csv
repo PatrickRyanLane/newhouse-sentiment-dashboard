@@ -1,57 +1,61 @@
-date,ceo,company,positive,neutral,negative,total,neg_pct,theme,alias
-2025-10-08,Janno Lieber,MTA,6,33,25,64,39.1,,Janno Lieber MTA
-2025-10-08,Monica Tibbits-Nutt,Massachusetts Bay Transportation Authority,10,48,4,62,6.5,,Monica Tibbits-Nutt Massachusetts Bay Transportation Authority
-2025-10-08,Phillip Eng,Massachusetts Bay Transportation Authority,16,35,9,60,15.0,,Phillip Eng Massachusetts Bay Transportation Authority
-2025-10-08,Randy Clarke,Washington Metropolitan Area Transit Authority,23,27,9,59,15.3,,Randy Clarke Washington Metropolitan Area Transit Authority
-2025-10-09,Janno Lieber,MTA,7,36,23,66,34.8,,Janno Lieber MTA
-2025-10-09,Monica Tibbits-Nutt,Massachusetts Bay Transportation Authority,11,53,3,67,4.5,,Monica Tibbits-Nutt Massachusetts Bay Transportation Authority
-2025-10-09,Phillip Eng,Massachusetts Bay Transportation Authority,16,33,10,59,16.9,,Phillip Eng Massachusetts Bay Transportation Authority
-2025-10-09,Randy Clarke,Washington Metropolitan Area Transit Authority,23,28,9,60,15.0,,Randy Clarke Washington Metropolitan Area Transit Authority
-2025-10-10,Janno Lieber,MTA,8,36,22,66,33.3,,Janno Lieber MTA
-2025-10-10,Monica Tibbits-Nutt,Massachusetts Bay Transportation Authority,10,51,3,64,4.7,,Monica Tibbits-Nutt Massachusetts Bay Transportation Authority
-2025-10-10,Phillip Eng,Massachusetts Bay Transportation Authority,17,32,10,59,16.9,,Phillip Eng Massachusetts Bay Transportation Authority
-2025-10-10,Randy Clarke,Washington Metropolitan Area Transit Authority,21,29,11,61,18.0,,Randy Clarke Washington Metropolitan Area Transit Authority
-2025-10-11,Janno Lieber,MTA,9,37,20,66,30.3,,Janno Lieber MTA
-2025-10-11,Monica Tibbits-Nutt,Massachusetts Bay Transportation Authority,11,52,3,66,4.5,,Monica Tibbits-Nutt Massachusetts Bay Transportation Authority
-2025-10-11,Phillip Eng,Massachusetts Bay Transportation Authority,16,33,9,58,15.5,,Phillip Eng Massachusetts Bay Transportation Authority
-2025-10-11,Randy Clarke,Washington Metropolitan Area Transit Authority,20,30,10,60,16.7,,Randy Clarke Washington Metropolitan Area Transit Authority
-2025-10-12,Janno Lieber,MTA,8,38,20,66,30.3,,Janno Lieber MTA
-2025-10-12,Monica Tibbits-Nutt,Massachusetts Bay Transportation Authority,10,51,3,64,4.7,,Monica Tibbits-Nutt Massachusetts Bay Transportation Authority
-2025-10-12,Phillip Eng,Massachusetts Bay Transportation Authority,17,32,9,58,15.5,,Phillip Eng Massachusetts Bay Transportation Authority
-2025-10-12,Randy Clarke,Washington Metropolitan Area Transit Authority,20,28,11,59,18.6,,Randy Clarke Washington Metropolitan Area Transit Authority
-2025-10-13,Janno Lieber,MTA,7,38,22,67,32.8,,Janno Lieber MTA
-2025-10-13,Monica Tibbits-Nutt,Massachusetts Bay Transportation Authority,10,50,2,62,3.2,,Monica Tibbits-Nutt Massachusetts Bay Transportation Authority
-2025-10-13,Phillip Eng,Massachusetts Bay Transportation Authority,19,32,8,59,13.6,,Phillip Eng Massachusetts Bay Transportation Authority
-2025-10-13,Randy Clarke,Washington Metropolitan Area Transit Authority,19,28,11,58,19.0,,Randy Clarke Washington Metropolitan Area Transit Authority
-2025-10-14,Janno Lieber,MTA,8,38,19,65,29.2,,Janno Lieber MTA
-2025-10-14,Monica Tibbits-Nutt,Massachusetts Bay Transportation Authority,10,50,2,62,3.2,,Monica Tibbits-Nutt Massachusetts Bay Transportation Authority
-2025-10-14,Phillip Eng,Massachusetts Bay Transportation Authority,18,33,8,59,13.6,,Phillip Eng Massachusetts Bay Transportation Authority
-2025-10-14,Randy Clarke,Washington Metropolitan Area Transit Authority,20,29,13,62,21.0,,Randy Clarke Washington Metropolitan Area Transit Authority
-2025-10-15,Janno Lieber,MTA,8,37,20,65,30.8,,Janno Lieber MTA
-2025-10-15,Monica Tibbits-Nutt,Massachusetts Bay Transportation Authority,10,52,2,64,3.1,,Monica Tibbits-Nutt Massachusetts Bay Transportation Authority
-2025-10-15,Phillip Eng,Massachusetts Bay Transportation Authority,17,33,7,57,12.3,,Phillip Eng Massachusetts Bay Transportation Authority
-2025-10-15,Randy Clarke,Washington Metropolitan Area Transit Authority,19,28,10,57,17.5,,Randy Clarke Washington Metropolitan Area Transit Authority
-2025-10-16,Janno Lieber,MTA,8,40,18,66,27.3,,Janno Lieber MTA
-2025-10-16,Monica Tibbits-Nutt,Massachusetts Bay Transportation Authority,9,52,3,64,4.7,,Monica Tibbits-Nutt Massachusetts Bay Transportation Authority
-2025-10-16,Phillip Eng,Massachusetts Bay Transportation Authority,18,33,7,58,12.1,,Phillip Eng Massachusetts Bay Transportation Authority
-2025-10-16,Randy Clarke,Washington Metropolitan Area Transit Authority,20,27,12,59,20.3,,Randy Clarke Washington Metropolitan Area Transit Authority
-2025-10-17,Janno Lieber,MTA,6,40,17,63,27.0,,Janno Lieber MTA
-2025-10-17,Monica Tibbits-Nutt,Massachusetts Bay Transportation Authority,9,37,9,55,16.4,,Monica Tibbits-Nutt Massachusetts Bay Transportation Authority
-2025-10-17,Phillip Eng,Massachusetts Bay Transportation Authority,8,39,13,60,21.7,,Phillip Eng Massachusetts Bay Transportation Authority
-2025-10-17,Randy Clarke,Washington Metropolitan Area Transit Authority,19,29,13,61,21.3,,Randy Clarke Washington Metropolitan Area Transit Authority
-2025-10-18,Janno Lieber,MTA,8,41,15,64,23.4,,Janno Lieber MTA
-2025-10-18,Monica Tibbits-Nutt,Massachusetts Bay Transportation Authority,9,41,10,60,16.7,,Monica Tibbits-Nutt Massachusetts Bay Transportation Authority
-2025-10-18,Phillip Eng,Massachusetts Bay Transportation Authority,7,43,11,61,18.0,,Phillip Eng Massachusetts Bay Transportation Authority
-2025-10-18,Randy Clarke,Washington Metropolitan Area Transit Authority,22,27,11,60,18.3,,Randy Clarke Washington Metropolitan Area Transit Authority
-2025-10-19,Janno Lieber,MTA,7,39,16,62,25.8,,Janno Lieber MTA
-2025-10-19,Monica Tibbits-Nutt,Massachusetts Bay Transportation Authority,10,38,11,59,18.6,,Monica Tibbits-Nutt Massachusetts Bay Transportation Authority
-2025-10-19,Phillip Eng,Massachusetts Bay Transportation Authority,7,44,10,61,16.4,,Phillip Eng Massachusetts Bay Transportation Authority
-2025-10-19,Randy Clarke,Washington Metropolitan Area Transit Authority,21,28,12,61,19.7,,Randy Clarke Washington Metropolitan Area Transit Authority
-2025-10-20,Janno Lieber,MTA,7,38,18,63,28.6,,Janno Lieber MTA
-2025-10-20,Monica Tibbits-Nutt,Massachusetts Bay Transportation Authority,10,40,10,60,16.7,,Monica Tibbits-Nutt Massachusetts Bay Transportation Authority
-2025-10-20,Phillip Eng,Massachusetts Bay Transportation Authority,8,42,11,61,18.0,,Phillip Eng Massachusetts Bay Transportation Authority
-2025-10-20,Randy Clarke,Washington Metropolitan Area Transit Authority,21,26,11,58,19.0,,Randy Clarke Washington Metropolitan Area Transit Authority
-2025-10-21,Janno Lieber,MTA,7,38,19,64,29.7,,Janno Lieber MTA
-2025-10-21,Monica Tibbits-Nutt,Massachusetts Bay Transportation Authority,9,40,11,60,18.3,,Monica Tibbits-Nutt Massachusetts Bay Transportation Authority
-2025-10-21,Phillip Eng,Massachusetts Bay Transportation Authority,7,42,11,60,18.3,,Phillip Eng Massachusetts Bay Transportation Authority
-2025-10-21,Randy Clarke,Washington Metropolitan Area Transit Authority,20,29,10,59,16.9,,Randy Clarke Washington Metropolitan Area Transit Authority
+date,ceo,company,positive_articles,neutral_articles,negative_articles,total,neg_pct,theme,alias
+2025-10-08,Janno Lieber,MTA,0,0,0,64,39.1,,Janno Lieber MTA
+2025-10-08,Monica Tibbits-Nutt,Massachusetts Bay Transportation Authority,0,0,0,62,6.5,,Monica Tibbits-Nutt Massachusetts Bay Transportation Authority
+2025-10-08,Phillip Eng,Massachusetts Bay Transportation Authority,0,0,0,60,15.0,,Phillip Eng Massachusetts Bay Transportation Authority
+2025-10-08,Randy Clarke,Washington Metropolitan Area Transit Authority,0,0,0,59,15.3,,Randy Clarke Washington Metropolitan Area Transit Authority
+2025-10-09,Janno Lieber,MTA,0,0,0,66,34.8,,Janno Lieber MTA
+2025-10-09,Monica Tibbits-Nutt,Massachusetts Bay Transportation Authority,0,0,0,67,4.5,,Monica Tibbits-Nutt Massachusetts Bay Transportation Authority
+2025-10-09,Phillip Eng,Massachusetts Bay Transportation Authority,0,0,0,59,16.9,,Phillip Eng Massachusetts Bay Transportation Authority
+2025-10-09,Randy Clarke,Washington Metropolitan Area Transit Authority,0,0,0,60,15.0,,Randy Clarke Washington Metropolitan Area Transit Authority
+2025-10-10,Janno Lieber,MTA,0,0,0,66,33.3,,Janno Lieber MTA
+2025-10-10,Monica Tibbits-Nutt,Massachusetts Bay Transportation Authority,0,0,0,64,4.7,,Monica Tibbits-Nutt Massachusetts Bay Transportation Authority
+2025-10-10,Phillip Eng,Massachusetts Bay Transportation Authority,0,0,0,59,16.9,,Phillip Eng Massachusetts Bay Transportation Authority
+2025-10-10,Randy Clarke,Washington Metropolitan Area Transit Authority,0,0,0,61,18.0,,Randy Clarke Washington Metropolitan Area Transit Authority
+2025-10-11,Janno Lieber,MTA,0,0,0,66,30.3,,Janno Lieber MTA
+2025-10-11,Monica Tibbits-Nutt,Massachusetts Bay Transportation Authority,0,0,0,66,4.5,,Monica Tibbits-Nutt Massachusetts Bay Transportation Authority
+2025-10-11,Phillip Eng,Massachusetts Bay Transportation Authority,0,0,0,58,15.5,,Phillip Eng Massachusetts Bay Transportation Authority
+2025-10-11,Randy Clarke,Washington Metropolitan Area Transit Authority,0,0,0,60,16.7,,Randy Clarke Washington Metropolitan Area Transit Authority
+2025-10-12,Janno Lieber,MTA,0,0,0,66,30.3,,Janno Lieber MTA
+2025-10-12,Monica Tibbits-Nutt,Massachusetts Bay Transportation Authority,0,0,0,64,4.7,,Monica Tibbits-Nutt Massachusetts Bay Transportation Authority
+2025-10-12,Phillip Eng,Massachusetts Bay Transportation Authority,0,0,0,58,15.5,,Phillip Eng Massachusetts Bay Transportation Authority
+2025-10-12,Randy Clarke,Washington Metropolitan Area Transit Authority,0,0,0,59,18.6,,Randy Clarke Washington Metropolitan Area Transit Authority
+2025-10-13,Janno Lieber,MTA,0,0,0,67,32.8,,Janno Lieber MTA
+2025-10-13,Monica Tibbits-Nutt,Massachusetts Bay Transportation Authority,0,0,0,62,3.2,,Monica Tibbits-Nutt Massachusetts Bay Transportation Authority
+2025-10-13,Phillip Eng,Massachusetts Bay Transportation Authority,0,0,0,59,13.6,,Phillip Eng Massachusetts Bay Transportation Authority
+2025-10-13,Randy Clarke,Washington Metropolitan Area Transit Authority,0,0,0,58,19.0,,Randy Clarke Washington Metropolitan Area Transit Authority
+2025-10-14,Janno Lieber,MTA,0,0,0,65,29.2,,Janno Lieber MTA
+2025-10-14,Monica Tibbits-Nutt,Massachusetts Bay Transportation Authority,0,0,0,62,3.2,,Monica Tibbits-Nutt Massachusetts Bay Transportation Authority
+2025-10-14,Phillip Eng,Massachusetts Bay Transportation Authority,0,0,0,59,13.6,,Phillip Eng Massachusetts Bay Transportation Authority
+2025-10-14,Randy Clarke,Washington Metropolitan Area Transit Authority,0,0,0,62,21.0,,Randy Clarke Washington Metropolitan Area Transit Authority
+2025-10-15,Janno Lieber,MTA,0,0,0,65,30.8,,Janno Lieber MTA
+2025-10-15,Monica Tibbits-Nutt,Massachusetts Bay Transportation Authority,0,0,0,64,3.1,,Monica Tibbits-Nutt Massachusetts Bay Transportation Authority
+2025-10-15,Phillip Eng,Massachusetts Bay Transportation Authority,0,0,0,57,12.3,,Phillip Eng Massachusetts Bay Transportation Authority
+2025-10-15,Randy Clarke,Washington Metropolitan Area Transit Authority,0,0,0,57,17.5,,Randy Clarke Washington Metropolitan Area Transit Authority
+2025-10-16,Janno Lieber,MTA,0,0,0,66,27.3,,Janno Lieber MTA
+2025-10-16,Monica Tibbits-Nutt,Massachusetts Bay Transportation Authority,0,0,0,64,4.7,,Monica Tibbits-Nutt Massachusetts Bay Transportation Authority
+2025-10-16,Phillip Eng,Massachusetts Bay Transportation Authority,0,0,0,58,12.1,,Phillip Eng Massachusetts Bay Transportation Authority
+2025-10-16,Randy Clarke,Washington Metropolitan Area Transit Authority,0,0,0,59,20.3,,Randy Clarke Washington Metropolitan Area Transit Authority
+2025-10-17,Janno Lieber,MTA,0,0,0,63,27.0,,Janno Lieber MTA
+2025-10-17,Monica Tibbits-Nutt,Massachusetts Bay Transportation Authority,0,0,0,55,16.4,,Monica Tibbits-Nutt Massachusetts Bay Transportation Authority
+2025-10-17,Phillip Eng,Massachusetts Bay Transportation Authority,0,0,0,60,21.7,,Phillip Eng Massachusetts Bay Transportation Authority
+2025-10-17,Randy Clarke,Washington Metropolitan Area Transit Authority,0,0,0,61,21.3,,Randy Clarke Washington Metropolitan Area Transit Authority
+2025-10-18,Janno Lieber,MTA,0,0,0,64,23.4,,Janno Lieber MTA
+2025-10-18,Monica Tibbits-Nutt,Massachusetts Bay Transportation Authority,0,0,0,60,16.7,,Monica Tibbits-Nutt Massachusetts Bay Transportation Authority
+2025-10-18,Phillip Eng,Massachusetts Bay Transportation Authority,0,0,0,61,18.0,,Phillip Eng Massachusetts Bay Transportation Authority
+2025-10-18,Randy Clarke,Washington Metropolitan Area Transit Authority,0,0,0,60,18.3,,Randy Clarke Washington Metropolitan Area Transit Authority
+2025-10-19,Janno Lieber,MTA,0,0,0,62,25.8,,Janno Lieber MTA
+2025-10-19,Monica Tibbits-Nutt,Massachusetts Bay Transportation Authority,0,0,0,59,18.6,,Monica Tibbits-Nutt Massachusetts Bay Transportation Authority
+2025-10-19,Phillip Eng,Massachusetts Bay Transportation Authority,0,0,0,61,16.4,,Phillip Eng Massachusetts Bay Transportation Authority
+2025-10-19,Randy Clarke,Washington Metropolitan Area Transit Authority,0,0,0,61,19.7,,Randy Clarke Washington Metropolitan Area Transit Authority
+2025-10-20,Janno Lieber,MTA,0,0,0,63,28.6,,Janno Lieber MTA
+2025-10-20,Monica Tibbits-Nutt,Massachusetts Bay Transportation Authority,0,0,0,60,16.7,,Monica Tibbits-Nutt Massachusetts Bay Transportation Authority
+2025-10-20,Phillip Eng,Massachusetts Bay Transportation Authority,0,0,0,61,18.0,,Phillip Eng Massachusetts Bay Transportation Authority
+2025-10-20,Randy Clarke,Washington Metropolitan Area Transit Authority,0,0,0,58,19.0,,Randy Clarke Washington Metropolitan Area Transit Authority
+2025-10-21,Janno Lieber,MTA,0,0,0,64,29.7,,Janno Lieber MTA
+2025-10-21,Monica Tibbits-Nutt,Massachusetts Bay Transportation Authority,0,0,0,60,18.3,,Monica Tibbits-Nutt Massachusetts Bay Transportation Authority
+2025-10-21,Phillip Eng,Massachusetts Bay Transportation Authority,0,0,0,60,18.3,,Phillip Eng Massachusetts Bay Transportation Authority
+2025-10-21,Randy Clarke,Washington Metropolitan Area Transit Authority,0,0,0,59,16.9,,Randy Clarke Washington Metropolitan Area Transit Authority
+2025-10-22,Janno Lieber,MTA,7,39,17,63,27.0,,Janno Lieber MTA
+2025-10-22,Monica Tibbits-Nutt,Massachusetts Bay Transportation Authority,9,39,11,59,18.6,,Monica Tibbits-Nutt Massachusetts Bay Transportation Authority
+2025-10-22,Phillip Eng,Massachusetts Bay Transportation Authority,7,40,11,58,19.0,,Phillip Eng Massachusetts Bay Transportation Authority
+2025-10-22,Randy Clarke,Washington Metropolitan Area Transit Authority,21,28,11,60,18.3,,Randy Clarke Washington Metropolitan Area Transit Authority
