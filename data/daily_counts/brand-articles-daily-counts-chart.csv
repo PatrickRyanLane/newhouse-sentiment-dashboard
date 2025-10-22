@@ -139,13 +139,16 @@ date,company,positive_articles,neutral_articles,negative_articles,total,neg_pct
 2025-10-21,OMNY,,,,50,0.220000
 2025-10-21,The T,,,,50,0.240000
 2025-10-21,Washington Metropolitan Area Transit Authority,,,,50,0.140000
-2025-10-22,Boston T,10,24,16,50,0.320000
-2025-10-22,DC Metro,12,25,13,50,0.260000
-2025-10-22,MBTA,7,31,12,50,0.240000
-2025-10-22,MTA,11,21,18,50,0.360000
-2025-10-22,Massachusetts Bay Transportation Authority,13,24,13,50,0.260000
-2025-10-22,Metrorail,8,23,19,50,0.380000
-2025-10-22,NYC Subway,6,24,20,50,0.400000
-2025-10-22,OMNY,9,30,11,50,0.220000
-2025-10-22,The T,16,16,18,50,0.360000
-2025-10-22,Washington Metropolitan Area Transit Authority,9,33,8,50,0.160000
+2025-10-22,Boston T,10,23,17,50,0.340000
+2025-10-22,CTA,11,21,18,50,0.360000
+2025-10-22,Chicago Transit Authority,9,26,15,50,0.300000
+2025-10-22,DC Metro,11,23,16,50,0.320000
+2025-10-22,MBTA,8,32,10,50,0.200000
+2025-10-22,MTA,9,23,18,50,0.360000
+2025-10-22,Massachusetts Bay Transportation Authority,12,25,13,50,0.260000
+2025-10-22,Metrorail,9,26,15,50,0.300000
+2025-10-22,NYC Subway,2,4,44,50,0.880000
+2025-10-22,OMNY,10,30,10,50,0.200000
+2025-10-22,The L,19,23,8,50,0.160000
+2025-10-22,The T,12,23,15,50,0.300000
+2025-10-22,Washington Metropolitan Area Transit Authority,9,34,7,50,0.140000
