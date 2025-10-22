@@ -46,6 +46,11 @@ def iter_dates(from_str: str, to_str: str):
         d += one
 
 def read_articles(dstr: str):
+    """Read articles CSV for a date and return list of dictionaries.
+    
+    This reads the INDIVIDUAL ARTICLES (modal data) which contain student edits.
+    We need this data to pass to sheets_helper so it can preserve sentiment edits.
+    """
     f = ARTICLES_DIR / f"{dstr}-brand-articles-modal.csv"
     if not f.exists():
         print(f"[INFO] No headline file for {dstr} at {f}; nothing to aggregate.", flush=True)
@@ -140,6 +145,13 @@ def upsert_daily_index(dstr: str, agg: dict):
     return pd.DataFrame(cleaned)
 
 def process_one(dstr: str, skip_sheets=False):
+    """Process articles for a single date.
+    
+    This function:
+    1. Reads articles and aggregates sentiment counts
+    2. Writes summary CSVs
+    3. Sends data to Google Sheets WITH EDIT PRESERVATION
+    """
     print(f"Processing {dstr}...")
     rows = read_articles(dstr)
     if not rows:
@@ -151,15 +163,33 @@ def process_one(dstr: str, skip_sheets=False):
     daily_df = write_daily(dstr, agg)
     rollup_df = upsert_daily_index(dstr, agg)
     
+    # ✅ FIXED: Convert rows to DataFrame and pass it to sheets writer
+    # This DataFrame contains the individual articles with their sentiments,
+    # which allows merge_preserving_edits() to match by URL and preserve student edits
+    rows_df = pd.DataFrame(rows) if rows else pd.DataFrame(columns=['company', 'sentiment', 'url'])
+    
+    # If we have full article data with URL, use that; otherwise fall back to simplified
+    # The sheets_helper will use the URL to match against previous day's data
+    f = ARTICLES_DIR / f"{dstr}-brand-articles-modal.csv"
+    if f.exists():
+        try:
+            rows_df = pd.read_csv(f)  # Use full data with all columns including URL
+        except Exception as e:
+            print(f"[WARN] Could not read full article data: {e}")
+            # Fall back to aggregated rows
+            rows_df = pd.DataFrame(rows)
+    
     # ===================================================================
     # NEW: Write to Google Sheets
     # ===================================================================
     if WRITE_TO_SHEETS and not skip_sheets and SHEETS_HELPER_AVAILABLE:
         try:
             print(f"\n[INFO] Writing brand article data to Google Sheets...")
+            print(f"[INFO] Preserving student sentiment edits from {dstr}...")
             success = write_brand_articles_to_sheets(
-                daily_df=daily_df,
-                rollup_df=rollup_df,
+                rows_df=rows_df,             # ✅ NOW PASSING: Individual articles (modal data with student edits!)
+                daily_df=daily_df,           # Summary counts by company and sentiment
+                rollup_df=rollup_df,         # Rolling historical data
                 target_date=dstr
             )
             if success:
