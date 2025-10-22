@@ -356,7 +356,7 @@ def write_brand_serps_to_sheets(
         # Modal: Preserve edits (students edit these!)
         write_to_sheet(rows_df, 'brand-serps-modal', date=target_date, 
                       preserve_edits=True, key_column='url', 
-                      preserve_columns=['sentiment', 'controlled']),
+                      preserve_columns=['sentiment', 'sentiment_edited', 'controlled', 'controlled_edited']),
         # Table: Don't preserve (auto-calculated)
         write_to_sheet(daily_df, 'brand-serps-table', date=target_date, preserve_edits=False),
         # Rollup: Update with fresh data
@@ -381,7 +381,7 @@ def write_ceo_serps_to_sheets(
     success = all([
         write_to_sheet(rows_df, 'ceo-serps-modal', date=target_date,
                       preserve_edits=True, key_column='url',
-                      preserve_columns=['sentiment', 'controlled']),
+                      preserve_columns=['sentiment', 'sentiment_edited', 'controlled', 'controlled_edited']),
         write_to_sheet(daily_df, 'ceo-serps-table', date=target_date, preserve_edits=False),
         update_rollup_sheet(rollup_df, 'ceo-serps-daily-counts-chart', date_column='date')
     ])
@@ -413,7 +413,7 @@ def write_brand_articles_to_sheets(
         # Modal: Preserve sentiment edits (students correct these!)
         write_to_sheet(rows_df, 'brand-articles-modal', date=target_date, 
                       preserve_edits=True, key_column='url',
-                      preserve_columns=['sentiment']),
+                      preserve_columns=['sentiment', 'sentiment_edited']),
         # Table: Fresh aggregated data (auto-calculated)
         write_to_sheet(daily_df, 'brand-articles-table', date=target_date, preserve_edits=False),
         # Rollup: Update rolling index
@@ -447,7 +447,7 @@ def write_ceo_articles_to_sheets(
         # Modal: Preserve sentiment edits (students correct these!)
         write_to_sheet(rows_df, 'ceo-articles-modal', date=target_date,
                       preserve_edits=True, key_column='url',
-                      preserve_columns=['sentiment']),
+                      preserve_columns=['sentiment', 'sentiment_edited']),
         # Table: Fresh aggregated data (auto-calculated)
         write_to_sheet(daily_df, 'ceo-articles-table', date=target_date, preserve_edits=False),
         # Rollup: Update rolling index
@@ -480,7 +480,7 @@ def write_articles_modal_to_sheets(
         date=target_date,
         preserve_edits=True,
         key_column='url',
-        preserve_columns=['sentiment']  # Only preserve sentiment for articles
+        preserve_columns=['sentiment', 'sentiment_edited']  # Only preserve sentiment for articles
     )
 
 # Backwards compatibility
