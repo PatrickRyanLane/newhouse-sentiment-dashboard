@@ -1,0 +1,14 @@
+date,company,positive_articles,neutral_articles,negative_articles,total,neg_pct
+2025-10-23,Boston T,10,24,16,50,0.320000
+2025-10-23,CTA,9,22,19,50,0.380000
+2025-10-23,Chicago Transit Authority,7,27,16,50,0.320000
+2025-10-23,DC Metro,10,25,15,50,0.300000
+2025-10-23,MBTA,8,30,12,50,0.240000
+2025-10-23,MTA,9,24,17,50,0.340000
+2025-10-23,Massachusetts Bay Transportation Authority,12,25,13,50,0.260000
+2025-10-23,Metrorail,8,25,17,50,0.340000
+2025-10-23,NYC Subway,2,17,31,50,0.620000
+2025-10-23,OMNY,8,29,13,50,0.260000
+2025-10-23,The L,21,21,8,50,0.160000
+2025-10-23,The T,16,24,10,50,0.200000
+2025-10-23,Washington Metropolitan Area Transit Authority,9,32,9,50,0.180000
