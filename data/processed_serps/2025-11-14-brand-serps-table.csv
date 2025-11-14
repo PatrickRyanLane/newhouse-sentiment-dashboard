@@ -1,0 +1,14 @@
+date,company,total,controlled,negative_serp,neutral_serp,positive_serp
+2025-11-14,Boston T,21,9,0,12,9
+2025-11-14,CTA,5,4,0,1,4
+2025-11-14,Chicago Transit Authority,4,1,0,3,1
+2025-11-14,DC Metro,5,3,0,2,3
+2025-11-14,MBTA,12,3,0,9,3
+2025-11-14,MTA,5,3,0,2,3
+2025-11-14,Massachusetts Bay Transportation Authority,17,8,0,9,8
+2025-11-14,Metrorail,9,2,0,7,2
+2025-11-14,NYC Subway,6,4,0,2,4
+2025-11-14,OMNY,6,5,0,1,5
+2025-11-14,The L,9,4,0,2,7
+2025-11-14,The T,20,3,0,15,5
+2025-11-14,Washington Metropolitan Area Transit Authority,7,2,1,3,3
