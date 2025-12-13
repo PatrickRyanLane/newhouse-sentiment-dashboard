@@ -702,3 +702,16 @@ date,company,total,negative_articles,neutral_articles,positive_articles
 2025-12-12,The L,50,10,20,20
 2025-12-12,The T,50,11,28,11
 2025-12-12,Washington Metropolitan Area Transit Authority,50,6,36,8
+2025-12-13,Boston T,50,14,26,10
+2025-12-13,CTA,50,22,15,13
+2025-12-13,Chicago Transit Authority,50,22,13,15
+2025-12-13,DC Metro,50,16,22,12
+2025-12-13,MBTA,50,13,29,8
+2025-12-13,MTA,50,12,24,14
+2025-12-13,Massachusetts Bay Transportation Authority,50,16,20,14
+2025-12-13,Metrorail,50,26,19,5
+2025-12-13,NYC Subway,50,26,17,7
+2025-12-13,OMNY,50,7,29,14
+2025-12-13,The L,50,10,19,21
+2025-12-13,The T,50,13,26,11
+2025-12-13,Washington Metropolitan Area Transit Authority,50,6,34,10
