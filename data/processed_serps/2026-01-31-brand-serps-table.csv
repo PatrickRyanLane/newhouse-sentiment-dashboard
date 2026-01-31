@@ -1,0 +1,14 @@
+date,company,total,controlled,negative_serp,neutral_serp,positive_serp
+2026-01-31,Boston T,21,12,0,9,12
+2026-01-31,CTA,5,4,0,1,4
+2026-01-31,Chicago Transit Authority,4,2,0,2,2
+2026-01-31,DC Metro,3,1,0,2,1
+2026-01-31,MBTA,12,6,0,6,6
+2026-01-31,MTA,4,2,0,2,2
+2026-01-31,Massachusetts Bay Transportation Authority,21,9,0,12,9
+2026-01-31,Metrorail,10,3,0,7,3
+2026-01-31,NYC Subway,6,4,0,2,4
+2026-01-31,OMNY,6,4,0,1,5
+2026-01-31,The L,8,3,0,2,6
+2026-01-31,The T,21,3,0,15,6
+2026-01-31,Washington Metropolitan Area Transit Authority,7,3,0,3,4
