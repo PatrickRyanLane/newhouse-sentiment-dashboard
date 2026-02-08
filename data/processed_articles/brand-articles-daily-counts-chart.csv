@@ -1443,3 +1443,16 @@ date,company,total,negative_articles,neutral_articles,positive_articles
 2026-02-07,The L,50,11,23,16
 2026-02-07,The T,50,10,19,21
 2026-02-07,Washington Metropolitan Area Transit Authority,50,9,30,11
+2026-02-08,Boston T,50,14,27,9
+2026-02-08,CTA,50,19,15,16
+2026-02-08,Chicago Transit Authority,50,19,20,11
+2026-02-08,DC Metro,50,12,27,11
+2026-02-08,MBTA,50,23,22,5
+2026-02-08,MTA,50,15,32,3
+2026-02-08,Massachusetts Bay Transportation Authority,50,17,20,13
+2026-02-08,Metrorail,50,26,16,8
+2026-02-08,NYC Subway,50,20,26,4
+2026-02-08,OMNY,50,9,29,12
+2026-02-08,The L,50,13,23,14
+2026-02-08,The T,50,10,19,21
+2026-02-08,Washington Metropolitan Area Transit Authority,50,7,34,9
