@@ -1729,3 +1729,16 @@ date,company,total,negative_articles,neutral_articles,positive_articles
 2026-03-01,The L,50,6,24,20
 2026-03-01,The T,50,10,27,13
 2026-03-01,Washington Metropolitan Area Transit Authority,50,8,32,10
+2026-03-02,Boston T,50,17,24,9
+2026-03-02,CTA,50,19,13,18
+2026-03-02,Chicago Transit Authority,50,19,20,11
+2026-03-02,DC Metro,50,12,26,12
+2026-03-02,MBTA,50,13,27,10
+2026-03-02,MTA,50,22,22,6
+2026-03-02,Massachusetts Bay Transportation Authority,50,14,23,13
+2026-03-02,Metrorail,50,26,17,7
+2026-03-02,NYC Subway,50,18,30,2
+2026-03-02,OMNY,50,8,29,13
+2026-03-02,The L,50,7,24,19
+2026-03-02,The T,50,12,26,12
+2026-03-02,Washington Metropolitan Area Transit Authority,50,9,30,11
