@@ -2457,3 +2457,16 @@ date,company,total,negative_articles,neutral_articles,positive_articles
 2026-04-26,The L,50,6,22,22
 2026-04-26,The T,50,13,26,11
 2026-04-26,Washington Metropolitan Area Transit Authority,50,16,22,12
+2026-04-27,Boston T,50,19,23,8
+2026-04-27,CTA,50,20,23,7
+2026-04-27,Chicago Transit Authority,50,15,24,11
+2026-04-27,DC Metro,50,23,24,3
+2026-04-27,MBTA,50,6,38,6
+2026-04-27,MTA,50,20,25,5
+2026-04-27,Massachusetts Bay Transportation Authority,50,11,26,13
+2026-04-27,Metrorail,50,16,17,17
+2026-04-27,NYC Subway,50,31,19,0
+2026-04-27,OMNY,50,8,29,13
+2026-04-27,The L,50,6,30,14
+2026-04-27,The T,50,13,23,14
+2026-04-27,Washington Metropolitan Area Transit Authority,50,16,22,12
