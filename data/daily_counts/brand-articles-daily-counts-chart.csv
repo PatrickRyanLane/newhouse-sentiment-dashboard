@@ -2814,3 +2814,16 @@ date,company,positive_articles,neutral_articles,negative_articles,total,neg_pct
 2026-05-15,The L,16,30,4,50,0.080000
 2026-05-15,The T,17,20,13,50,0.260000
 2026-05-15,Washington Metropolitan Area Transit Authority,14,26,10,50,0.200000
+2026-05-16,Boston T,9,24,17,50,0.340000
+2026-05-16,CTA,9,16,25,50,0.500000
+2026-05-16,Chicago Transit Authority,12,24,14,50,0.280000
+2026-05-16,DC Metro,8,29,13,50,0.260000
+2026-05-16,MBTA,6,23,21,50,0.420000
+2026-05-16,MTA,3,7,40,50,0.800000
+2026-05-16,Massachusetts Bay Transportation Authority,16,27,7,50,0.140000
+2026-05-16,Metrorail,14,17,19,50,0.380000
+2026-05-16,NYC Subway,3,9,38,50,0.760000
+2026-05-16,OMNY,9,32,9,50,0.180000
+2026-05-16,The L,17,27,6,50,0.120000
+2026-05-16,The T,20,18,12,50,0.240000
+2026-05-16,Washington Metropolitan Area Transit Authority,13,25,12,50,0.240000
