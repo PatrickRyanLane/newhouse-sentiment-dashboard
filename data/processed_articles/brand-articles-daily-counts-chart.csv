@@ -3807,3 +3807,16 @@ date,company,total,negative_articles,neutral_articles,positive_articles
 2026-08-10,The L,50,13,23,14
 2026-08-10,The T,50,12,26,12
 2026-08-10,Washington Metropolitan Area Transit Authority,50,11,25,14
+2026-08-11,Boston T,50,15,25,10
+2026-08-11,CTA,50,17,16,17
+2026-08-11,Chicago Transit Authority,50,13,20,17
+2026-08-11,DC Metro,50,8,35,7
+2026-08-11,MBTA,50,19,24,7
+2026-08-11,MTA,50,13,22,15
+2026-08-11,Massachusetts Bay Transportation Authority,50,7,31,12
+2026-08-11,Metrorail,50,22,20,8
+2026-08-11,NYC Subway,50,22,16,12
+2026-08-11,OMNY,50,8,31,11
+2026-08-11,The L,50,9,24,17
+2026-08-11,The T,50,8,28,14
+2026-08-11,Washington Metropolitan Area Transit Authority,50,10,27,13
