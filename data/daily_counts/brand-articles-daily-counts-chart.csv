@@ -4245,3 +4245,16 @@ date,company,positive_articles,neutral_articles,negative_articles,total,neg_pct
 2026-09-05,The L,16,27,7,50,0.140000
 2026-09-05,The T,20,21,9,50,0.180000
 2026-09-05,Washington Metropolitan Area Transit Authority,15,26,9,50,0.180000
+2026-09-06,Boston T,9,23,18,50,0.360000
+2026-09-06,CTA,15,14,21,50,0.420000
+2026-09-06,Chicago Transit Authority,17,23,10,50,0.200000
+2026-09-06,DC Metro,13,25,12,50,0.240000
+2026-09-06,MBTA,9,22,19,50,0.380000
+2026-09-06,MTA,1,5,44,50,0.880000
+2026-09-06,Massachusetts Bay Transportation Authority,13,29,8,50,0.160000
+2026-09-06,Metrorail,11,18,21,50,0.420000
+2026-09-06,NYC Subway,7,17,26,50,0.520000
+2026-09-06,OMNY,10,33,7,50,0.140000
+2026-09-06,The L,7,16,6,29,0.206897
+2026-09-06,The T,17,22,11,50,0.220000
+2026-09-06,Washington Metropolitan Area Transit Authority,14,27,9,50,0.180000
