@@ -1,0 +1,14 @@
+date,company,positive_articles,neutral_articles,negative_articles,total,neg_pct
+2026-10-02,Boston T,8,26,16,50,0.320000
+2026-10-02,CTA,8,10,32,50,0.640000
+2026-10-02,Chicago Transit Authority,23,13,14,50,0.280000
+2026-10-02,DC Metro,15,20,15,50,0.300000
+2026-10-02,MBTA,2,23,25,50,0.500000
+2026-10-02,MTA,4,28,18,50,0.360000
+2026-10-02,Massachusetts Bay Transportation Authority,15,26,9,50,0.180000
+2026-10-02,Metrorail,11,20,19,50,0.380000
+2026-10-02,NYC Subway,2,10,38,50,0.760000
+2026-10-02,OMNY,18,23,9,50,0.180000
+2026-10-02,The L,17,30,3,50,0.060000
+2026-10-02,The T,12,21,17,50,0.340000
+2026-10-02,Washington Metropolitan Area Transit Authority,18,21,11,50,0.220000
