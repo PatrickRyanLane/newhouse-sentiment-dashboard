@@ -4804,3 +4804,16 @@ date,company,positive_articles,neutral_articles,negative_articles,total,neg_pct
 2026-10-19,The L,15,27,8,50,0.160000
 2026-10-19,The T,15,20,15,50,0.300000
 2026-10-19,Washington Metropolitan Area Transit Authority,18,25,7,50,0.140000
+2026-10-20,Boston T,8,25,17,50,0.340000
+2026-10-20,CTA,0,15,35,50,0.700000
+2026-10-20,Chicago Transit Authority,21,15,14,50,0.280000
+2026-10-20,DC Metro,12,27,11,50,0.220000
+2026-10-20,MBTA,9,24,17,50,0.340000
+2026-10-20,MTA,1,25,24,50,0.480000
+2026-10-20,Massachusetts Bay Transportation Authority,17,26,7,50,0.140000
+2026-10-20,Metrorail,13,26,11,50,0.220000
+2026-10-20,NYC Subway,2,8,40,50,0.800000
+2026-10-20,OMNY,18,23,9,50,0.180000
+2026-10-20,The L,17,27,6,50,0.120000
+2026-10-20,The T,18,25,7,50,0.140000
+2026-10-20,Washington Metropolitan Area Transit Authority,19,24,7,50,0.140000
