@@ -4901,3 +4901,16 @@ date,company,total,negative_articles,neutral_articles,positive_articles
 2026-11-04,The L,42,6,21,15
 2026-11-04,The T,50,15,21,14
 2026-11-04,Washington Metropolitan Area Transit Authority,39,5,25,9
+2026-11-05,Boston T,46,11,27,8
+2026-11-05,CTA,50,14,21,15
+2026-11-05,Chicago Transit Authority,50,4,26,20
+2026-11-05,DC Metro,50,9,30,11
+2026-11-05,MBTA,50,34,12,4
+2026-11-05,MTA,50,15,21,14
+2026-11-05,Massachusetts Bay Transportation Authority,22,4,13,5
+2026-11-05,Metrorail,47,11,17,19
+2026-11-05,NYC Subway,50,33,14,3
+2026-11-05,OMNY,46,8,32,6
+2026-11-05,The L,50,5,28,17
+2026-11-05,The T,50,11,25,14
+2026-11-05,Washington Metropolitan Area Transit Authority,42,5,28,9
